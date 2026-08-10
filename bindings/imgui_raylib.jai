@@ -1,149 +1,249 @@
 // imgui_raylib.jai
-// Dear ImGui backend for raylib (input via raylib, rendering via direct GL),
-// the Jai port of Ascension's tlib:odin-imgui/imgui_impl_raylib.
+// Dear ImGui backend for raylib — the Jai port of
+// Ascension/tlib/odin-imgui/imgui_impl_raylib/imgui_impl_raylib.odin
+// (which itself is based on the raylib extras rlImGui).
 //
-// Rendering uses the Jai GL module (glad-style) directly instead of raylib's
-// rlgl so we fully control GL state (VAO/index-buffer bindings, shader,
-// matrices) and can save/restore everything around the ImGui pass — raylib's
-// rlgl keeps its own state that rlDrawVertexArrayElements-style calls would
-// clobber. The pattern follows the official imgui_impl_opengl3 backend.
+// Input comes from raylib (mouse, keyboard incl. keymap + text input,
+// focus, clipboard); rendering goes through raylib's rlgl immediate-mode
+// API (rlBegin/rlVertex2f/rlScissor) driven by ImDrawData, exactly like the
+// Odin original. Call imgui_raylib_new_frame() before building the frame
+// (it also pumps raylib input events), then imgui_raylib_render() after
+// Render(), inside raylib's BeginDrawing()/EndDrawing().
+//
+// Usage (matches the Odin original):
+//     imgui_raylib_setup()
+//     for !WindowShouldClose() {
+//         imgui_raylib_new_frame()
+//         ... imgui widgets ...
+//         imgui_raylib_render()
+//     }
+//     imgui_raylib_shutdown()
 
 #import "Basic";
-#import "bindings/raylib";
-#import "bindings/rlgl";
-#import "core/screen";
-
 #import "ImGui";
-#import "GL";
 
-// The Jai ImGui module does not bind these ImFontAtlas helpers.
+rl :: #import "bindings/raylib";
+rlgl :: #import "bindings/rlgl";
+
 imgui_dll :: #system_library "imgui";
+
+// The Jai ImGui module declares these as struct members (cpp_method); this
+// compiler version cannot call them via member syntax, so rebind them here
+// as standalone functions (same pattern as the DrawList_* helpers below).
+IO_AddKeyEvent :: (this: *IO, key: Key, down: bool) #cpp_method #foreign imgui_dll "?AddKeyEvent@ImGuiIO@@QEAAXW4ImGuiKey@@_N@Z";
+IO_AddMousePosEvent :: (this: *IO, x: float, y: float) #cpp_method #foreign imgui_dll "?AddMousePosEvent@ImGuiIO@@QEAAXMM@Z";
+IO_AddMouseButtonEvent :: (this: *IO, button: s32, down: bool) #cpp_method #foreign imgui_dll "?AddMouseButtonEvent@ImGuiIO@@QEAAXH_N@Z";
+IO_AddMouseWheelEvent :: (this: *IO, wheel_x: float, wheel_y: float) #cpp_method #foreign imgui_dll "?AddMouseWheelEvent@ImGuiIO@@QEAAXMM@Z";
+IO_AddFocusEvent :: (this: *IO, focused: bool) #cpp_method #foreign imgui_dll "?AddFocusEvent@ImGuiIO@@QEAAX_N@Z";
+IO_AddInputCharacter :: (this: *IO, c: u32) #cpp_method #foreign imgui_dll "?AddInputCharacter@ImGuiIO@@QEAAXI@Z";
+
+// The Jai ImGui module does not bind this ImFontAtlas helper either.
 FontAtlas_GetTexDataAsRGBA32 :: (atlas: *ImFontAtlas, out_pixels: **u8, out_width: *s32, out_height: *s32, out_bpp: *s32 = null) #cpp_method #foreign imgui_dll "?GetTexDataAsRGBA32@ImFontAtlas@@QEAAXPEAPEAEPEAH11@Z";
 
-// ImDrawList primitives (the module declares them as struct members; Jai cannot
-// call those via member syntax in this compiler version, so rebind them here).
+// The module declares these as ImFontAtlas members too (cpp_method); rebind
+// them here so the CJK font can be loaded before the atlas is packed.
+FontAtlas_AddFontFromFileTTF :: (this: *ImFontAtlas, filename: *u8, size_pixels: float, font_cfg: *ImFontConfig = null, glyph_ranges: *ImWchar = null) -> *ImFont #cpp_method #foreign imgui_dll "?AddFontFromFileTTF@ImFontAtlas@@QEAAPEAUImFont@@PEBDMPEBUImFontConfig@@PEBG@Z";
+FontAtlas_GetGlyphRangesChineseFull :: (this: *ImFontAtlas) -> *ImWchar #cpp_method #foreign imgui_dll "?GetGlyphRangesChineseFull@ImFontAtlas@@QEAAPEBGXZ";
+FontAtlas_GetGlyphRangesChineseSimplifiedCommon :: (this: *ImFontAtlas) -> *ImWchar #cpp_method #foreign imgui_dll "?GetGlyphRangesChineseSimplifiedCommon@ImFontAtlas@@QEAAPEBGXZ";
+
+// ImDrawList primitives (same reason as above: the module declares them as
+// struct members; rebind as standalone functions for the editor tools).
 DrawList_AddLine :: (this: *ImDrawList, p1: *ImVec2, p2: *ImVec2, col: u32, thickness: float = 1.0) #cpp_method #foreign imgui_dll "?AddLine@ImDrawList@@QEAAXAEBUImVec2@@0IM@Z";
 DrawList_AddRect :: (this: *ImDrawList, p_min: *ImVec2, p_max: *ImVec2, col: u32, rounding: float = 0.0, flags: s32 = 0, thickness: float = 1.0) #cpp_method #foreign imgui_dll "?AddRect@ImDrawList@@QEAAXAEBUImVec2@@0IMHM@Z";
 DrawList_AddRectFilled :: (this: *ImDrawList, p_min: *ImVec2, p_max: *ImVec2, col: u32, rounding: float = 0.0, flags: s32 = 0) #cpp_method #foreign imgui_dll "?AddRectFilled@ImDrawList@@QEAAXAEBUImVec2@@0IMH@Z";
 DrawList_AddText :: (this: *ImDrawList, pos: *ImVec2, col: u32, text_begin: *u8, text_end: *u8 = null) #cpp_method #foreign imgui_dll "?AddText@ImDrawList@@QEAAXAEBUImVec2@@IPEBD1@Z";
 
-BACKEND_VS_SRC :: #string VS_END
-#version 330 core
-layout(location = 0) in vec2 Position;
-layout(location = 1) in vec2 UV;
-layout(location = 2) in vec4 Color;
-uniform mat4 ProjMtx;
-out vec2 Frag_UV;
-out vec4 Frag_Color;
-void main() {
-    Frag_UV = UV;
-    Frag_Color = Color;
-    gl_Position = ProjMtx * vec4(Position.xy, 0.0, 1.0);
-}
-VS_END
+// --- backend state ---
 
-BACKEND_FS_SRC :: #string FS_END
-#version 330 core
-in vec2 Frag_UV;
-in vec4 Frag_Color;
-uniform sampler2D Texture;
-layout(location = 0) out vec4 Out_Color;
-void main() {
-    Out_Color = Frag_Color * texture(Texture, Frag_UV.st);
-}
-FS_END
+current_mouse_cursor: MouseCursor = .COUNT;
+mouse_cursor_map: [MouseCursor.COUNT] rl.RL_MouseCursor;
+raylib_key_map: [349] Key;   // indexed by raylib keycode; Key.None (0) = unmapped
+last_frame_focused := false;
+last_control_pressed := false;
+last_shift_pressed := false;
+last_alt_pressed := false;
+last_super_pressed := false;
 
-Backend_State :: struct {
-    initialized:  bool;
-    shader_id:    u32;
-    font_texture: u32;
-    vao_id:       u32;
-    vbo_id:       u32;
-    ibo_id:       u32;
-    mvp_loc:      s32;
-    tex_loc:      s32;
+font_texture_id: u32 = 0;
+
+is_control_down :: () -> bool {
+    return rl.IsKeyDown(.LEFT_CONTROL) || rl.IsKeyDown(.RIGHT_CONTROL);
 }
 
-state: Backend_State;
+is_shift_down :: () -> bool {
+    return rl.IsKeyDown(.LEFT_SHIFT) || rl.IsKeyDown(.RIGHT_SHIFT);
+}
+
+is_alt_down :: () -> bool {
+    return rl.IsKeyDown(.LEFT_ALT) || rl.IsKeyDown(.RIGHT_ALT);
+}
+
+is_super_down :: () -> bool {
+    return rl.IsKeyDown(.LEFT_SUPER) || rl.IsKeyDown(.RIGHT_SUPER);
+}
+
+// floor() for the scissor math (Basic has no floor; avoiding Math to keep
+// its Vector2 etc. out of this module's scope).
+floor_f :: (x: float32) -> float32 {
+    xi := cast(s32) x;
+    if cast(float32) xi > x {
+        xi -= 1;
+    }
+    return cast(float32) xi;
+}
+
+// --- lifecycle ---
 
 imgui_raylib_setup :: () -> bool {
-    if state.initialized {
-        return true;
-    }
-
-    gl_load(*gl);
-    
-    shader := LoadShaderFromMemory(BACKEND_VS_SRC.data, BACKEND_FS_SRC.data);
-    state.shader_id = shader.id;
-    state.mvp_loc = glGetUniformLocation(cast(u32) state.shader_id, "ProjMtx");
-    state.tex_loc = glGetUniformLocation(cast(u32) state.shader_id, "Texture");
-
-    // Vertex buffer objects + VAO (GL-managed; raylib's rlgl VAO handling
-    // unbinds the index buffer, which breaks glDrawElements).
-    glGenVertexArrays(1, *state.vao_id);
-    glBindVertexArray(cast(u32) state.vao_id);
-    glGenBuffers(1, *state.vbo_id);
-    glBindBuffer(cast(u32) GL_ARRAY_BUFFER, cast(u32) state.vbo_id);
-    glBufferData(cast(u32) GL_ARRAY_BUFFER, 0, null, cast(u32) GL_STREAM_DRAW);
-    // Vertex layout: pos(2x float) uv(2x float) col(u32) -> 20 bytes
-    glVertexAttribPointer(0, 2, cast(u32) GL_FLOAT, false, 20, cast(*void) 0);
-    glEnableVertexAttribArray(0);
-    glVertexAttribPointer(1, 2, cast(u32) GL_FLOAT, false, 20, cast(*void) 8);
-    glEnableVertexAttribArray(1);
-    glVertexAttribPointer(2, 4, cast(u32) GL_UNSIGNED_BYTE, true, 20, cast(*void) 16);
-    glEnableVertexAttribArray(2);
-    glGenBuffers(1, *state.ibo_id);
-    glBindBuffer(cast(u32) GL_ELEMENT_ARRAY_BUFFER, cast(u32) state.ibo_id);
-    glBufferData(cast(u32) GL_ELEMENT_ARRAY_BUFFER, 0, null, cast(u32) GL_STREAM_DRAW);
-    glBindVertexArray(0);
-
-    // Upload the font atlas texture.
-    io := GetIO();
-    pixels: *u8;
-    w: s32;
-    h: s32;
-    FontAtlas_GetTexDataAsRGBA32(io.Fonts, *pixels, *w, *h);
-    state.font_texture = rlLoadTexture(cast(*void) pixels, w, h, 7, 1);
-    io.Fonts.TexID = cast(*void) cast(u64) state.font_texture;
-
-    state.initialized = true;
+    setup_globals();
+    setup_keymap();
+    setup_mouse_cursor();
+    setup_backend();
+    setup_font_texture();
     return true;
 }
 
+imgui_raylib_shutdown :: () {
+    if font_texture_id != 0 {
+        rlgl.rlUnloadTexture(font_texture_id);
+        font_texture_id = 0;
+    }
+}
+
+// Full frame start: pump raylib input events, update io for this frame, then
+// begin the ImGui frame. (The Odin original calls process_events()/new_frame()
+// and ImGui.NewFrame() separately; the app shell here only calls
+// imgui_raylib_new_frame(), so all three are merged.)
+imgui_raylib_new_frame :: () {
+    process_events();
+
+    io := GetIO();
+
+    if rl.IsWindowFullscreen() {
+        monitor := rl.GetCurrentMonitor();
+        io.DisplaySize = .{ x = cast(float32) rl.GetMonitorWidth(monitor), y = cast(float32) rl.GetMonitorHeight(monitor) };
+    } else {
+        io.DisplaySize = .{ x = cast(float32) rl.GetScreenWidth(), y = cast(float32) rl.GetScreenHeight() };
+    }
+
+    // The real framebuffer scale is the RenderWidth/Height over the
+    // ScreenWidth/Height ratio (handles HiDPI and resizing).
+    fb_w := cast(float32) rl.GetRenderWidth();
+    fb_h := cast(float32) rl.GetRenderHeight();
+    if io.DisplaySize.x > 0.0 && io.DisplaySize.y > 0.0 {
+        io.DisplayFramebufferScale = .{ x = fb_w / io.DisplaySize.x, y = fb_h / io.DisplaySize.y };
+    } else {
+        io.DisplayFramebufferScale = .{ x = 1.0, y = 1.0 };
+    }
+
+    io.DeltaTime = rl.GetFrameTime();
+
+    if io.WantSetMousePos {
+        rl.SetMousePosition(cast(s32) io.MousePos.x, cast(s32) io.MousePos.y);
+    } else {
+        mouse_pos := rl.GetMousePosition();
+        IO_AddMousePosEvent(io, mouse_pos.x, mouse_pos.y);
+    }
+
+    set_mouse_event(io, rl.RL_MouseButton.LEFT, 0);
+    set_mouse_event(io, rl.RL_MouseButton.RIGHT, 1);
+    set_mouse_event(io, rl.RL_MouseButton.MIDDLE, 2);
+    set_mouse_event(io, rl.RL_MouseButton.SIDE, 3);
+    set_mouse_event(io, rl.RL_MouseButton.EXTRA, 4);
+
+    wheel := rl.GetMouseWheelMoveV();
+    IO_AddMouseWheelEvent(io, wheel.x, wheel.y);
+
+    // Mouse cursor management (skip when the app opted out via config).
+    if (io.ConfigFlags_ & .NoMouseCursorChange) == 0 {
+        imgui_cursor := GetMouseCursor();
+        if imgui_cursor != current_mouse_cursor || io.MouseDrawCursor {
+            current_mouse_cursor = imgui_cursor;
+            if io.MouseDrawCursor || imgui_cursor == .None {
+                rl.HideCursor();
+            } else {
+                rl.ShowCursor();
+                if cast(s32) imgui_cursor > -1 && imgui_cursor < .COUNT {
+                    rl.SetMouseCursor(mouse_cursor_map[cast(s64) cast(s32) imgui_cursor]);
+                } else {
+                    rl.SetMouseCursor(rl.RL_MouseCursor.DEFAULT);
+                }
+            }
+        }
+    }
+
+    NewFrame();
+}
+
+// Pump raylib input into the io event queue (focus, modifiers, keys, chars).
+// Called automatically by imgui_raylib_new_frame(); exposed for parity with
+// the Odin original.
+process_events :: () -> bool {
+    io := GetIO();
+
+    focused := rl.IsWindowFocused();
+    if focused != last_frame_focused {
+        IO_AddFocusEvent(io, focused);
+    }
+    last_frame_focused = focused;
+
+    // Modifier keys change -> emit events so shortcuts work.
+    ctrl_down := is_control_down();
+    if ctrl_down != last_control_pressed {
+        IO_AddKeyEvent(io, .ImGuiMod_Ctrl, ctrl_down);
+    }
+    last_control_pressed = ctrl_down;
+
+    shift_down := is_shift_down();
+    if shift_down != last_shift_pressed {
+        IO_AddKeyEvent(io, .ImGuiMod_Shift, shift_down);
+    }
+    last_shift_pressed = shift_down;
+
+    alt_down := is_alt_down();
+    if alt_down != last_alt_pressed {
+        IO_AddKeyEvent(io, .ImGuiMod_Alt, alt_down);
+    }
+    last_alt_pressed = alt_down;
+
+    super_down := is_super_down();
+    if super_down != last_super_pressed {
+        IO_AddKeyEvent(io, .ImGuiMod_Super, super_down);
+    }
+    last_super_pressed = super_down;
+
+    // Pressed keys, in event order.
+    key_id := rl.GetKeyPressed();
+    while key_id != rl.KeyboardKey.NULL {
+        imgui_key := raylib_key_map[cast(s64) cast(s32) key_id];
+        if imgui_key != .None {
+            IO_AddKeyEvent(io, imgui_key, true);
+        }
+        key_id = rl.GetKeyPressed();
+    }
+
+    // Released keys.
+    for code: 0..raylib_key_map.count-1 {
+        imgui_key := raylib_key_map[code];
+        if imgui_key != .None && rl.IsKeyReleased(cast(rl.KeyboardKey) code) {
+            IO_AddKeyEvent(io, imgui_key, false);
+        }
+    }
+
+    // Text input, in order.
+    ch := rl.GetCharPressed();
+    while ch != 0 {
+        IO_AddInputCharacter(io, cast(u32) ch);
+        ch = rl.GetCharPressed();
+    }
+
+    return true;
+}
+
+// Render the current frame: Render() + draw data pass.
 imgui_raylib_render :: () {
     Render();
     imgui_raylib_render_draw_data();
-}
-
-imgui_raylib_shutdown :: () {
-    if !state.initialized {
-        return;
-    }
-    glDeleteVertexArrays(1, *state.vao_id);
-    glDeleteBuffers(1, *state.vbo_id);
-    glDeleteBuffers(1, *state.ibo_id);
-    glDeleteProgram(cast(u32) state.shader_id);
-    rlUnloadTexture(state.font_texture);
-    state.initialized = false;
-}
-
-imgui_raylib_new_frame :: () {
-    io := GetIO();
-    io.DisplaySize = .{ x = cast(float32) SCREEN_WIDTH, y = cast(float32) SCREEN_HEIGHT };
-    io.DisplayFramebufferScale = .{ x = 1.0, y = 1.0 };   // 1:1 with DisplaySize (raylib window)
-    io.DeltaTime = GetFrameTime();
-
-    // Legacy input fields (mouse + wheel). Keyboard forwarding (F1/F2 etc.)
-    // is left as future work; mode switching is handled by the app shell.
-    mouse := GetMousePosition();
-    io.MousePos = .{ x = mouse.x, y = mouse.y };
-    io.MouseDown[0] = IsMouseButtonDown(.LEFT);
-    io.MouseDown[1] = IsMouseButtonDown(.RIGHT);
-    io.MouseDown[2] = IsMouseButtonDown(.MIDDLE);
-    wheel := GetMouseWheelMoveV();
-    io.MouseWheel = wheel.y;
-
-    NewFrame();
 }
 
 imgui_raylib_render_draw_data :: () {
@@ -152,102 +252,293 @@ imgui_raylib_render_draw_data :: () {
         return;
     }
 
-    // Backup GL state (official imgui_impl_opengl3 pattern).
-    last_active_texture: s32;      glGetIntegerv(cast(u32) GL_ACTIVE_TEXTURE, *last_active_texture);
-    last_program: s32;             glGetIntegerv(cast(u32) GL_CURRENT_PROGRAM, *last_program);
-    last_texture: s32;             glGetIntegerv(cast(u32) GL_TEXTURE_BINDING_2D, *last_texture);
-    last_array_buffer: s32;        glGetIntegerv(cast(u32) GL_ARRAY_BUFFER_BINDING, *last_array_buffer);
-    last_element_array_buffer: s32; glGetIntegerv(cast(u32) GL_ELEMENT_ARRAY_BUFFER_BINDING, *last_element_array_buffer);
-    last_vertex_array: s32;        glGetIntegerv(cast(u32) GL_VERTEX_ARRAY_BINDING, *last_vertex_array);
-    last_polygon_mode: [2] s32;    glGetIntegerv(cast(u32) GL_POLYGON_MODE, last_polygon_mode.data);
-    last_viewport: [4] s32;        glGetIntegerv(cast(u32) GL_VIEWPORT, last_viewport.data);
-    last_scissor_box: [4] s32;     glGetIntegerv(cast(u32) GL_SCISSOR_BOX, last_scissor_box.data);
-    last_blend_src_rgb: s32;       glGetIntegerv(cast(u32) GL_BLEND_SRC_RGB, *last_blend_src_rgb);
-    last_blend_dst_rgb: s32;       glGetIntegerv(cast(u32) GL_BLEND_DST_RGB, *last_blend_dst_rgb);
-    last_blend_src_alpha: s32;     glGetIntegerv(cast(u32) GL_BLEND_SRC_ALPHA, *last_blend_src_alpha);
-    last_blend_dst_alpha: s32;     glGetIntegerv(cast(u32) GL_BLEND_DST_ALPHA, *last_blend_dst_alpha);
-    last_enable_blend := glIsEnabled(cast(u32) GL_BLEND);
-    last_enable_cull_face := glIsEnabled(cast(u32) GL_CULL_FACE);
-    last_enable_depth_test := glIsEnabled(cast(u32) GL_DEPTH_TEST);
-    last_enable_scissor_test := glIsEnabled(cast(u32) GL_SCISSOR_TEST);
-    print("[R] backup scissor=% box=(%,%,%,%) vp=(%,%,%,%) err=%\n", last_enable_scissor_test, last_scissor_box[0], last_scissor_box[1], last_scissor_box[2], last_scissor_box[3], last_viewport[0], last_viewport[1], last_viewport[2], last_viewport[3], glGetError(), to_standard_error = true);
+    // Flush raylib's batch so our immediate-mode triangles come out on top,
+    // and disable backface culling like the Odin original.
+    rlgl.rlDrawRenderBatchActive();
+    rlgl.rlDisableBackfaceCulling();
 
-    // Setup render state: alpha blending, no culling, no depth, scissor, fill.
-    glActiveTexture(cast(u32) GL_TEXTURE0);
-    glEnable(cast(u32) GL_BLEND);
-    glBlendEquation(cast(u32) GL_FUNC_ADD);
-    glBlendFunc(cast(u32) GL_SRC_ALPHA, cast(u32) GL_ONE_MINUS_SRC_ALPHA);
-    glDisable(cast(u32) GL_CULL_FACE);
-    glDisable(cast(u32) GL_DEPTH_TEST);
-    glEnable(cast(u32) GL_SCISSOR_TEST);
-    glPolygonMode(cast(u32) GL_FRONT_AND_BACK, cast(u32) GL_FILL);
-
-    fb_width := cast(s32) (draw_data.DisplaySize.x * draw_data.FramebufferScale.x);
-    fb_height := cast(s32) (draw_data.DisplaySize.y * draw_data.FramebufferScale.y);
-    glViewport(0, 0, cast(u32) fb_width, cast(u32) fb_height);
-
-    glUseProgram(cast(u32) state.shader_id);
-    glUniform1i(state.tex_loc, 0);
-
-    // Orthographic projection (imgui convention, top-left origin, column-major).
-    ortho: Matrix;
-    ortho.m0 = 2.0 / draw_data.DisplaySize.x;
-    ortho.m5 = -2.0 / draw_data.DisplaySize.y;
-    ortho.m10 = 2.0;
-    ortho.m12 = -1.0;
-    ortho.m13 = 1.0;
-    ortho.m15 = 1.0;
-    glUniformMatrix4fv(state.mvp_loc, 1, false, cast(*float32) *ortho);
-
-    glBindVertexArray(cast(u32) state.vao_id);
-
-    for list_i: 0..draw_data.CmdListsCount-1 {
-        draw_list := (draw_data.CmdLists)[list_i];
-
-        glBindBuffer(cast(u32) GL_ARRAY_BUFFER, cast(u32) state.vbo_id);
-        glBufferData(cast(u32) GL_ARRAY_BUFFER, draw_list.VtxBuffer.Size * 20, draw_list.VtxBuffer.Data, cast(u32) GL_STREAM_DRAW);
-        glBindBuffer(cast(u32) GL_ELEMENT_ARRAY_BUFFER, cast(u32) state.ibo_id);
-        glBufferData(cast(u32) GL_ELEMENT_ARRAY_BUFFER, draw_list.IdxBuffer.Size * 2, draw_list.IdxBuffer.Data, cast(u32) GL_STREAM_DRAW);
-
-        for cmd_i: 0..draw_list.CmdBuffer.Size-1 {
-            cmd := draw_list.CmdBuffer.Data[cmd_i];
-            if cmd.UserCallback != null {
+    if draw_data.CmdListsCount > 0 {
+        for list_i: 0..draw_data.CmdListsCount-1 {
+            draw_list := (draw_data.CmdLists)[list_i];
+            if draw_list.CmdBuffer.Size <= 0 {
                 continue;
             }
+            for cmd_i: 0..draw_list.CmdBuffer.Size-1 {
+                cmd := draw_list.CmdBuffer.Data[cmd_i];
 
-            clip := cmd.ClipRect;
-            clip.x -= draw_data.DisplayPos.x;
-            clip.y -= draw_data.DisplayPos.y;
-            clip.z -= draw_data.DisplayPos.x;
-            clip.w -= draw_data.DisplayPos.y;
-            if clip.x < 0 { clip.x = 0; }
-            if clip.y < 0 { clip.y = 0; }
-            if clip.z > cast(float32) fb_width { clip.z = cast(float32) fb_width; }
-            if clip.w > cast(float32) fb_height { clip.w = cast(float32) fb_height; }
-            if clip.x >= clip.z || clip.y >= clip.w {
-                continue;
+                enable_scissor(
+                    cmd.ClipRect.x - draw_data.DisplayPos.x,
+                    cmd.ClipRect.y - draw_data.DisplayPos.y,
+                    cmd.ClipRect.z - (cmd.ClipRect.x - draw_data.DisplayPos.x),
+                    cmd.ClipRect.w - (cmd.ClipRect.y - draw_data.DisplayPos.y),
+                );
+
+                if cmd.UserCallback != null {
+                    cmd.UserCallback(draw_list, *cmd);
+                    continue;
+                }
+
+                render_triangles(cmd.ElemCount, cmd.IdxOffset, draw_list.IdxBuffer, draw_list.VtxBuffer, cmd.TextureId);
+                rlgl.rlDrawRenderBatchActive();
             }
-
-            glBindTexture(cast(u32) GL_TEXTURE_2D, cast(u32) cast(u64) cmd.TextureId);
-            glScissor(cast(s32) clip.x, cast(s32) (cast(float32) fb_height - clip.w), cast(u32) (clip.z - clip.x), cast(u32) (clip.w - clip.y));
-
-            glDrawElements(cast(u32) GL_TRIANGLES, cast(u32) cmd.ElemCount, cast(u32) GL_UNSIGNED_SHORT, cast(*void) (cast(u64) cmd.IdxOffset * 2));
         }
     }
 
-    // Restore GL state.
-    glUseProgram(cast(u32) last_program);
-    glBindTexture(cast(u32) GL_TEXTURE_2D, cast(u32) last_texture);
-    glActiveTexture(cast(u32) last_active_texture);
-    glBindVertexArray(cast(u32) last_vertex_array);
-    glBindBuffer(cast(u32) GL_ARRAY_BUFFER, cast(u32) last_array_buffer);
-    glBindBuffer(cast(u32) GL_ELEMENT_ARRAY_BUFFER, cast(u32) last_element_array_buffer);
-    glBlendFuncSeparate(cast(u32) last_blend_src_rgb, cast(u32) last_blend_dst_rgb, cast(u32) last_blend_src_alpha, cast(u32) last_blend_dst_alpha);
-    if last_enable_blend { glEnable(cast(u32) GL_BLEND); } else { glDisable(cast(u32) GL_BLEND); }
-    if last_enable_cull_face { glEnable(cast(u32) GL_CULL_FACE); } else { glDisable(cast(u32) GL_CULL_FACE); }
-    if last_enable_depth_test { glEnable(cast(u32) GL_DEPTH_TEST); } else { glDisable(cast(u32) GL_DEPTH_TEST); }
-    if last_enable_scissor_test { glEnable(cast(u32) GL_SCISSOR_TEST); } else { glDisable(cast(u32) GL_SCISSOR_TEST); }
-    glPolygonMode(cast(u32) GL_FRONT_AND_BACK, cast(u32) last_polygon_mode[0]);
-    glViewport(last_viewport[0], last_viewport[1], cast(u32) last_viewport[2], cast(u32) last_viewport[3]);
-    glScissor(last_scissor_box[0], last_scissor_box[1], cast(u32) last_scissor_box[2], cast(u32) last_scissor_box[3]);
+    rlgl.rlSetTexture(0);
+    rlgl.rlDisableScissorTest();
+    rlgl.rlEnableBackfaceCulling();
+}
+
+// --- private helpers ---
+
+enable_scissor :: (x: float32, y: float32, width: float32, height: float32) {
+    rlgl.rlEnableScissorTest();
+    io := GetIO();
+
+    // rlgl scissor origin is bottom-left; flip y (matches official rlImGui:
+    // y starts at the bottom of the display minus the clip height).
+    rlgl.rlScissor(
+        cast(s32)(x * io.DisplayFramebufferScale.x),
+        cast(s32)((io.DisplaySize.y - floor_f(y + height)) * io.DisplayFramebufferScale.y),
+        cast(s32)(width * io.DisplayFramebufferScale.x),
+        cast(s32)(height * io.DisplayFramebufferScale.y),
+    );
+}
+
+render_triangles :: (count: u32, index_start: u32, index_buffer: ImVector(ImDrawIdx), vert_buffer: ImVector(ImDrawVert), texture_ptr: ImTextureID) {
+    if count < 3 {
+        return;
+    }
+
+    texture_id := cast(u32) cast(u64) texture_ptr;
+
+    rlgl.rlBegin(cast(s32) rlgl.rlGlMode.RL_TRIANGLES);
+    rlgl.rlSetTexture(texture_id);
+
+    i: u32 = 0;
+    while i <= count - 3 {
+        if rlgl.rlCheckRenderBatchLimit(3) != 0 {
+            rlgl.rlBegin(cast(s32) rlgl.rlGlMode.RL_TRIANGLES);
+            rlgl.rlSetTexture(texture_id);
+        }
+
+        index_a := index_buffer.Data[cast(s64)(index_start + i)];
+        index_b := index_buffer.Data[cast(s64)(index_start + i + 1)];
+        index_c := index_buffer.Data[cast(s64)(index_start + i + 2)];
+
+        vertex_a := vert_buffer.Data[cast(s64) index_a];
+        vertex_b := vert_buffer.Data[cast(s64) index_b];
+        vertex_c := vert_buffer.Data[cast(s64) index_c];
+
+        draw_triangle_vert(vertex_a);
+        draw_triangle_vert(vertex_b);
+        draw_triangle_vert(vertex_c);
+
+        i += 3;
+    }
+
+    rlgl.rlEnd();
+}
+
+draw_triangle_vert :: (vert: ImDrawVert) {
+    rlgl.rlColor4ub(
+        cast(u8)((vert.col >> 0) & 0xFF),
+        cast(u8)((vert.col >> 8) & 0xFF),
+        cast(u8)((vert.col >> 16) & 0xFF),
+        cast(u8)((vert.col >> 24) & 0xFF),
+    );
+    rlgl.rlTexCoord2f(vert.uv.x, vert.uv.y);
+    rlgl.rlVertex2f(vert.pos.x, vert.pos.y);
+}
+
+set_mouse_event :: (io: *IO, rl_mouse: rl.RL_MouseButton, imgui_mouse: s32) {
+    if rl.IsMouseButtonPressed(rl_mouse) {
+        IO_AddMouseButtonEvent(io, imgui_mouse, true);
+    } else if rl.IsMouseButtonReleased(rl_mouse) {
+        IO_AddMouseButtonEvent(io, imgui_mouse, false);
+    }
+}
+
+setup_globals :: () {
+    last_frame_focused = rl.IsWindowFocused();
+    last_control_pressed = false;
+    last_shift_pressed = false;
+    last_alt_pressed = false;
+    last_super_pressed = false;
+}
+
+setup_keymap :: () {
+    k := raylib_key_map;   // local alias for brevity (array is reference-semantic)
+
+    k[cast(s64) cast(s32) rl.KeyboardKey.APOSTROPHE]    = .Apostrophe;
+    k[cast(s64) cast(s32) rl.KeyboardKey.COMMA]         = .Comma;
+    k[cast(s64) cast(s32) rl.KeyboardKey.MINUS]         = .Minus;
+    k[cast(s64) cast(s32) rl.KeyboardKey.PERIOD]        = .Period;
+    k[cast(s64) cast(s32) rl.KeyboardKey.SLASH]         = .Slash;
+    k[cast(s64) cast(s32) rl.KeyboardKey.ZERO]          = ._0;
+    k[cast(s64) cast(s32) rl.KeyboardKey.ONE]           = ._1;
+    k[cast(s64) cast(s32) rl.KeyboardKey.TWO]           = ._2;
+    k[cast(s64) cast(s32) rl.KeyboardKey.THREE]         = ._3;
+    k[cast(s64) cast(s32) rl.KeyboardKey.FOUR]          = ._4;
+    k[cast(s64) cast(s32) rl.KeyboardKey.FIVE]          = ._5;
+    k[cast(s64) cast(s32) rl.KeyboardKey.SIX]           = ._6;
+    k[cast(s64) cast(s32) rl.KeyboardKey.SEVEN]         = ._7;
+    k[cast(s64) cast(s32) rl.KeyboardKey.EIGHT]         = ._8;
+    k[cast(s64) cast(s32) rl.KeyboardKey.NINE]          = ._9;
+    k[cast(s64) cast(s32) rl.KeyboardKey.SEMICOLON]     = .Semicolon;
+    k[cast(s64) cast(s32) rl.KeyboardKey.EQUAL]         = .Equal;
+    k[cast(s64) cast(s32) rl.KeyboardKey.A]             = .A;
+    k[cast(s64) cast(s32) rl.KeyboardKey.B]             = .B;
+    k[cast(s64) cast(s32) rl.KeyboardKey.C]             = .C;
+    k[cast(s64) cast(s32) rl.KeyboardKey.D]             = .D;
+    k[cast(s64) cast(s32) rl.KeyboardKey.E]             = .E;
+    k[cast(s64) cast(s32) rl.KeyboardKey.F]             = .F;
+    k[cast(s64) cast(s32) rl.KeyboardKey.G]             = .G;
+    k[cast(s64) cast(s32) rl.KeyboardKey.H]             = .H;
+    k[cast(s64) cast(s32) rl.KeyboardKey.I]             = .I;
+    k[cast(s64) cast(s32) rl.KeyboardKey.J]             = .J;
+    k[cast(s64) cast(s32) rl.KeyboardKey.K]             = .K;
+    k[cast(s64) cast(s32) rl.KeyboardKey.L]             = .L;
+    k[cast(s64) cast(s32) rl.KeyboardKey.M]             = .M;
+    k[cast(s64) cast(s32) rl.KeyboardKey.N]             = .N;
+    k[cast(s64) cast(s32) rl.KeyboardKey.O]             = .O;
+    k[cast(s64) cast(s32) rl.KeyboardKey.P]             = .P;
+    k[cast(s64) cast(s32) rl.KeyboardKey.Q]             = .Q;
+    k[cast(s64) cast(s32) rl.KeyboardKey.R]             = .R;
+    k[cast(s64) cast(s32) rl.KeyboardKey.S]             = .S;
+    k[cast(s64) cast(s32) rl.KeyboardKey.T]             = .T;
+    k[cast(s64) cast(s32) rl.KeyboardKey.U]             = .U;
+    k[cast(s64) cast(s32) rl.KeyboardKey.V]             = .V;
+    k[cast(s64) cast(s32) rl.KeyboardKey.W]             = .W;
+    k[cast(s64) cast(s32) rl.KeyboardKey.X]             = .X;
+    k[cast(s64) cast(s32) rl.KeyboardKey.Y]             = .Y;
+    k[cast(s64) cast(s32) rl.KeyboardKey.Z]             = .Z;
+    k[cast(s64) cast(s32) rl.KeyboardKey.SPACE]         = .Space;
+    k[cast(s64) cast(s32) rl.KeyboardKey.ESCAPE]        = .Escape;
+    k[cast(s64) cast(s32) rl.KeyboardKey.ENTER]         = .Enter;
+    k[cast(s64) cast(s32) rl.KeyboardKey.TAB]           = .Tab;
+    k[cast(s64) cast(s32) rl.KeyboardKey.BACKSPACE]     = .Backspace;
+    k[cast(s64) cast(s32) rl.KeyboardKey.INSERT]        = .Insert;
+    k[cast(s64) cast(s32) rl.KeyboardKey.DELETE]        = .Delete;
+    k[cast(s64) cast(s32) rl.KeyboardKey.RIGHT]         = .RightArrow;
+    k[cast(s64) cast(s32) rl.KeyboardKey.LEFT]          = .LeftArrow;
+    k[cast(s64) cast(s32) rl.KeyboardKey.DOWN]          = .DownArrow;
+    k[cast(s64) cast(s32) rl.KeyboardKey.UP]            = .UpArrow;
+    k[cast(s64) cast(s32) rl.KeyboardKey.PAGE_UP]       = .PageUp;
+    k[cast(s64) cast(s32) rl.KeyboardKey.PAGE_DOWN]     = .PageDown;
+    k[cast(s64) cast(s32) rl.KeyboardKey.HOME]          = .Home;
+    k[cast(s64) cast(s32) rl.KeyboardKey.END]           = .End;
+    k[cast(s64) cast(s32) rl.KeyboardKey.CAPS_LOCK]     = .CapsLock;
+    k[cast(s64) cast(s32) rl.KeyboardKey.SCROLL_LOCK]   = .ScrollLock;
+    k[cast(s64) cast(s32) rl.KeyboardKey.NUM_LOCK]      = .NumLock;
+    k[cast(s64) cast(s32) rl.KeyboardKey.PRINT_SCREEN]  = .PrintScreen;
+    k[cast(s64) cast(s32) rl.KeyboardKey.PAUSE]         = .Pause;
+    k[cast(s64) cast(s32) rl.KeyboardKey.F1]            = .F1;
+    k[cast(s64) cast(s32) rl.KeyboardKey.F2]            = .F2;
+    k[cast(s64) cast(s32) rl.KeyboardKey.F3]            = .F3;
+    k[cast(s64) cast(s32) rl.KeyboardKey.F4]            = .F4;
+    k[cast(s64) cast(s32) rl.KeyboardKey.F5]            = .F5;
+    k[cast(s64) cast(s32) rl.KeyboardKey.F6]            = .F6;
+    k[cast(s64) cast(s32) rl.KeyboardKey.F7]            = .F7;
+    k[cast(s64) cast(s32) rl.KeyboardKey.F8]            = .F8;
+    k[cast(s64) cast(s32) rl.KeyboardKey.F9]            = .F9;
+    k[cast(s64) cast(s32) rl.KeyboardKey.F10]           = .F10;
+    k[cast(s64) cast(s32) rl.KeyboardKey.F11]           = .F11;
+    k[cast(s64) cast(s32) rl.KeyboardKey.F12]           = .F12;
+    k[cast(s64) cast(s32) rl.KeyboardKey.LEFT_SHIFT]    = .LeftShift;
+    k[cast(s64) cast(s32) rl.KeyboardKey.LEFT_CONTROL]  = .LeftCtrl;
+    k[cast(s64) cast(s32) rl.KeyboardKey.LEFT_ALT]      = .LeftAlt;
+    k[cast(s64) cast(s32) rl.KeyboardKey.LEFT_SUPER]    = .LeftSuper;
+    k[cast(s64) cast(s32) rl.KeyboardKey.RIGHT_SHIFT]   = .RightShift;
+    k[cast(s64) cast(s32) rl.KeyboardKey.RIGHT_CONTROL] = .RightCtrl;
+    k[cast(s64) cast(s32) rl.KeyboardKey.RIGHT_ALT]     = .RightAlt;
+    k[cast(s64) cast(s32) rl.KeyboardKey.RIGHT_SUPER]   = .RightSuper;
+    k[cast(s64) cast(s32) rl.KeyboardKey.KB_MENU]       = .Menu;
+    k[cast(s64) cast(s32) rl.KeyboardKey.LEFT_BRACKET]  = .LeftBracket;
+    k[cast(s64) cast(s32) rl.KeyboardKey.BACKSLASH]     = .Backslash;
+    k[cast(s64) cast(s32) rl.KeyboardKey.RIGHT_BRACKET] = .RightBracket;
+    k[cast(s64) cast(s32) rl.KeyboardKey.GRAVE]         = .GraveAccent;
+    k[cast(s64) cast(s32) rl.KeyboardKey.KP_0]          = .Keypad0;
+    k[cast(s64) cast(s32) rl.KeyboardKey.KP_1]          = .Keypad1;
+    k[cast(s64) cast(s32) rl.KeyboardKey.KP_2]          = .Keypad2;
+    k[cast(s64) cast(s32) rl.KeyboardKey.KP_3]          = .Keypad3;
+    k[cast(s64) cast(s32) rl.KeyboardKey.KP_4]          = .Keypad4;
+    k[cast(s64) cast(s32) rl.KeyboardKey.KP_5]          = .Keypad5;
+    k[cast(s64) cast(s32) rl.KeyboardKey.KP_6]          = .Keypad6;
+    k[cast(s64) cast(s32) rl.KeyboardKey.KP_7]          = .Keypad7;
+    k[cast(s64) cast(s32) rl.KeyboardKey.KP_8]          = .Keypad8;
+    k[cast(s64) cast(s32) rl.KeyboardKey.KP_9]          = .Keypad9;
+    k[cast(s64) cast(s32) rl.KeyboardKey.KP_DECIMAL]    = .KeypadDecimal;
+    k[cast(s64) cast(s32) rl.KeyboardKey.KP_DIVIDE]     = .KeypadDivide;
+    k[cast(s64) cast(s32) rl.KeyboardKey.KP_MULTIPLY]   = .KeypadMultiply;
+    k[cast(s64) cast(s32) rl.KeyboardKey.KP_SUBTRACT]   = .KeypadSubtract;
+    k[cast(s64) cast(s32) rl.KeyboardKey.KP_ADD]        = .KeypadAdd;
+    k[cast(s64) cast(s32) rl.KeyboardKey.KP_ENTER]      = .KeypadEnter;
+    k[cast(s64) cast(s32) rl.KeyboardKey.KP_EQUAL]      = .KeypadEqual;
+}
+
+setup_mouse_cursor :: () {
+    mouse_cursor_map[cast(s64) cast(s32) MouseCursor.Arrow]      = rl.RL_MouseCursor.ARROW;
+    mouse_cursor_map[cast(s64) cast(s32) MouseCursor.TextInput]  = rl.RL_MouseCursor.IBEAM;
+    mouse_cursor_map[cast(s64) cast(s32) MouseCursor.Hand]       = rl.RL_MouseCursor.POINTING_HAND;
+    mouse_cursor_map[cast(s64) cast(s32) MouseCursor.ResizeAll]  = rl.RL_MouseCursor.RESIZE_ALL;
+    mouse_cursor_map[cast(s64) cast(s32) MouseCursor.ResizeEW]   = rl.RL_MouseCursor.RESIZE_EW;
+    mouse_cursor_map[cast(s64) cast(s32) MouseCursor.ResizeNESW] = rl.RL_MouseCursor.RESIZE_NESW;
+    mouse_cursor_map[cast(s64) cast(s32) MouseCursor.ResizeNS]   = rl.RL_MouseCursor.RESIZE_NS;
+    mouse_cursor_map[cast(s64) cast(s32) MouseCursor.ResizeNWSE] = rl.RL_MouseCursor.RESIZE_NWSE;
+    mouse_cursor_map[cast(s64) cast(s32) MouseCursor.NotAllowed] = rl.RL_MouseCursor.NOT_ALLOWED;
+}
+
+setup_backend :: () {
+    io := GetIO();
+    io.BackendPlatformName = "imgui_impl_raylib".data;
+
+    // HasMouseCursors: backend can set the OS cursor. (The Odin original also
+    // sets RendererHasTextures, which the Jai ImGui module does not define.)
+    io.BackendFlags_ = io.BackendFlags_ | .HasMouseCursors;
+
+    io.MousePos = .{ x = 0.0, y = 0.0 };
+
+    io.SetClipboardTextFn = set_clip_text_callback;
+    io.GetClipboardTextFn = get_clip_text_callback;
+}
+
+// CJK font (Simplified Chinese) used by the editor (dialogue tool etc.).
+// MapleMono-CN covers ASCII + CJK; it becomes Fonts[0] and the default font
+// so editor text renders Chinese. The file is loaded relative to the working
+// directory (repo root when launched via build_dev.bat), same as game assets.
+CJK_FONT_PATH :: "resources/fonts/MapleMono-CN-Medium.ttf";
+EDITOR_FONT_SIZE :: 16.0;
+
+setup_font_texture :: () {
+    io := GetIO();
+
+    // AddFontFromFileTTF must run before the atlas is packed by
+    // GetTexDataAsRGBA32 below. On failure (missing file / wrong cwd) we keep
+    // imgui's built-in font (English only) instead of crashing.
+    chinese_font := FontAtlas_AddFontFromFileTTF(
+        io.Fonts,
+        CJK_FONT_PATH.data,
+        EDITOR_FONT_SIZE,
+        null,
+        FontAtlas_GetGlyphRangesChineseSimplifiedCommon(io.Fonts),
+    );
+    if chinese_font != null {
+        io.FontDefault = chinese_font;
+    }
+
+    pixels: *u8;
+    w: s32;
+    h: s32;
+    FontAtlas_GetTexDataAsRGBA32(io.Fonts, *pixels, *w, *h);
+    font_texture_id = rlgl.rlLoadTexture(cast(*void) pixels, w, h, cast(s32) rlgl.rlPixelFormat.PIXELFORMAT_UNCOMPRESSED_R8G8B8A8, 1);
+    io.Fonts.TexID = cast(*void) cast(u64) font_texture_id;
+}
+
+set_clip_text_callback :: (user_data: *void, text: *u8) #c_call {
+    rl.rlSetClipboardText(text);
+}
+
+get_clip_text_callback :: (user_data: *void) -> *u8 #c_call {
+    return rl.rlGetClipboardText();
 }

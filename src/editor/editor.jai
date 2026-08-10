@@ -190,15 +190,17 @@ draw_editor_dockspace :: () {
 }
 
 // --- font loading ---
-// The Jai ImGui module does not bind ImFontAtlas::AddFontFromFileTTF; the
-// editor uses imgui's built-in default font for now.
+// The CJK font (MapleMono-CN, incl. Simplified Chinese) is loaded by the
+// raylib backend (bindings/imgui_raylib.jai) before the atlas is packed; the
+// default font then covers both ASCII and Chinese, so dialogue text renders.
 
 load_imgui_font :: () {
-    // Default font (Fonts[0]) is used automatically.
+    // Done in imgui_raylib_setup() (AddFontFromFileTTF + atlas upload).
 }
 
 unload_imgui_font :: () {
-    // Nothing to free in this simplified port.
+    // Font + atlas are owned by the ImGui context (freed by DestroyContext);
+    // the GPU texture is unloaded by imgui_raylib_shutdown().
 }
 
 // --- shared helpers ---

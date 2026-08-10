@@ -228,3 +228,19 @@ rlDrawVertexArrayElements :: (offset: s32, count: s32, mode: s32) #foreign rayli
 // Flush (and reset) the active render batch. Called around the ImGui pass so
 // raylib's batching state stays consistent (same approach as official rlImGui).
 rlDrawRenderBatchActive :: () #foreign raylib;
+
+// --- Immediate-mode drawing (rlgl pseudo-OpenGL 1.1 API) ---
+rlBegin :: (mode: s32) #foreign raylib;
+rlEnd :: () #foreign raylib;
+rlVertex2f :: (x: float32, y: float32) #foreign raylib;
+rlTexCoord2f :: (x: float32, y: float32) #foreign raylib;
+rlColor4ub :: (r: u8, g: u8, b: u8, a: u8) #foreign raylib;
+
+// Set current texture for render batch and check buffer limits.
+rlSetTexture :: (id: u32) #foreign raylib;
+
+// Check internal buffer overflow for a given number of vertices.
+rlCheckRenderBatchLimit :: (v_count: s32) -> s32 #foreign raylib;
+
+rlEnableBackfaceCulling :: () #foreign raylib;
+rlDisableBackfaceCulling :: () #foreign raylib;

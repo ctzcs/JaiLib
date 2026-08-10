@@ -22,13 +22,16 @@ src/                     # 游戏本体
                          #   managers/gen_csv/game/ink_post/ink_fluid
   editor/                #   编辑器壳 + 3 个工具（imgui 接入 Jai ImGui 模块）
   main.jai               #   App 壳（Game/Editor 模式，F1 切换）
-bindings/                # raylib / rlgl / imgui_raylib 的 Jai FFI 绑定
+bindings/                # raylib / rlgl / imgui_raylib / clay 的 Jai FFI 绑定
+  clay/                  #   clay UI 库绑定（module.jai + clay.c + windows/clay.lib + generate.jai）
+  clay_raylib.jai        #   clay 的 raylib 渲染后端（含文本测量回调）
 ```
 
 ## 构建
 
 - `build_dev.bat`：编译 tlib 测试 + DEV 版游戏（编辑器启用），自动拷贝 `raylib.dll`/`ImGui.dll`
 - `build_release.bat`：`DEV=false` + `-release` 版游戏
+- `build_clay_demo.bat`：编译独立的 clay UI demo（`tools/clay_demo.jai`）
 
 需要：
 - `jai.exe`（beta 0.2.009），路径在 bat 顶部 `JAI` 变量可改
@@ -59,12 +62,24 @@ Game 模式：空格重放叶群爆发，按住左键挥砍切叶。Editor 模�
 - **内存**：`[..]` 数组是引用语义（拷贝需深拷贝）；分配器用 `context.allocator`
   + `push_allocator`；虚拟内存用 `VirtualAlloc`（需按页对齐）。
 - **imgui**：编辑器用 Jai `ImGui` 模块（非 docking 版 dll）+ 自写 raylib 后端
-  （rlgl 渲染 + legacy 输入字段）。字体加载与完整键盘转发留作后续；
-  DrawList 绘制函数因编译器不支持 cpp_method 成员调用，在
-  `bindings/imgui_raylib.jai` 重绑定为独立函数。
-- **未完成**：imgui 自定义字体、完整键盘输入转发。`tool_dialogue` 已完整实现
-  （节点编辑/连线/拖拽/右键菜单 + JSON 保存/加载）。`tools/` 开发期生成器未移植
-  （见 `tools/README.md`，资源已直接拷贝自原项目）。
+  `bindings/imgui_raylib.jai`，完整移植 Odin 版 `imgui_impl_raylib`：
+  rlgl 立即模式渲染（`rlBegin`/`rlVertex2f`/`rlScissor`，与官方 rlImGui 同思路），
+  输入全部对齐（键盘 keymap、修饰键、焦点、字符输入、鼠标按钮/滚轮/位置、
+  鼠标光标、剪贴板回调）。编辑器默认字体为 `resources/fonts/MapleMono-CN-Medium.ttf`
+  （ASCII + 简体中文，`ChineseSimplifiedCommon` 字符集），dialogue 工具可正常
+  显示中文。DrawList 绘制函数因编译器不支持 cpp_method 成员调用，
+  在 `bindings/imgui_raylib.jai` 重绑定为独立函数。
+- **clay**：`bindings/clay/` 为 clay UI 库的 Jai 绑定（由 clay-jai 的
+  `generate.jai` 生成，含宏层 `Element`/`ID`/`Layout`/`Text` 等），静态库用
+  预编译的 `windows/clay.lib`（`module.jai` 自带 `#library,no_dll` 路径）。
+  `bindings/clay_raylib.jai` 提供 raylib 渲染后端与文本测量回调
+  （`SetMeasureTextFunction`，基于 raylib 默认字体）。demo：
+  `build_clay_demo.bat` → `bin\clay_demo.exe`。
+  注意：`#c_call` 文本测量回调内不要用无参 `push_context` 调用本地过程
+  （jai 0.2.009 会随机崩溃），直接内联拷贝 + `#foreign` 调用。
+- **未完成**：`tools/` 开发期生成器未移植
+  （见 `tools/README.md`，资源已直接拷贝自原项目）。`tool_dialogue` 已完整实现
+  （节点编辑/连线/拖拽/右键菜单 + JSON 保存/加载）。
 
 ## 测试
 

@@ -1,0 +1,9 @@
+{
+    "local_modules": ["tlib", "src", "bindings", "."],
+    "roots": ["src/main.jai"],
+    "build_root": "src/main.jai",
+    "jai_path": "D:/MySpace/RefProject/jai/jai",
+    "intermediate_path": ".build",
+    "auto_insert_parentheses": true,
+    "use_symbols_from_local_modules": true
+}

@@ -1,0 +1,9 @@
+bin/
+.build/
+*.exe
+*.pdb
+*.obj
+imgui.ini
+debug.log
+stdout.txt
+stderr.txt

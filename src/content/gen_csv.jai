@@ -5,7 +5,7 @@
 #import "Basic";
 #import "Hash_Table";
 #import "encoding/csv";
-#import "content/defs";
+#import "content/core/defs";
 
 Leaf_Config_Row :: struct {
     kind:         Leaf_Kind;

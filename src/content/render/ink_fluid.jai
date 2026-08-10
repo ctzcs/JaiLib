@@ -7,7 +7,7 @@
 #import "bindings/raylib";
 #import "core/screen";
 #import "content/asset_storage";
-#import "content/ink_post";
+#import "content/render/ink_post";
 
 FLUID_SIM_SCALE :: 0.85;
 FLUID_PRESSURE_ITERS :: 14;

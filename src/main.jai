@@ -9,7 +9,6 @@
 #import "core/frame";
 #import "core/libs";
 #import "content/game";
-#import "content/entity";
 #import "editor/editor";
 
 DEFAULT_MODE :: Mode.Editor;

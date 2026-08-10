@@ -20,6 +20,8 @@ src/                     # 游戏本体
   core/                  #   DEV 标志、屏幕尺寸、输入/相机、imgui 帧封装
   content/               #   const/defs/utils/assets/atlas/particle/entity/
                          #   managers/gen_csv/game/ink_post/ink_fluid
+                         #   module.jai 聚合入口（#load 合并全部 content 文件，
+                         #   供 game.jai 等一行 `#import "content/module"`）
   editor/                #   编辑器壳 + 3 个工具（imgui 接入 Jai ImGui 模块）
   main.jai               #   App 壳（Game/Editor 模式，F1 切换）
 bindings/                # raylib / rlgl / imgui_raylib / clay 的 Jai FFI 绑定
@@ -51,7 +53,12 @@ Game 模式：空格重放叶群爆发，按住左键挥砍切叶。Editor 模�
 ## Jai 移植说明（与 Odin 的关键差异）
 
 - **命名空间**：Jai 的 `#import` 不传递且命名空间绑定名全局唯一；tlib 各包用
-  `X :: #import "路径"` 隔离同名类型，`#import` 依赖需逐文件声明。
+  `X :: #import "路径"` 隔离同名类型，`#import` 依赖需逐文件声明。每个 tlib
+  包目录都有 `module.jai` 聚合入口：`#import "tween"`/`#import "content"` 等
+  目录名即可一行导入整包（用 `#load` 文本合并，符号随 #load 传递；`handle`
+  因 4 个子实现顶层符号同名，改用 `HA`/`HMF`/`HMG`/`HMV` 命名空间别名聚合）。
+  测试文件（`*_test.jai`）带 `main`，不聚合进 module，`run_tests.jai` 直接
+  `#import` 具体测试文件。
 - **语法**：无 `using`（字段显式访问）、无 `switch`（用 `if x == { case; }`）、
   过程参数不可变（需拷贝）、`remove`/`delete` 等为保留字（改名 `remove_handle`）、
   结构体字段用分号、解引用 `<<x`、取地址 `*x`、浮点字面量默认 float32、

@@ -4,7 +4,7 @@
 #import "Basic";
 #import "tween/math_util";
 #import "bindings/raylib";
-#import "content/const";
+#import "content/core/const";
 
 Particle_Render_Kind :: enum u8 {
     Rect;

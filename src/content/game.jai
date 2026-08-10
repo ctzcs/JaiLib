@@ -6,29 +6,14 @@
 // that part is wired to the Jai ImGui module in Phase 5.
 
 #import "Basic";
-#import "tween/math_util";
 #import "bindings/raylib";
 #import "core/build";
 #import "core/frame";
 #import "core/screen";
-#import "tween/manager";
-#import "tween/tween";
-#import "tween/managed_tween";
-#import "tween/managed_sequence";
+#import "tween";
 #import "encoding/csv";
-#import "content/const";
-#import "content/defs";
-#import "content/entity";
-#import "content/utils";
-#import "content/asset_storage";
-#import "content/atlas";
-#import "content/atlas_draw";
-#import "content/particle";
-#import "content/managers";
-#import "content/gen_csv";
+#import "content";
 #import "core/libs";
-#import "content/ink_post";
-#import "content/ink_fluid";
 
 // --- Burst Tuning ---
 Burst_Tuning :: struct {

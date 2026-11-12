@@ -1,40 +1,31 @@
 @echo off
 setlocal
 cd /d "%~dp0"
-REM tlib self-tests (all modules). Run from repo root.
-REM Requires jai.exe (edit JAI below).
+REM 全量回归：core/ + kit/（olib 一比一移植）。验收编译器为 jacket。
+REM 需要 jfoster 检出在 %JFOSTER_PARENT%，默认 D:\MySpace\Github。
 
-if "%JAI%"=="" set JAI=D:\MySpace\RefProject\jai\jai\bin\jai.exe
-set OUT_DIR=bin
+if "%JAIC%"=="" set JAIC=D:\Lib\jacket-windows-x64\jaic.exe
+if "%JFOSTER_PARENT%"=="" set JFOSTER_PARENT=D:\MySpace\Github
+if not exist bin mkdir bin
 
-if not exist %OUT_DIR% mkdir %OUT_DIR%
-
-echo [tests] building...
-%JAI% -no_cwd -import_dir "%CD%\Libs\Engine" -import_dir "%CD%\Tests" -exe tlib_tests Tests\run_tests.jai
+echo ============================================
+echo [1/2] core/
+echo ============================================
+call run_core_tests.bat
 if errorlevel 1 (
-    echo [tests] build FAILED
+    echo [tests] core FAILED
     exit /b 1
 )
-move /y Tests\tlib_tests.exe %OUT_DIR% >nul 2>&1
-move /y Tests\tlib_tests.pdb %OUT_DIR% >nul 2>&1
-%OUT_DIR%\tlib_tests.exe
+
+echo.
+echo ============================================
+echo [2/2] kit/
+echo ============================================
+call run_kit_tests.bat
 if errorlevel 1 (
-    echo [tests] FAILED at runtime
+    echo [tests] kit FAILED
     exit /b 1
 )
+
+echo.
 echo [tests] all passed.
-"%JAI%" -no_cwd -import_dir "%CD%\Libs\Engine" -import_dir "%CD%\Tests" -output_path "%CD%\bin" -exe engine_core_tests Tests\engine_core_tests.jai
-if errorlevel 1 exit /b 1
-bin\engine_core_tests.exe
-if errorlevel 1 exit /b 1
-"%JAI%" -no_cwd -import_dir "%CD%\Libs\Engine" -import_dir "%CD%\Tests" -output_path "%CD%\bin" -exe storage_tests Tests\storage_tests.jai
-if errorlevel 1 exit /b 1
-bin\storage_tests.exe
-if errorlevel 1 exit /b 1
-"%JAI%" -release -no_cwd -import_dir "%CD%\Tests" -output_path "%CD%\bin" -exe gutwall_tests Tests\gutwall_tests.jai
-if errorlevel 1 exit /b 1
-bin\gutwall_tests.exe
-if errorlevel 1 exit /b 1
-powershell -NoProfile -ExecutionPolicy Bypass -File Tools\test_shaders.ps1
-if errorlevel 1 exit /b 1
-exit /b 0

@@ -1,9 +1,0 @@
-{
-    "local_modules": ["Libs/Engine", "Libs/Engine/bindings"],
-    "roots": ["Tests/run_tests.jai", "Tests/imgui_demo.jai"],
-    "build_root": "Tests/run_tests.jai",
-    "jai_path": "D:/MySpace/RefProject/jai/jai",
-    "intermediate_path": ".build",
-    "auto_insert_parentheses": true,
-    "use_symbols_from_local_modules": true
-}

@@ -169,3 +169,23 @@ JaiLib 的 `run_tests.bat` 照旧全绿。
 - Jai 无 `using`、无 `switch`、参数不可变、跨模块运算符不可见等差异，按仓库
   README「Jai 移植说明」处理，不做接口发明。
 - 每个模块移植同时移植其测试，断言语义不变；测试通过 `jaic` 与官方编译器双跑。
+
+## 老树退役（2026-11-13）
+
+`Libs/Engine` 已删除。删除前的快照在 git commit `f672218`（"checkpoint: core/ + kit/ 一比一移植完成"），
+需要找回旧实现或旧 demo 时 `git checkout f672218 -- Libs/Engine Tests/`。
+
+同一批删掉的还有：
+
+| 删除项 | 原因 |
+| --- | --- |
+| `Libs/Engine/**`（63 个 .jai） | 全部由 `core/` + `kit/` 覆盖；`container` / `threading` / `gfx` / `text` / `editor` / `game_app` 按决定不移植 |
+| `Tests/*.jai`（18 个老 demo/测试） | 建在旧 `gfx` / `text` / `editor` / `game_app` 上；新树的测试在 `Tests/core` / `Tests/kit`，示例是 `hello_kit` |
+| `Tests/{fluid2d,gutwall,web_probe}` | 同上（fluid2d 的 shader 走的是老渲染栈） |
+| `thirdparty/clay_foster.jai` | 只被 `Tests/clay_demo.jai` 使用；`kit/ui` 有自己的 clay 后端 |
+| `Tools/*`（shader 编译、harfbuzz 构建、web 探针等 8 个脚本） | 服务于已删除的旧 demo |
+| 6 个 `run_*_demo.bat` | 同上 |
+| `jails.json` | 引用已删除的 `Libs/Engine` 路径 |
+
+`run_tests.bat` 改为依次调用 `run_core_tests.bat` 与 `run_kit_tests.bat`。
+

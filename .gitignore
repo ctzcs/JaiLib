@@ -7,3 +7,6 @@ imgui.ini
 debug.log
 stdout.txt
 stderr.txt
+.test_tmp/
+.zcode/
+.alma-snapshots

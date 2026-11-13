@@ -5,10 +5,10 @@
 //   | `materials: []foster.Material`                       | `[..] *F.Material`（F.material_create / material_destroy）|
 //   | `programs/parameters/shaders` 为 `[]T`                | `[..] T` + array_resize / array_free                  |
 //   | `make([]dev.Session, n)`                             | array_resize（零初始化，dev.init 需要地址稳定：数组不扩容）|
-//   | `foster.MaterialInitWithShaders(&m, &program.vertex, &program.fragment)` | F.material_create()（jfoster 侧 vertex/fragment 恒为 null，见 module.jai 第 4 条） |
+//   | `foster.MaterialInitWithShaders(&m, &program.vertex, &program.fragment)` | F.material_create() + 安装成功后 F.material_stage_set_shader(*stage, program.vertex/fragment) |
 //   | `foster.DrawCommandDispose(&probe)`                  | 无需释放（Draw_Command 不含动态数组）                    |
-//   | `foster.ShaderPairTryReplace(...)`（只换目标的复核）    | 同样走 dev.apply：jfoster 没有原位替换，两次路径都返回 false + 诊断 |
-//   | `program.vertex.Resource != nil`                     | `program.vertex != null`（恒为 null ⇒ 该复核分支永不触发）|
+//   | `foster.ShaderPairTryReplace(..., CreateInfo, probes)` | dev.revalidate / dev.apply → F.ShaderPairTryReplace     |
+//   | `program.vertex.Resource != nil`                     | `program.vertex != null`（首次安装成功后才有值）           |
 //   | `for &program, i in b.programs[:count]`              | for *program, i: array_view(b.programs, 0, count)     |
 //   | `s.bank_error == error` / `delete(s.bank_error)`     | 字符串比较相同；释放走 free(data)                       |
 //   | `for old in s.shaders`（值拷贝）                       | for old: s.bank.shaders（值拷贝，与本包其余迭代一致）     |
@@ -105,8 +105,9 @@ bank_make :: (s: *Session, build: dev.Parameter_Build) -> *Parameter_Bank {
             b.last_status[i] = s.bank.last_status[prior];
         }
         // olib: foster.MaterialInitWithShaders(&b.materials[i], &program.vertex, &program.fragment)。
-        // jfoster 侧 dev.Session.vertex / .fragment 恒为 null（apply 是未实现的 seam），
-        // 所以这里建的是空材质：Pass 一旦安装成功就会写入这两个 stage（见 dev.apply 的诊断）。
+        // jfoster 的 Shader 要 *Graphics_Device 才能造，而 bank_make 时这份 program 还没有字节码，
+        // 所以先建空材质；dev.apply 首次安装出那一对 Shader 后由 bank_apply 补上借用
+        // （地址此后不变：热替换只换内容）。
         b.materials[i] = F.material_create();
         dev.configure_parameters(*b.programs[i], sh.texture_count(schema));
     }
@@ -154,9 +155,8 @@ bank_selected_shader :: (s: *Session, b: *Parameter_Bank) -> int {
 }
 
 // 只为选中 Shader 分配目标、验证管线；其他 Shader 仅保留编译结果。
-// 注意：jfoster 没有 ShaderPairTryReplace，dev.apply 是未实现的 seam（固定返回 false + 诊断），
-// 所以候选包在这里不会变成 .Live —— 本函数的控制流与 olib 一致，只是 apply 永远失败，
-// bank_error 会显示 dev.SHADER_PAIR_REPLACE_UNAVAILABLE（见 module.jai 第 4 条与报告）。
+// 控制流与 olib 一致：needs_apply 走 dev.apply（候选 → 原位替换 → .Live），
+// needs_check 走 dev.revalidate（已安装的字节码 + 新目标/网格重新校验，不重编 HLSL）。
 bank_apply :: (s: *Session, b: *Parameter_Bank, selected: int, apply_updates := true) -> bool {
     if b == null || b.candidate_failed return false;
     if !shader_targets_prepare(s, b, selected) {
@@ -191,12 +191,13 @@ bank_apply :: (s: *Session, b: *Parameter_Bank, selected: int, apply_updates := 
                 if needs_apply {
                     applied = dev.apply(program, s.device, array_view(probes, 0, probe_count));
                 } else {
-                    // 切到另一套目标/网格时，olib 用缓存代码验证实际管线，无需重新编译 HLSL。
-                    // jfoster 没有 Foster 的 ShaderPairTryReplace：这一支同样只能得到 apply 的诊断。
-                    applied = dev.apply(program, s.device, array_view(probes, 0, probe_count));
+                    // 切到另一套目标/网格时，用已安装的字节码验证实际管线，无需重新编译 HLSL
+                    // （olib 在同一分支调 foster.ShaderPairTryReplace + program.vertex.CreateInfo）。
+                    ok, problem := dev.revalidate(program, s.device, array_view(probes, 0, probe_count));
+                    applied = ok;
                     if !applied {
                         e.rejected_revision[i] = program.revision;
-                        bank_error(s, program.diagnostic);
+                        bank_error(s, problem);
                     }
                 }
                 if applied {
@@ -207,6 +208,14 @@ bank_apply :: (s: *Session, b: *Parameter_Bank, selected: int, apply_updates := 
                         if s.pending_bank == null bank_error(s, "");
                     }
                 }
+            }
+            // 材质借用 Session 里那对地址固定的 *F.Shader（olib 在 MaterialInitWithShaders 里
+            // 一次借好）：热替换只改 Shader 的内容不改地址，所以这里重复设置也始终指向活程序。
+            if program.vertex != null {
+                F.material_stage_set_shader(*b.materials[i].Vertex, program.vertex);
+            }
+            if program.fragment != null {
+                F.material_stage_set_shader(*b.materials[i].Fragment, program.fragment);
             }
             drawable = drawable && program.vertex != null && program.fragment != null &&
                        e.validated_revision[i] == program.revision;

@@ -131,7 +131,7 @@ main :: () {
     shader_source_changes_include_same_length_and_deletion(*st);
     shader_reject_stale_candidate_without_touching_live_state(*st);
     shader_safe_creation_reports_errors_without_gpu(*st);
-    shader_apply_reports_unimplemented_seam(*st);
+    shader_apply_requires_graphics_device(*st);
     shader_single_file_build_snapshot_and_stale_watch_result(*st);
     shader_snapshot_includes_copies_standard_include(*st);
     all_ok &= test_summary("kit/rendering/shader", *st);

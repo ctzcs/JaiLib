@@ -4,7 +4,7 @@
 //   compiler.jai     —— compiler.odin     （临时工作区 / 源码与 include 快照 / 候选编译 / 指纹）
 //   shader_files.jai —— shader_files.odin （.oshader 候选包：schemas + shaders + programs）
 //   parameters.jai   —— parameters.odin   （候选包所有权 + 后台监听线程）
-//   dev.jai          —— dev.odin          （Session / Status / update / apply；apply 是未实现 seam）
+//   dev.jai          —— dev.odin          （Session / Status / update / apply / revalidate）
 //
 // 具名导入：
 //   sh     —— kit/rendering/shader（Schema / Shader_Desc / clone / dispose）

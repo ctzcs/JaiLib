@@ -1,27 +1,27 @@
 // dev —— 开发专用 HLSL 热重载，2D/3D 共用。后台仅编译，GPU 替换由渲染线程提交。
 // 一比一移植自 olib kit/rendering/shader/dev/dev.odin。
 //
-// ============================ apply 是未实现的 seam ============================
-// olib 的 apply 调 foster.ShaderPairTryReplace：把两段新字节码装进**地址不变**的两个
-// Shader，并由渲染线程用真实 DrawCommand（probes）验证管线后原位替换——
+// ============================ apply 走真正的原位替换 ============================
+// apply 调 F.ShaderPairTryReplace（jfoster graphics/shader_pair_replace.jai，olib
+// olib_shader_reload.odin 的移植）：把两段新字节码装进**地址不变**的两个 *F.Shader，
+// 并用真实 Draw_Command（probes）验证候选管线后原位替换——
 // uniform、纹理、相机、预览时间都不重置，材质借用的指针也一直有效。
 //
-// jfoster **没有** ShaderPairTryReplace（那是 olib 在 foster 之上的扩展）。jfoster 只有
-// shader_create / shader_recreate：前者要 *Graphics_Device 造新对象（地址会变，材质借用的
-// 指针全部失效），后者要求 Shader 已存在且不校验管线、也不保证资源槽位不变。
-// 因此这里把 GPU 替换做成**明确的未实现 seam**：
-//   - 候选是否过期、资源契约是否变化，全部照 olib 逐条检查（这些是纯数据，可移植、有测试）；
-//   - 检查都通过后不假装成功：set_error 写入 SHADER_PAIR_REPLACE_UNAVAILABLE 并返回 false，
-//     绝不把 status 推进到 .Live、也绝不改 revision。
-//   - Session.vertex / fragment 因此永远是 null：宿主不能在 jfoster 上拿到「热替换后的
-//     Shader 对」。等 jfoster 提供等价接口（地址不变 + probes 校验 + 资源槽位保留）时，
-//     只需填 apply 的这一段，其余状态机不用动。
-// ==============================================================================
+// 与 olib 唯一的形态差异来自「谁造那两个 Shader」：
+//   - olib 的 Session.vertex/fragment 是 Shader **值**，init 时先填 Stage/Name、
+//     Resource 为空，ShaderPairTryReplace 在同一个地址上 ShaderTryInit 出来。
+//   - jfoster 的 Shader 是堆对象，且 ShaderPairTryReplace 要求两个**已存在**的 Shader
+//     （它只替换内容）。所以第一次安装由 apply 用 shader_create 造出这一对
+//     （地址从此固定），立刻交给 ShaderPairTryReplace 走同一条「候选 + probes 校验」路径；
+//     校验失败就把这一对丢掉（此时还没有任何材质借用它）。之后每次 apply 都只换内容。
+//   - dispose 释放这一对（shader_dispose + free 结构体），顺序与 defaults_destroy 一致。
 //
 // Jai 侧差异（逐条对应 olib 的写法，行为不变）：
 //   | olib (Odin)                                   | JaiLib (Jai)                                            |
 //   | --------------------------------------------- | ------------------------------------------------------- |
-//   | session.vertex/fragment: foster.Shader         | *F.Shader（null：原因见上面的 seam 说明）                 |
+//   | session.vertex/fragment: foster.Shader         | *F.Shader（apply 首次安装时创建，地址此后不变）             |
+//   | foster.ShaderPairTryReplace(&vertex,&fragment) | F.ShaderPairTryReplace(vertex, fragment, ...)（已是指针）  |
+//   | shader.CreateInfo（foster 存在 Shader 上）      | shader_infos()：由 Build.code + 资源反射现拼              |
 //   | .Vulkan / .D3D12 / .Metal                      | .VULKAN / .D3D12 / .METAL（jfoster 成员名全大写）          |
 //   | .Vertex / .Fragment（foster 枚举）              | .VERTEX / .FRAGMENT                                     |
 //   | thread.create_and_start_with_data              | New(THREAD.Thread) + thread_init/thread_start           |
@@ -44,11 +44,11 @@ Status :: enum {
     Error;
 }
 
-// jfoster 侧没有「地址不变的 Shader 对」可持有，所以这里存指针（见文件头）。
 // Session 必须保持地址稳定；不要复制。init 后 dispose，退出时等待编译线程结束。
-// 持有 shader 和字节码；material 借用 &vertex/&fragment，须先于 Session 释放。
+// 持有 shader 和字节码；material 借用 vertex/fragment（同一对 *F.Shader，地址不变），
+// 须先于 Session 释放。vertex/fragment 在第一次 apply 成功前后者为 null。
 Session :: struct {
-    vertex, fragment: *F.Shader; // 恒为 null：apply 是未实现的 seam，jfoster 不提供原位替换。
+    vertex, fragment: *F.Shader; // apply 首次安装时 F.shader_create 出来的活 Shader 对；地址此后不变。
     status: Status;
     diagnostic: string;
     revision: u64;
@@ -117,7 +117,7 @@ init :: (s: *Session, source: string, driver: F.Graphics_Driver,
     s.expected[0] = vertex_resources;
     s.expected[1] = fragment_resources;
     // olib 在这里把 s.vertex.Stage/.Name 预填好；jfoster 的 Shader 必须由 shader_create 造，
-    // 而替换路径不可用（见文件头），所以不造对象，字段保持 null。
+    // 而 init 不接 *Graphics_Device，所以活 Shader 对留到第一次 apply（那里才拿到设备）。
     return true;
 }
 
@@ -129,8 +129,7 @@ dispose :: (s: *Session) {
         free(s.worker);
         s.worker = null;
     }
-    if s.vertex != null F.shader_dispose(s.vertex);
-    if s.fragment != null F.shader_dispose(s.fragment);
+    shader_pair_release(s);
     build_dispose(*s.live);
     build_dispose(*s.job.result);
     if s.job.source.data != null free(s.job.source.data);
@@ -216,9 +215,9 @@ compile_worker :: (thread: *THREAD.Thread) -> s64 {
     return 0;
 }
 
-// 在所有实际绘制和 Batcher 排队之前调用，probes 覆盖该 Shader 所有绘制配置。
-// 成功后的重启语义（地址不变、uniform/纹理/相机不重置）在 jfoster 上无法实现：见文件头。
-// 返回 false 的两种情形：候选过期/资源契约变化（olib 原样）与「替换接口缺失」（Jai 侧专有）。
+// 把所有实际绘制和 Batcher 排队之前调用，probes 覆盖该 Shader 所有绘制配置。
+// 成功：GPU 程序原位替换（地址不变、uniform/纹理/相机不重置）→ .Live，revision += 1。
+// 返回 false 的四种情形：候选过期 / 资源契约变化 / 没有设备 / 候选管线被拒（诊断在 s.diagnostic）。
 apply :: (s: *Session, device: *F.Graphics_Device, probes: [] F.Draw_Command) -> bool {
     push_allocator(dev_heap());
     if s.status != .Ready return false;
@@ -244,17 +243,111 @@ apply :: (s: *Session, device: *F.Graphics_Device, probes: [] F.Draw_Command) ->
             return false;
         }
     }
-    // ---- 到这里 olib 会调 foster.ShaderPairTryReplace（见文件头）。jfoster 没有等价接口：
-    // 不创建 Shader、不改 status/revision，只留下可读的诊断。
-    _ = device;
-    _ = probes;
-    set_error(s, SHADER_PAIR_REPLACE_UNAVAILABLE);
-    build_dispose(*s.job.result);
-    return false;
+    // ---- 到这里 olib 调 foster.ShaderPairTryReplace（见文件头）。jfoster 的同名过程要两个
+    // 已存在的 Shader：第一次安装先造出地址固定的这一对，之后就只换内容。
+    infos := shader_infos(s, s.job.result.code, s.job.result.resources);
+    if device == null {
+        set_error(s, "Shader replacement requires a created Graphics Device");
+        build_dispose(*s.job.result);
+        return false;
+    }
+    primed := s.vertex == null || s.fragment == null;
+    if primed && !shader_pair_prime(s, device, infos) {
+        set_error(s, "Failed to create the live Shader pair");
+        build_dispose(*s.job.result);
+        return false;
+    }
+    ok, problem := F.ShaderPairTryReplace(s.vertex, s.fragment, device, infos[0], infos[1], probes);
+    if !ok {
+        // 第一次安装没有旧 Shader 可保留：这一对（以及它们的字节码借用）一起丢掉。
+        // 之后的失败由 ShaderPairTryReplace 负责，旧 Shader/材质全部原样。
+        if primed shader_pair_release(s);
+        set_error(s, problem);
+        build_dispose(*s.job.result);
+        return false;
+    }
+    build_dispose(*s.live);
+    s.live = s.job.result;
+    s.job.result = Build.{};
+    s.status = .Live;
+    s.revision += 1;
+    if s.diagnostic.data != null free(s.diagnostic.data);
+    s.diagnostic = "";
+    return true;
 }
 
-// 未实现 seam 的固定诊断文本（宿主可据此把热重载降级为「重启生效」）。
-SHADER_PAIR_REPLACE_UNAVAILABLE :: "GPU shader replacement is unavailable: jfoster has no ShaderPairTryReplace; restart the host to load the compiled shader";
+// 用已安装构建的字节码重新校验实际管线（切到另一套目标/网格时用），不重新编译 HLSL。
+// 与 apply 的差别：不消耗候选、不改 status/revision；失败诊断交给调用方决定怎么显示。
+revalidate :: (s: *Session, device: *F.Graphics_Device, probes: [] F.Draw_Command) -> (ok: bool, error: string) {
+    push_allocator(dev_heap());
+    if s.vertex == null || s.fragment == null {
+        return false, "Shader revalidation requires an installed shader pair";
+    }
+    if device == null return false, "Shader replacement requires a created Graphics Device";
+    infos := shader_infos(s, s.live.code, s.live.resources);
+    return F.ShaderPairTryReplace(s.vertex, s.fragment, device, infos[0], infos[1], probes);
+}
+
+// 两份 Shader_Create_Info：olib 直接取 foster.Shader 上留存的 CreateInfo，jfoster 的 Shader
+// 不留字节码，所以由调用方给出「哪一次构建的字节码」。槽位来源与 olib 一致：
+// 生成参数布局时用 init/configure_parameters 约定的槽（反射可能因优化少报），否则用本次反射。
+shader_infos :: (s: *Session, code: [2][] u8, resources: [2] Resources) -> [2] F.Shader_Create_Info {
+    infos: [2] F.Shader_Create_Info;
+    for i: 0..1 {
+        r := resources[i];
+        if s.parameter_layout r = s.expected[i];
+        stage := F.Shader_Stage.VERTEX;
+        entry := "vertex_main";
+        if i == 1 {
+            stage = .FRAGMENT;
+            entry = "fragment_main";
+        }
+        infos[i] = F.Shader_Create_Info.{
+            Stage = stage,
+            Bytes = code[i],
+            EntryPoint = entry,
+            SamplerCount = cast(s32) r.samplers,
+            UniformBufferCount = cast(s32) r.uniform_buffers,
+            StorageBufferCount = cast(s32) r.storage_buffers,
+        };
+    }
+    return infos;
+}
+
+// 第一次安装：jfoster 的 ShaderPairTryReplace 只替换已存在 Shader 的内容，而 shader_create
+// 是唯一的造 Shader 途径。所以先用候选字节码造出这一对（地址从此固定），随即交给
+// ShaderPairTryReplace 走同一条「候选 + probes 校验」路径——首装也不许绕过管线校验。
+// 名字与 olib 的 init 一致（ShaderPairTryReplace 会沿用它给候选命名）。
+shader_pair_prime :: (s: *Session, device: *F.Graphics_Device, infos: [2] F.Shader_Create_Info) -> bool {
+    s.vertex = F.shader_create(device, .VERTEX, infos[0].Bytes,
+        sampler_count = infos[0].SamplerCount,
+        uniform_buffer_count = infos[0].UniformBufferCount,
+        storage_buffer_count = infos[0].StorageBufferCount,
+        entry_point = infos[0].EntryPoint,
+        name = "live vertex");
+    s.fragment = F.shader_create(device, .FRAGMENT, infos[1].Bytes,
+        sampler_count = infos[1].SamplerCount,
+        uniform_buffer_count = infos[1].UniformBufferCount,
+        storage_buffer_count = infos[1].StorageBufferCount,
+        entry_point = infos[1].EntryPoint,
+        name = "live fragment");
+    return s.vertex != null && s.fragment != null;
+}
+
+// 释放这一对（先 GPU 资源再结构体，与 jfoster 的 defaults_destroy / kit 各 renderer 同序）。
+// 只给 dispose 和「首装校验失败」用：此时还没有材质借用这两个地址。
+shader_pair_release :: (s: *Session) {
+    if s.vertex != null {
+        F.shader_dispose(s.vertex);
+        free(s.vertex);
+        s.vertex = null;
+    }
+    if s.fragment != null {
+        F.shader_dispose(s.fragment);
+        free(s.fragment);
+        s.fragment = null;
+    }
+}
 
 set_error :: (s: *Session, message: string) {
     if s.diagnostic.data != null free(s.diagnostic.data);

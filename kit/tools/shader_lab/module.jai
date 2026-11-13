@@ -28,11 +28,12 @@
 //   3. foster.MaterialStageSetUniformBuffer(&stage, buf, slot) → F.material_stage_set_uniform(&stage, slot, buf)。
 //      foster.GraphicsDeviceDraw(dev, &cmd) → F.graphics_device_draw(dev, cmd)（按值传命令）；
 //      foster.DrawCommandDispose(&cmd) 不存在：jfoster 的 Draw_Command 不含动态数组，无需释放。
-//   4. **热重载路径**：jfoster 没有 ShaderPairTryReplace，`dev.apply` 在 JaiLib 是未实现的 seam
-//      （dev.Session.vertex / .fragment 恒为 null，诊断文本见 dev.SHADER_PAIR_REPLACE_UNAVAILABLE）。
-//      因此 bank 不再“原位替换 GPU 程序”，而是用 dev 候选包编译出的字节码
-//      （dev.Build.code[2]）直接 F.shader_create 出新的 Shader 对再 F.material_create。语义等价：
-//      bank 存活期间的 Material 地址仍然固定（一次分配、不再增长），旧包整体释放。
+//   4. **热重载路径**：`dev.apply` → `F.ShaderPairTryReplace`（jfoster graphics/shader_pair_replace.jai）
+//      真的原位替换 GPU 程序：`dev.Session.vertex/fragment` 是 apply 首次安装时 shader_create 出来的
+//      `*F.Shader` 对，之后每次热重载只换内容、地址不变，所以材质借用的指针一直有效；
+//      bank 的 Material 仍在 bank_make 时空建、在 bank_apply 安装成功后 F.material_stage_set_shader
+//      借用那两个地址（olib 的 MaterialInitWithShaders 等价物）。切到另一套目标/网格时走
+//      `dev.revalidate`（已安装的字节码重新校验管线，不重编 HLSL）。
 //   5. **图标图集未移植**：r2d.builtin_icons_decode / imgui_foster.Icons 依赖 olib 的
 //      assets/icons/game-icons.{xml,png}，不属于本仓库（见 kit/rendering/2d/module.jai 第 4 条）。
 //      这里保留 Icon_Set 类型与 ICON_NAMES 表，但表为空，lab_button 退化为纯文字按钮；

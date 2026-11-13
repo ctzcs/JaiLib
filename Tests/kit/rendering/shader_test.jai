@@ -20,8 +20,8 @@
 // ============================ 不假装能编译 ============================
 // shadercross / dxc 不在 JaiLib 里：compile.run 默认返回 COMPILER_UNAVAILABLE（没有注入执行器），
 // dev.compile / stage_compile / reflect 因此只断言「诊断字符串 + 没有产物 + 没有 provenance」，
-// 绝不假装编译成功。dev.Session.apply 是未实现的 seam（jfoster 没有 ShaderPairTryReplace），
-// 只断言返回 false + SHADER_PAIR_REPLACE_UNAVAILABLE。
+// 绝不假装编译成功。dev.Session.apply 真的调 F.ShaderPairTryReplace（需要 GPU），本文件只断言
+// 没有设备时的语义（拒绝、诊断、不造 Shader）；接通的真跑验证在 .test_tmp/hot_reload_probe.jai。
 //
 // Jai 侧差异（断言语义不变）：
 //   | olib (Odin)                                   | 这里 (Jai)                                            |
@@ -1202,12 +1202,13 @@ shader_safe_creation_reports_errors_without_gpu :: (state: *Test_State) {
     ST_DEV.dispose(*s);
 }
 
-// dev.Session.apply 是未实现的 seam：候选有效、资源契约一致，也必须返回 false 并给出固定诊断，
-// 绝不把 status 推进到 Live、绝不改 revision。
-shader_apply_reports_unimplemented_seam :: (state: *Test_State) {
-    root := shader_test_fresh_dir("seam");
-    source := tprint("%/seam.oshader", root);
-    expect(state, shader_test_write(source, SHADER_SINGLE_FILE), "写出 seam.oshader");
+// dev.Session.apply 现在真的调 F.ShaderPairTryReplace（GPU 路径，真跑见
+// .test_tmp/hot_reload_probe.jai）。没有设备这一层纯 CPU 可测的语义是：
+// 候选有效、资源契约一致，也必须返回 false、给出可读诊断，且不造 Shader、不改 revision。
+shader_apply_requires_graphics_device :: (state: *Test_State) {
+    root := shader_test_fresh_dir("device");
+    source := tprint("%/device.oshader", root);
+    expect(state, shader_test_write(source, SHADER_SINGLE_FILE), "写出 device.oshader");
 
     s: ST_DEV.Session;
     expect(state, ST_DEV.init(*s, source, ST_F.Graphics_Driver.VULKAN, ST_DEV.Resources.{},
@@ -1222,10 +1223,16 @@ shader_apply_reports_unimplemented_seam :: (state: *Test_State) {
     s.revision = 3;
 
     probes: [] ST_F.Draw_Command;
-    expect(state, !ST_DEV.apply(*s, null, probes), "apply 在 jfoster 上必须失败");
-    shader_test_expect_value(state, s.diagnostic, ST_DEV.SHADER_PAIR_REPLACE_UNAVAILABLE);
+    expect(state, !ST_DEV.apply(*s, null, probes), "没有图形设备时 apply 必须失败");
+    expect(state, ST_STRING.contains(s.diagnostic, "Graphics Device"),
+           tprint("诊断说明缺少图形设备：\"%\"", s.diagnostic));
     expect(state, s.status == .Error && s.revision == 3 && s.vertex == null && s.fragment == null,
-           "seam 不推进到 Live、不改 revision、不造 Shader");
+           "失败不推进到 Live、不改 revision、不造 Shader");
+    expect(state, s.live.code[0].count == 0 && s.live.code[1].count == 0, "失败不留下已安装构建");
+
+    // revalidate 只对「已安装的 Shader 对」有意义：没有设备时同样先报缺对/缺设备。
+    ok_revalidate, problem := ST_DEV.revalidate(*s, null, probes);
+    expect(state, !ok_revalidate && problem != "", tprint("没有已安装 Shader 对时 revalidate 失败：\"%\"", problem));
     ST_DEV.dispose(*s);
 }
 //@endregion

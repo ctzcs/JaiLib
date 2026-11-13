@@ -44,6 +44,9 @@ Tests/core/<module>/<module>_test.jai
 | `log_info(fmt, args)` | jfoster 的 `log_info/log_error` 收**已格式化好的 string**，不是变参：先 `tprint` |
 | `\`defer` | Jai 的 `\`defer` 在**调用方作用域**结束才触发；宏里用它关资源会漏（kit/ui 的 segfault 就是这么来的） |
 
+| Jai 的 `cast` 有运行期检查 | `cast(u32) <负数>`、`cast(s8)`（≥128 的字节）、指针截到 32 位都会 **panic 而不是编译报错**。照抄 Odin 的无检查转换时必须显式改写（例如符号扩展用 `if b >= 128 { base -= 256 }` 的 u32 回绕） |
+| `jaic -check -no_dce` 也不是万能的 | 实测它只对**可达**的过程体做类型检查；写进死代码里的 `no_such_symbol` 不报错。真正的验收要靠运行期测试，而不是只看 `-check` |
+
 ## 测试
 
 - 每个模块一个 `*_test.jai`，过程签名 `(state: *Test_State)`，用

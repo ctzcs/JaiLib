@@ -1,7 +1,7 @@
 // ui:text_input —— 单行文本输入 / 输入法候选框位置。
 //
 // clay 0.12 没有 ClipElementConfig，输入框的水平裁剪改用 Scroll 容器（只开 horizontal），
-// 每帧把 -t.scroll 写进它的 scrollPosition（见 ui_element 的 scroll_offset）。
+// 每帧把 -t.scroll 写进声明的 clip.childOffset（clay 布局按它偏移子元素，与 olib 一致）。
 // 副作用：滚轮在输入框上会滚动它（olib 不会）；文本超出时由 clay 自己钳制在内容范围内，
 // 因此 ui_text_width 的外层 clamp 仍然生效，行为在正常输入下一致。
 
@@ -100,35 +100,25 @@ ui_text_input :: (ctx: *UI_Context, theme: *UI_Theme, id: string, buffer: *[..] 
     if editing scroll = t.scroll;
     line := ui_text_line_height(font, size);
     // 编辑中的外框就是焦点框（UI_Focus_Style），这里只画悬停描边。
+    // 0.14 的 border presence 由 width 是否为 0 决定，不需要额外的 has_border。
     border: clay.BorderElementConfig;
-    has_border := false;
     if !editing && state.hovered && !state.disabled {
-        has_border = true;
-        border = .{
-            left = .{ width = 1, color = ui_clay_color(theme.panel_border) },
-            right = .{ width = 1, color = ui_clay_color(theme.panel_border) },
-            top = .{ width = 1, color = ui_clay_color(theme.panel_border) },
-            bottom = .{ width = 1, color = ui_clay_color(theme.panel_border) },
-        };
+        border = ui_clay_border(1, ui_clay_color(theme.panel_border));
     }
     bg := theme.window_bg;
     if state.disabled bg = theme.panel;
-    ui_element(UI_Decl.{
+    clay.UI(clay.ElementDeclaration.{
         id = element,
         layout = .{
             sizing = .{ width = clay.SizingFixed(max(width, 16)), height = clay.SizingFixed(line + pad * 2) },
-            padding = ui_padding_all(theme.padding),
+            padding = clay.PaddingAll(theme.padding),
             childAlignment = .{ y = .CENTER },
         },
-        has_scroll = true,
-        scroll = .{ horizontal = true },
-        has_scroll_offset = true,
-        scroll_offset = .{ -scroll, 0 },
-        has_rect = true,
-        rect = .{ color = ui_clay_color(bg), cornerRadius = clay.CornerRadiusAll(theme.corner_radius) },
-        has_border = has_border,
+        clip = .{ horizontal = true, childOffset = .[ -scroll, 0 ] },
+        backgroundColor = ui_clay_color(bg),
+        cornerRadius = clay.CornerRadiusAll(theme.corner_radius),
         border = border,
-    }, children = #code {
+    }, #code {
         shown := text;
         color := theme.text;
         if state.disabled color = theme.text_dim;
@@ -139,17 +129,16 @@ ui_text_input :: (ctx: *UI_Context, theme: *UI_Theme, id: string, buffer: *[..] 
         config := ui_text_config(ctx, .{
             fontId = theme.body_font_id, fontSize = size, textColor = ui_clay_color(color), wrapMode = .NONE,
         });
-        if config != null && shown.count > 0 ui_text_element(ctx, shown, config);
+        if config != null && shown.count > 0 clay.TextDynamic(shown, config);
         blink_phase := t.blink - JM.floor(t.blink);
         if editing && blink_phase < 0.5 {
-            ui_element(UI_Decl.{
+            clay.UI(clay.ElementDeclaration.{
                 layout = .{ sizing = .{ width = clay.SizingFixed(2), height = clay.SizingFixed(line) } },
-                has_floating = true,
                 floating = .{
-                    offset = .{ pad + caret_x - scroll - 1, pad },
+                    attachTo = .PARENT, offset = .[ pad + caret_x - scroll - 1, pad ],
+                    clipTo = .ATTACHED_PARENT,
                 },
-                has_rect = true,
-                rect = .{ color = ui_clay_color(theme.text) },
+                backgroundColor = ui_clay_color(theme.text),
             });
         }
     });

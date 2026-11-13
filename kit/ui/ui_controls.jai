@@ -1,7 +1,7 @@
 // ui:controls —— 下拉框 / 虚拟列表 / 拖放。
 //
-// clay 0.12 浮层用 parentId 定位（0 = 声明处的层级父元素，与 olib 的 attachTo = .Parent 同义）；
-// 挂到 root 的写法见 ui_modal_decl（parentId 指向 Clay__RootContainer）。
+// 浮层用 0.14 的 floating 定位：attachTo = .PARENT 挂到声明处的层级父元素（与 olib 一致），
+// 挂到 root 的写法见 ui_modal_decl（attachTo = .ROOT）。
 
 //@region 下拉框
 
@@ -27,7 +27,7 @@ ui_dropdown :: (ctx: *UI_Context, theme: *UI_Theme, id: string, options: [] stri
             // 这次确认已用来打开，不能再让刚获得焦点的选项当作点击。
             ctx.navigation.activate = false;
         }
-    } else if open && ui_clicked(ctx) && !ui_hovered(ctx, id) && !ui_hovered(ctx, popup_id) {
+    } else if open && ui_clicked(ctx) && !clay.PointerOver(element) && !clay.PointerOver(clay.ID(popup_id)) {
         open = false;
     }
     if open {
@@ -44,17 +44,17 @@ ui_dropdown :: (ctx: *UI_Context, theme: *UI_Theme, id: string, options: [] stri
     if state.disabled label_color = theme.text_dim;
     changed := false;
     width_axis := max(width, 48);
-    ui_element(UI_Decl.{
+    clay.UI(clay.ElementDeclaration.{
         id = element,
         layout = .{
             sizing = .{ width = clay.SizingFixed(width_axis), height = clay.SizingFit() },
-            padding = ui_padding_all(theme.padding),
+            padding = clay.PaddingAll(theme.padding),
             childGap = 8,
             childAlignment = .{ y = .CENTER },
         },
-        has_rect = true,
-        rect = .{ color = ui_clay_color(bg), cornerRadius = clay.CornerRadiusAll(theme.corner_radius) },
-    }, children = #code {
+        backgroundColor = ui_clay_color(bg),
+        cornerRadius = clay.CornerRadiusAll(theme.corner_radius),
+    }, #code {
         current := "";
         if selected.* >= 0 && selected.* < options.count current = options[selected.*];
         ui_label_ex(ctx, theme, current, label_color, theme.body_font_size);
@@ -71,38 +71,32 @@ ui_dropdown_popup :: (ctx: *UI_Context, theme: *UI_Theme, id: string, popup_id: 
                       options: [] string, selected: *int, width: float32) -> bool {
     changed := false;
     ui_block_pointer(ctx, popup_id);
-    ui_element(UI_Decl.{
+    clay.UI(clay.ElementDeclaration.{
         id = clay.ID(popup_id),
         layout = .{
             sizing = .{ width = clay.SizingFixed(width), height = clay.SizingFit() },
             layoutDirection = .TOP_TO_BOTTOM,
-            padding = ui_padding_all(4),
+            padding = clay.PaddingAll(4),
         },
-        has_floating = true,
         floating = .{
+            attachTo = .PARENT,
             attachment = .{ element = .LEFT_TOP, parent = .LEFT_BOTTOM },
-            offset = .{ 0, 4 },
+            offset = .[ 0, 4 ],
             zIndex = 60,
             pointerCaptureMode = .CAPTURE,
         },
-        has_rect = true,
-        rect = .{ color = ui_clay_color(theme.panel), cornerRadius = clay.CornerRadiusAll(theme.corner_radius) },
-        has_border = true,
-        border = .{
-            left = .{ width = 1, color = ui_clay_color(theme.panel_border) },
-            right = .{ width = 1, color = ui_clay_color(theme.panel_border) },
-            top = .{ width = 1, color = ui_clay_color(theme.panel_border) },
-            bottom = .{ width = 1, color = ui_clay_color(theme.panel_border) },
-        },
-    }, children = #code {
-        list: UI_Decl;
+        backgroundColor = ui_clay_color(theme.panel),
+        cornerRadius = clay.CornerRadiusAll(theme.corner_radius),
+        border = ui_clay_border(1, ui_clay_color(theme.panel_border)),
+    }, #code {
+        list: clay.ElementDeclaration;
         if options.count > UI_DROPDOWN_VISIBLE_ROWS {
             row := cast(float32) theme.body_font_size * 1.4 + cast(float32) theme.padding;
             list = ui_scroll_decl(ctx, tprint("%#list", id), row * UI_DROPDOWN_VISIBLE_ROWS, gap = 2);
         } else {
             list = ui_column_decl(2);
         }
-        ui_element(list, children = #code {
+        clay.UI(list, #code {
             for option, i: options {
                 option_id := tprint("%#%", id, i);
                 s := ui_interact(ctx, option_id, UI_Widget_Options.{ no_focus_ring = true }); // 选项用底色表示焦点
@@ -111,7 +105,7 @@ ui_dropdown_popup :: (ctx: *UI_Context, theme: *UI_Theme, id: string, popup_id: 
                 if s.hovered || s.focused row_bg = theme.button_hover;
                 text_color := theme.text;
                 if i == selected.* text_color = theme.accent;
-                ui_element(UI_Decl.{
+                clay.UI(clay.ElementDeclaration.{
                     id = clay.ID(option_id),
                     layout = .{
                         sizing = .{ width = clay.SizingGrow(), height = clay.SizingFit() },
@@ -120,12 +114,9 @@ ui_dropdown_popup :: (ctx: *UI_Context, theme: *UI_Theme, id: string, popup_id: 
                             top = theme.padding / 2, bottom = theme.padding / 2,
                         },
                     },
-                    has_rect = true,
-                    rect = .{
-                        color = ui_clay_color(row_bg),
-                        cornerRadius = clay.CornerRadiusAll(max(theme.corner_radius - 2, 0)),
-                    },
-                }, children = #code {
+                    backgroundColor = ui_clay_color(row_bg),
+                    cornerRadius = clay.CornerRadiusAll(max(theme.corner_radius - 2, 0)),
+                }, #code {
                     ui_label_ex(ctx, theme, option, text_color, theme.body_font_size);
                 });
                 if s.clicked {
@@ -170,7 +161,7 @@ ui_virtual_range :: (ctx: *UI_Context, id: string, count: int, row_height: float
     if count <= 0 || row_height <= 0 return .{};
     key := clay.ID(id).id;
     top: float32;
-    for scroll: ctx.scrolls if scroll.id == key top = -scroll.offset.y;
+    for scroll: ctx.scrolls if scroll.id == key top = -scroll.offset[1];
     first := clamp(cast(int) JM.floor(top / row_height) - overscan, 0, count);
     last := clamp(cast(int) JM.ceil((top + view_height) / row_height) + overscan, first, count);
     return .{ first, last, cast(float32) first * row_height, cast(float32) (count - last) * row_height };
@@ -179,7 +170,7 @@ ui_virtual_range :: (ctx: *UI_Context, id: string, count: int, row_height: float
 // 虚拟列表的占位：撑开被省略行的高度，使滚动范围与完整列表一致。
 ui_virtual_spacer :: (height: float32) {
     if height <= 0 return;
-    ui_element(UI_Decl.{
+    clay.UI(clay.ElementDeclaration.{
         layout = .{ sizing = .{ width = clay.SizingGrow(), height = clay.SizingFixed(height) } },
     });
 }
@@ -232,7 +223,7 @@ ui_drag_position :: (ctx: *UI_Context) -> F.Vector2 {
 ui_drop_target :: (ctx: *UI_Context, id: string) -> (payload: int, hovered: bool, dropped: bool) {
     if !ctx.drag.dragging return 0, false, false;
     if ctx.modal_id != 0 && ctx.scope_id != ctx.modal_id return 0, false, false;
-    hovered = ui_hovered(ctx, id);
+    hovered = clay.PointerOver(clay.ID(id));
     dropped = hovered && ui_released(ctx);
     return ctx.drag.payload, hovered, dropped;
 }

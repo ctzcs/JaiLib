@@ -10,8 +10,8 @@
 //   | testing.expect_value(t, a, b)                | expect(state, a == b, "msg")                         |
 //   | testing.expectf(t, cond, "...%v", a)         | expectf(state, cond, "...%", a)                      |
 //   | sync.mutex_lock（clay 全局 context）          | 不需要：runner 串行调用，一个 ctx 用完就 dispose     |
-//   | `if clay.UI()(decl) { … }`                   | `ui_element(decl, children = #code { … })`           |
-//   | clay.ElementDeclaration{…}                   | UI_Decl{…}（见 kit/ui/ui.jai 头部差异 A）            |
+//   | `if clay.UI()(decl) { … }`                   | `clay.UI(decl, #code { … })`           |
+//   | clay.ElementDeclaration{…}                   | 同名同字段（没有适配层；presence 见 kit/ui/module.jai）        |
 //   | `foster.Texture{Width=128}`                  | fake_texture（只填元数据，不建 GPU 资源）            |
 //   | `foster.MsdfCharacter{Codepoint='A'}`        | 合成 F.Msdf_Font（字形表 + 平面/图集边界）           |
 //   | `len(x)`                                     | `x.count`                                            |
@@ -20,16 +20,16 @@
 //   | `map` 下标                                   | table_find / table_set（Hash_Table）                 |
 //
 // 与 olib 行为不同、因此断言方向也不同的地方（都是 kit/ui 头部已声明的移植差异，不是本次改动）：
-//   * 差异 C：没有 Clay_SetPointerHitTestFunction。命中测试按**布局**矩形，不跟 ui_set_visual 变换；
-//     变换后的指针反算走 ui_pointer_local / ui_visual_pointer（滑条、拖动用它）。
-//     所以 visual_subtree_* / visual_slider_* 里“变换后位置仍然 hovered”改成两条断言：
-//     布局位置 hovered + 变换反算得到正确局部坐标。
+//   * 差异 C（迁移到 clay 0.14 之后已消失）：移植版带 SetPointerHitTestFunction，kit/ui 把它装成
+//     ui_visual_hit，于是 clay.PointerOver 自己就跟着 ui_set_visual 的变换、嵌套裁剪和 presence 的
+//     inert 走 —— visual_subtree_* / visual_slider_* 恢复成 olib 的「变换后位置才命中」。
+//     ui_pointer_local / ui_visual_pointer 仍是自定义滑条、拖动要用的逆变换入口。
 //   * 差异 E/H：jfoster 的 Msdf_Font 没有 Characters/Kerning/SourceRect/Offset，字距恒为 0
 //     （ui_msdf_kerning 是留空的钩子）。olib 里依赖字距的期望值相应按 0 字距折算。
 //   * 需要 Render2D/GPU 的断言（ui_render 的 runs/vertices、MSDF 材质分段、圆角纹理、字体上传）
 //     一律不执行，见 ui_render_* 处注释；本文件不伪造 GPU 设备。
-//   * ui_presence 的退场隔离用 kit 自己的 ui_hovered / ui_interact 判定，不用 clay.PointerOver：
-//     clay 的命中表不知道 presence 的 inert（kit/ui 的命中链是自实现的，差异 C）。
+//   * 命中测试走 clay 自己的 SetPointerHitTestFunction 回调（ui_visual_hit），所以
+//     clay.PointerOver 就是完整判据：它看得到变换、嵌套裁剪与 presence 的 inert。
 //
 // 补写的后半部分用例（olib 一一对应，见各 @region 注释）：
 //   * 指针边沿 5 例（ui_controls_test.odin 的 pointer_edges_*，含显式 setter 与重按归属）；
@@ -39,18 +39,23 @@
 //   * 5 个本任务验收点（ui_translate 字段翻译、ui_ops_insert 中间插入、焦点框插入位置、
 //     ui_visual_lerp、UTF-8/缓冲拼接）。
 //
-// 这批用例查出并修掉的两个 kit/ui 真 bug（都在命中/翻译层，未改接口与结构）：
+// 这批用例在迁移到 clay 0.14 前后查出/复核过的真 bug（都在命中/翻译层与夹具，接口与结构未改）：
 //   1) 命中链把浮动元素的**声明父元素**也算作被指针覆盖。clay 把浮动元素挂成布局树的独立根
-//      （clay.c:1888，且不加入父的 children），于是 clay.PointerOver(按钮) 在指针位于浮层上时为
-//      false。kit 的命中链原来一路走到声明父，导致「浮层在按钮上方」被判成「按钮也被覆盖」，
-//      按在选项上的按下事件被下拉框按钮抢走——点选项只会关闭列表，选不中。
-//      修法：UI_Element_Info / UI_Hit_Element 记 floating 标志，ui_hit_update 的祖先链走到浮动元素
-//      为止（裁剪祖先的遍历不受影响，浮动元素仍继承父的 clip）。
-//   2) 带裁剪的焦点元素（文本框）的焦点框画在了它自己的裁剪之内。clay 的裁剪命令 id 是
-//      元素 id 的派生 id（RehashWithNumber 10/11），原来只按 cmd.id == focused_id 判断，
-//      且没有视觉变换时 cmd_owner_map 是空表，于是 ring_at 停在裁剪起点之前。
-//      修法：ui_translate_into 单独为焦点元素登记派生 id，并用 ui_translate_owner_id 判断归属；
-//      ring_bb 仍取非裁剪命令的 boundingBox，元素没有自己的绘制命令时退回布局矩形。
+//      （不加入父的 children），于是 clay.PointerOver(按钮) 在指针位于浮层上时为 false。迁移之后
+//      这条不用再自己维护：clay 的 pointerOverIds 按树根分别 DFS，浮动根的 parentId 只决定视觉
+//      与裁剪继承。（历史修法：UI_Element_Info / UI_Hit_Element 记 floating 标志。）
+//   2) 带裁剪的焦点元素（文本框）的焦点框画在了它自己的裁剪之内。clay 0.14 有**两条** SCISSOR_END：
+//      clay_layout.jai 里元素自己那条带 elementId，根级那条（浮动根的 root.clipElementId）不带，
+//      elementId 默认 0。文本框的光标是 clipTo = ATTACHED_PARENT 的浮动根，它的根级 SCISSOR_START
+//      同样带着文本框的 elementId —— 若把 SCISSOR_START 算成「焦点元素自己的命令」，ring_at 会停在
+//      这条裁剪起点之后，而收尾的根级 SCISSOR_END 没有 elementId，再也挪不回来，焦点框落进裁剪里。
+//      修法：ui_translate_into 的 focused 判定排除 SCISSOR_START（与 olib 一致），ring_at 只由矩形、
+//      描边、文字和**元素自己**的 SCISSOR_END 推进；ring_bb 仍取非裁剪命令的 boundingBox，元素没有
+//      自己的绘制命令时退回布局矩形。
+//   3) 浮动子树的嵌套裁剪在夹具里没接上：clip-inner 省略了 clipTo，而 clay 的零值枚举就是
+//      .NONE（CLAY_CLIP_TO_NONE == 0），等于声明「这条浮层不跟父元素裁剪」，clay 会把它的 clipId
+//      清 0 —— 外层裁剪既不进 clipId 链、也不进 clay 的 hit-test 裁剪检查。夹具按 olib 显式写
+//      clipTo = .ATTACHED_PARENT；断言一条没动。
 #import "Basic";
 #import "test_support";
 JM :: #import "Math";
@@ -189,7 +194,7 @@ dispose_test_font :: (font: *F.Msdf_Font) {
 
 // 把一组手搓的 clay 渲染命令送进翻译层（不经过布局，纯 CPU）。
 translate_commands :: (ctx: *UI_Context, commands: [] clay.RenderCommand) -> [..] UI_Op {
-    array := clay.RenderCommandArray.{
+    array := clay.ClayArray(clay.RenderCommand).{
         capacity = cast(s32) commands.count,
         length = cast(s32) commands.count,
         internalArray = commands.data,
@@ -197,14 +202,16 @@ translate_commands :: (ctx: *UI_Context, commands: [] clay.RenderCommand) -> [..
     return ui_translate(ctx, array);
 }
 
+// 0.14 的 RenderCommand 直接带 renderData（union），不再是 0.12 那种
+// `config = .{ xxxElementConfig = ptr }` 的指针包装；圆角也从 elementConfig 移到 renderData。
 rect_command :: (id: u32, x: float32, y: float32, w: float32, h: float32,
                  color: clay.Color, radius: float32 = 0) -> clay.RenderCommand {
-    cfg := clay.RectangleElementConfig.{ color = color, cornerRadius = clay.CornerRadiusAll(radius) };
-    ptr := New(clay.RectangleElementConfig);
-    ptr.* = cfg;
     return clay.RenderCommand.{
         boundingBox = bbox(x, y, w, h),
-        config = .{ rectangleElementConfig = ptr },
+        renderData = .{ rectangle = .{
+            backgroundColor = color,
+            cornerRadius = clay.CornerRadiusAll(radius),
+        } },
         id = id,
         commandType = .RECTANGLE,
     };
@@ -218,22 +225,19 @@ visual_test_frame :: (ctx: *UI_Context, visual: UI_Visual, enabled := true) -> U
     ui_begin(ctx, 1.0 / 60);
     if enabled ui_set_visual(ctx, "visual-parent", visual);
     state := ui_interact(ctx, "visual-child");
-    ui_element(UI_Decl.{
+    clay.UI(clay.ElementDeclaration.{
         id = clay.ID("visual-parent"),
         layout = .{
             sizing = .{ width = clay.SizingFixed(100), height = clay.SizingFixed(60) },
-            padding = ui_padding_all(10),
+            padding = clay.PaddingAll(10),
         },
-        has_rect = true,
-        rect = .{ color = .{ 200, 100, 50, 255 } },
-        has_border = true,
-        border = .{ left = .{ width = 2, color = .{ 255, 255, 255, 255 } } },
-    }, children = #code {
-        ui_element(UI_Decl.{
+        backgroundColor = .[ 0.78, 0.39, 0.2, 1 ],
+        border = .{ color = .[ 1, 1, 1, 1 ], width = .{ left = 2 } },
+    }, #code {
+        clay.UI(clay.ElementDeclaration.{
             id = clay.ID("visual-child"),
             layout = .{ sizing = .{ width = clay.SizingFixed(40), height = clay.SizingFixed(20) } },
-            has_rect = true,
-            rect = .{ color = .{ 255, 255, 255, 255 } },
+            backgroundColor = .[ 1, 1, 1, 1 ],
         });
     });
     ui_translate_into(ctx, ui_end(ctx), *ctx.ops);
@@ -301,18 +305,17 @@ visual_nested_text_image_clip_and_offscreen_entry :: (state: *Test_State) {
     inner.opacity = 0.5;
     ui_set_visual(*ctx, "clip-parent", outer);
     ui_set_visual(*ctx, "image-child", inner);
-    ui_element(UI_Decl.{
+    clay.UI(clay.ElementDeclaration.{
         id = clay.ID("clip-parent"),
         layout = .{ sizing = .{ width = clay.SizingFixed(100), height = clay.SizingFixed(60) } },
-        has_scroll = true,
-        scroll = .{ horizontal = true, vertical = true },
-    }, children = #code {
+        clip = .{ horizontal = true, vertical = true },
+    }, #code {
         decl := ui_nine_slice_decl(*ctx, tex, 12, 6);
         decl.id = clay.ID("image-child");
         decl.layout.sizing = .{
             width = clay.SizingFixed(80), height = clay.SizingFixed(40),
         };
-        ui_element(decl, children = #code {
+        clay.UI(decl, #code {
             theme := UI_THEME_DARK;
             theme.body_font_id = 0;
             ui_label(*ctx, *theme, "AV");
@@ -322,13 +325,11 @@ visual_nested_text_image_clip_and_offscreen_entry :: (state: *Test_State) {
     entry := UI_VISUAL_DEFAULT;
     entry.offset = vec2(-400, 0);
     ui_set_visual(*ctx, "offscreen", entry);
-    ui_element(UI_Decl.{
+    clay.UI(clay.ElementDeclaration.{
         id = clay.ID("offscreen"),
         layout = .{ sizing = .{ width = clay.SizingFixed(20), height = clay.SizingFixed(20) } },
-        has_floating = true,
-        floating = .{ parentId = clay.ID(UI_ROOT_ID).id, offset = .{ 450, 100 } },
-        has_rect = true,
-        rect = .{ color = .{ 255, 255, 255, 255 } },
+        floating = .{ attachTo = .ROOT, offset = .[ 450, 100 ] },
+        backgroundColor = .[ 1, 1, 1, 1 ],
     });
     ui_translate_into(*ctx, ui_end(*ctx), *ctx.ops);
     text_count, nine_count := 0, 0;
@@ -351,7 +352,7 @@ visual_nested_text_image_clip_and_offscreen_entry :: (state: *Test_State) {
     expect(state, text_count == 2 && nine_count == 9 && entry_found, "两段文本 + 九个切片 + 入场元素");
     ui_set_pointer(*ctx, 70, 40, false);
     ui_begin(*ctx, 0);
-    expect(state, ui_hovered(*ctx, "image-child"), "裁剪容器内的子元素可命中");
+    expect(state, clay.PointerOver(clay.ID("image-child")), "裁剪容器内的子元素可命中");
     ui_end(*ctx);
 }
 
@@ -389,10 +390,10 @@ visual_slider_frame :: (ctx: *UI_Context, value: *float32) {
     v.rotation = PI_F / 2;
     ui_set_visual(ctx, "slider-parent", v);
     theme := UI_THEME_DARK;
-    ui_element(UI_Decl.{
+    clay.UI(clay.ElementDeclaration.{
         id = clay.ID("slider-parent"),
         layout = .{ sizing = .{ width = clay.SizingFixed(200), height = clay.SizingFixed(24) } },
-    }, children = #code {
+    }, #code {
         ui_slider(ctx, *theme, "visual-slider", value);
     });
     ui_end(ctx);
@@ -425,26 +426,25 @@ visual_clip_frame :: (ctx: *UI_Context) {
     v := UI_VISUAL_DEFAULT;
     v.offset = vec2(100, 50);
     ui_set_visual(ctx, "clip-outer", v);
-    ui_element(UI_Decl.{
+    clay.UI(clay.ElementDeclaration.{
         id = clay.ID("clip-outer"),
         layout = .{ sizing = .{ width = clay.SizingFixed(100), height = clay.SizingFixed(100) } },
-        has_scroll = true,
-        scroll = .{ horizontal = true, vertical = true },
-    }, children = #code {
+        clip = .{ horizontal = true, vertical = true },
+    }, #code {
         // 浮动子树继承声明处的父元素，且被祖先裁剪。
-        ui_element(UI_Decl.{
+        // clipTo 必须显式写 ATTACHED_PARENT：clay 的零值枚举是 .NONE（CLAY_CLIP_TO_NONE == 0），
+        // 不写就等于声明「这条浮层不跟父元素裁剪」，clay 会把它的 clipId 清 0 —— 于是外层裁剪
+        // 既不进 clipId 链、也不进 clay 的 hit-test 裁剪检查。olib 的同名 fixture 就是这么写的。
+        clay.UI(clay.ElementDeclaration.{
             id = clay.ID("clip-inner"),
             layout = .{ sizing = .{ width = clay.SizingFixed(100), height = clay.SizingFixed(100) } },
-            has_floating = true,
-            floating = .{ offset = .{ 60, 0 }, zIndex = 2 },
-            has_scroll = true,
-            scroll = .{ horizontal = true, vertical = true },
-        }, children = #code {
-            ui_element(UI_Decl.{
+            floating = .{ attachTo = .PARENT, offset = .[ 60, 0 ], zIndex = 2, clipTo = .ATTACHED_PARENT },
+            clip = .{ horizontal = true, vertical = true },
+        }, #code {
+            clay.UI(clay.ElementDeclaration.{
                 id = clay.ID("clip-target"),
                 layout = .{ sizing = .{ width = clay.SizingFixed(100), height = clay.SizingFixed(100) } },
-                has_rect = true,
-                rect = .{ color = .{ 1, 1, 1, 1 } },
+                backgroundColor = .[ 1, 1, 1, 1 ],
             });
         });
     });
@@ -458,12 +458,12 @@ visual_floating_ancestry_and_nested_clip_match_input :: (state: *Test_State) {
     visual_clip_frame(*ctx);
     ui_set_pointer(*ctx, 180, 80, false);
     ui_begin(*ctx, 0);
-    expect(state, ui_hovered(*ctx, "clip-target"), "浮动元素在祖先裁剪内可命中");
+    expect(state, clay.PointerOver(clay.ID("clip-target")), "浮动元素在祖先裁剪内可命中");
     ui_end(*ctx);
     visual_clip_frame(*ctx);
     ui_set_pointer(*ctx, 230, 80, false);
     ui_begin(*ctx, 0);
-    expect(state, !ui_hovered(*ctx, "clip-target"), "外层裁剪仍拒绝输入");
+    expect(state, !clay.PointerOver(clay.ID("clip-target")), "外层裁剪仍拒绝输入");
     ui_end(*ctx);
 }
 
@@ -734,14 +734,12 @@ image_uv_and_trimmed_atlas_frame :: (state: *Test_State) {
     defer ui_dispose(*ctx);
     tex := fake_texture(128, 64);
     defer free(tex);
-    // clay 0.12 的图像配置在 config.imageElementConfig（olib 是 renderData.image）。
-    cfg := New(clay.ImageElementConfig);
-    cfg.* = .{ imageData = cast(*void) tex };
+    // 0.14 的图像配置就在 renderData.image（同 olib），不再经 elementConfig 指针。
     commands: [1] clay.RenderCommand;
     commands[0] = clay.RenderCommand.{
         commandType = .IMAGE,
         boundingBox = bbox(0, 0, 40, 40),
-        config = .{ imageElementConfig = cfg },
+        renderData = .{ image = .{ imageData = cast(*void) tex } },
     };
     ops := translate_commands(*ctx, commands);
     expect(state, ops.count == 1, "一条图像命令");
@@ -760,7 +758,6 @@ image_uv_and_trimmed_atlas_frame :: (state: *Test_State) {
         expect(state, op.u0 == 0.25 && op.u1 == 0.375 && op.v0 == 0.25 && op.v1 == 0.5, "图集 UV");
     }
     expect(state, found, "找到图片 op");
-    free(cfg);
     array_free(ops);
 }
 
@@ -775,11 +772,10 @@ nine_slice_preserves_corners_and_draws_behind_children :: (state: *Test_State) {
         ui_begin(*ctx, 1.0 / 60);
         decl := ui_nine_slice_decl(*ctx, tex, 32, 12);
         decl.layout.sizing = .{ width = clay.SizingFixed(size.x), height = clay.SizingFixed(size.y) };
-        ui_element(decl, children = #code {
-            ui_element(UI_Decl.{
+        clay.UI(decl, #code {
+            clay.UI(clay.ElementDeclaration.{
                 layout = .{ sizing = .{ width = clay.SizingFixed(2), height = clay.SizingFixed(2) } },
-                has_rect = true,
-                rect = .{ color = .{ 1, 0, 0, 1 } },
+                backgroundColor = .[ 1, 0, 0, 1 ],
             });
         });
         ops := ui_translate(*ctx, ui_end(*ctx));
@@ -867,7 +863,7 @@ context_reinitialization_and_pool_diagnostics :: (state: *Test_State) {
     ui_begin(*ctx, 1.0 / 60);
     expect(state, !ctx.pool_overflow && ui_text_config(*ctx, .{}) != null, "下一帧重置池与标记");
     ui_end(*ctx);
-    expect(state, ui_color(clay.Color.{ 1, 1, 1, 0.5 }) == F.Color.{ 128, 128, 128, 128 }, "颜色换算");
+    expect(state, ui_color(.[ 1.0, 1.0, 1.0, 0.5 ]) == F.Color.{ 128, 128, 128, 128 }, "颜色换算");
 }
 
 scroll_layout_starts_at_top_and_clips_after_wheel :: (state: *Test_State) {
@@ -878,15 +874,14 @@ scroll_layout_starts_at_top_and_clips_after_wheel :: (state: *Test_State) {
         ui_set_pointer(*ctx, 5, 5, false);
         if frame == 2 ui_add_scroll(*ctx, 0, -2);
         ui_begin(*ctx, 1.0 / 60);
-        ui_element(ui_scroll_decl(*ctx, "list", 50, 100), children = #code {
+        clay.UI(ui_scroll_decl(*ctx, "list", 50, 100), #code {
             for i: 0 .. 7 {
-                ui_element(UI_Decl.{
+                clay.UI(clay.ElementDeclaration.{
                     id = clay.ID("row", cast(u32) i),
                     layout = .{
                         sizing = .{ width = clay.SizingFixed(80), height = clay.SizingFixed(20) },
                     },
-                    has_rect = true,
-                    rect = .{ color = .{ 1, 1, 1, 1 } },
+                    backgroundColor = .[ 1.0, 1.0, 1.0, 1.0 ],
                 });
             }
         });
@@ -895,7 +890,7 @@ scroll_layout_starts_at_top_and_clips_after_wheel :: (state: *Test_State) {
         expect(state, data.found, "滚动容器数据存在");
         if frame == 0 expect(state, clay.GetElementData(clay.ID("row", 0)).boundingBox.y == 0, "初始在顶部");
         if frame == 2 {
-            expect(state, data.scrollPosition != null && data.scrollPosition.y < 0, "滚轮把内容推上去");
+            expect(state, data.scrollPosition != null && data.scrollPosition.*[1] < 0, "滚轮把内容推上去");
             expect(state, clay.GetElementData(clay.ID("row", 0)).boundingBox.y < 0, "首行跟着滚动");
         }
         ops := ui_translate(*ctx, commands);
@@ -947,17 +942,17 @@ cancel_and_disappearing_widget_release_capture :: (state: *Test_State) {
 pointer_edges_frame :: (ctx: *UI_Context, options: UI_Widget_Options = .{}, drag := false)
                        -> (a: UI_Interaction, b: UI_Interaction, dropped: bool) {
     ui_begin(ctx, 1.0 / 60);
-    ui_element(ui_row_decl(20), children = #code {
+    clay.UI(ui_row_decl(20), #code {
         a = ui_interact(ctx, "edge-a", options);
         if drag _ = ui_drag_source(ctx, "edge-a", a, 7);
-        ui_element(UI_Decl.{
+        clay.UI(clay.ElementDeclaration.{
             id = clay.ID("edge-a"),
             layout = .{ sizing = .{ width = clay.SizingFixed(60), height = clay.SizingFixed(50) } },
         });
         ui_set_scope(ctx, "edge-modal");
         b = ui_interact(ctx, "edge-b");
         _, _, dropped = ui_drop_target(ctx, "edge-b");
-        ui_element(UI_Decl.{
+        clay.UI(clay.ElementDeclaration.{
             id = clay.ID("edge-b"),
             layout = .{ sizing = .{ width = clay.SizingFixed(60), height = clay.SizingFixed(50) } },
         });
@@ -1155,11 +1150,11 @@ pointer_edges_drag_release_and_cancel :: (state: *Test_State) {
 focus_scroll_frame :: (ctx: *UI_Context, nav: UI_Navigation = .{}) {
     ui_set_navigation(ctx, nav);
     ui_begin(ctx, 1.0 / 60);
-    ui_element(ui_scroll_decl(ctx, "rows", 100, 200, gap = 0), children = #code {
+    clay.UI(ui_scroll_decl(ctx, "rows", 100, 200, gap = 0), #code {
         for i: 0 .. 19 {
             id := tprint("row-%", i);
             _ = ui_interact(ctx, id);
-            ui_element(UI_Decl.{
+            clay.UI(clay.ElementDeclaration.{
                 id = clay.ID(id),
                 layout = .{ sizing = .{ width = clay.SizingFixed(200), height = clay.SizingFixed(20) } },
             });
@@ -1172,7 +1167,7 @@ focus_scroll_y :: (ctx: *UI_Context) -> float32 {
     clay.SetCurrentContext(ctx.clay_context);
     data := clay.GetScrollContainerData(clay.ID("rows"));
     if !data.found || data.scrollPosition == null return 0;
-    return data.scrollPosition.y;
+    return data.scrollPosition.*[1];
 }
 
 focus_change_scrolls_container_to_show_widget :: (state: *Test_State) {
@@ -1276,11 +1271,11 @@ virtual_frame :: (ctx: *UI_Context, scroll: float32 = 0) -> UI_Virtual_Range {
     ui_add_scroll(ctx, 0, scroll);
     ui_begin(ctx, 1.0 / 60);
     r := ui_virtual_range(ctx, "big", 1000, 20, 100, 1);
-    ui_element(ui_scroll_decl(ctx, "big", 100, 200, gap = 0), children = #code {
+    clay.UI(ui_scroll_decl(ctx, "big", 100, 200, gap = 0), #code {
         ui_virtual_spacer(r.before);
         if r.last > r.first {
             for _: r.first .. r.last - 1 {
-                ui_element(UI_Decl.{
+                clay.UI(clay.ElementDeclaration.{
                     layout = .{ sizing = .{ width = clay.SizingGrow(), height = clay.SizingFixed(20) } },
                 });
             }
@@ -1302,7 +1297,7 @@ virtual_list_declares_only_visible_rows :: (state: *Test_State) {
     data := clay.GetScrollContainerData(clay.ID("big"));
     expect(state, data.contentDimensions.height == 1000 * 20, "占位撑满整张列表");
     // 直接把滚动位置放到第 500 行，下一帧只声明附近几行。
-    data.scrollPosition.y = -10000;
+    data.scrollPosition.*[1] = -10000;
     r = virtual_frame(*ctx);
     expect(state, range_eq(r, UI_Virtual_Range.{ 499, 506, 499 * 20, 494 * 20 }), "滚动后只声明附近行");
     virtual_frame(*ctx);
@@ -1324,18 +1319,18 @@ drag_frame :: (ctx: *UI_Context, x: float32, y: float32, down: bool) -> Drag_Tes
     result: Drag_Test_Result;
     ui_set_pointer(ctx, x, y, down);
     ui_begin(ctx, 1.0 / 60);
-    ui_element(ui_row_decl(40), children = #code {
+    clay.UI(ui_row_decl(40), #code {
         state := ui_interact(ctx, "slot-a");
         result.clicked = state.clicked;
         result.dragging = ui_drag_source(ctx, "slot-a", state, 7);
-        ui_element(UI_Decl.{
+        clay.UI(clay.ElementDeclaration.{
             id = clay.ID("slot-a"),
             layout = .{ sizing = .{ width = clay.SizingFixed(50), height = clay.SizingFixed(50) } },
         });
         payload, _, dropped := ui_drop_target(ctx, "slot-b");
         result.dropped = dropped;
         result.payload = payload;
-        ui_element(UI_Decl.{
+        clay.UI(clay.ElementDeclaration.{
             id = clay.ID("slot-b"),
             layout = .{ sizing = .{ width = clay.SizingFixed(50), height = clay.SizingFixed(50) } },
         });
@@ -1482,7 +1477,7 @@ focus_ring_frame :: (ctx: *UI_Context, theme: *UI_Theme, x: float32, y: float32,
                      widget: UI_Widget_Options = .{}) {
     ui_set_pointer(ctx, x, y, down);
     ui_begin(ctx, 1.0 / 60);
-    ui_element(UI_Decl.{ layout = .{ padding = ui_padding_all(20) } }, children = #code {
+    clay.UI(clay.ElementDeclaration.{ layout = .{ padding = clay.PaddingAll(20) } }, #code {
         _ = ui_button(ctx, theme, "ring", "", widget);
     });
     ui_translate_into(ctx, ui_end(ctx), *ctx.ops);
@@ -1562,7 +1557,7 @@ focus_ring_follows_theme_style :: (state: *Test_State) {
 
 focus_ring_text_frame :: (ctx: *UI_Context, theme: *UI_Theme, buffer: *[..] u8) {
     ui_begin(ctx, 1.0 / 60);
-    ui_element(UI_Decl.{ layout = .{ padding = ui_padding_all(20) } }, children = #code {
+    clay.UI(clay.ElementDeclaration.{ layout = .{ padding = clay.PaddingAll(20) } }, #code {
         _ = ui_text_input(ctx, theme, "name", buffer);
     });
     ui_translate_into(ctx, ui_end(ctx), *ctx.ops);
@@ -1654,14 +1649,14 @@ presence_test_frame :: (ctx: *UI_Context, open: bool) -> (alive: bool, progress:
     alive, progress = ui_presence(ctx, "popup", open, MOTION_TEST, MOTION_TEST);
     if alive {
         state = ui_interact(ctx, "popup-button");
-        ui_element(UI_Decl.{
+        clay.UI(clay.ElementDeclaration.{
             id = clay.ID("popup"),
             layout = .{
                 sizing = .{ width = clay.SizingFixed(100), height = clay.SizingFixed(60) },
-                padding = ui_padding_all(10),
+                padding = clay.PaddingAll(10),
             },
-        }, children = #code {
-            ui_element(UI_Decl.{
+        }, #code {
+            clay.UI(clay.ElementDeclaration.{
                 id = clay.ID("popup-button"),
                 layout = .{ sizing = .{ width = clay.SizingFixed(40), height = clay.SizingFixed(20) } },
             });
@@ -1687,10 +1682,10 @@ presence_progress_and_exit_isolates_input :: (state: *Test_State) {
     expect(state, alive && progress < 1, "退场第一帧仍在");
     alive, _, widget = presence_test_frame(*ctx, false);
     expect(state, alive, "退场中仍继续声明");
-    // clay.PointerOver 只看 clay 自己的命中表，不知道 ui_presence 的 inert（见 kit/ui 头部差异 C）；
-    // kit 的判据是 ui_hovered / ui_interact，两者都必须拒绝退场子树。
+    // ui_interact 与 clay.PointerOver 全走 kit 装的命中回调（ui_visual_hit，它跳过 inert 子树），
+    // 所以两者都必须拒绝退场子树。
     expect(state, !widget.hovered, "退场子树不再接受 ui_interact 命中");
-    expect(state, !ui_hovered(*ctx, "popup-button"), "退场子树不在命中链里");
+    expect(state, !clay.PointerOver(clay.ID("popup-button")), "退场子树不在命中链里");
     expect(state, ctx.previous_widgets.count == 0, "退场子树被导航跳过");
     expect(state, !ctx.input.pointer, "退场子树不消费指针");
     frames := 0;
@@ -1714,20 +1709,16 @@ ui_translate_translates_command_fields :: (state: *Test_State) {
     expect(state, ui_init(*ctx, 200, 100), "ui_init");
     defer ui_dispose(*ctx);
     commands: [4] clay.RenderCommand;
-    commands[0] = rect_command(clay.ID("a").id, 10, 20, 30, 40, clay.Color.{ 1, 0.5, 0.25, 1 }, 6);
-    // 描边：四边宽度不同，各出一条 op。
-    border := New(clay.BorderElementConfig);
-    defer free(border);
-    border.* = .{
-        left = .{ width = 2, color = .{ 1, 0, 0, 1 } },
-        right = .{ width = 3, color = .{ 0, 1, 0, 1 } },
-        top = .{ width = 4, color = .{ 0, 0, 1, 1 } },
-        bottom = .{ width = 5, color = .{ 1, 1, 0, 1 } },
-    };
+    commands[0] = rect_command(clay.ID("a").id, 10, 20, 30, 40, .[ 1.0, 0.5, 0.25, 1.0 ], 6);
+    // 描边：四边宽度不同，各出一条 op。clay 0.14 的 BorderRenderData 是一个 color
+    // 加一份 BorderWidth（left/right/top/bottom/betweenChildren）。
     commands[1] = clay.RenderCommand.{
         commandType = .BORDER,
         boundingBox = bbox(0, 0, 100, 50),
-        config = .{ borderElementConfig = border },
+        renderData = .{ border = .{
+            color = .[ 1, 0, 0, 1 ],
+            width = .{ left = 2, right = 3, top = 4, bottom = 5 },
+        } },
     };
     commands[2] = clay.RenderCommand.{
         commandType = .SCISSOR_START,
@@ -1744,9 +1735,8 @@ ui_translate_translates_command_fields :: (state: *Test_State) {
     expect(state, ops[0].radius == 6 && ops[0].texture == null, "圆角与纯色标记");
     // 四边顺序：上、下、左、右。
     expect(state, ops[1].x0 == 0 && ops[1].y0 == 0 && ops[1].x1 == 100 && ops[1].y1 == 4, "上边");
-    // clay 0.12 的 BorderElementConfig 每边各有颜色，但翻译层与 olib 一样四边共用 left 的颜色
-    // （olib 的 clay.BorderElementConfig 只有一个 color 字段）。
-    expect(state, color_eq(ops[1].color, F.Color.{ 255, 0, 0, 255 }), "四边共用 left 的颜色");
+    // 0.14 的 BorderRenderData 只有一个 color，四边天然同色。
+    expect(state, color_eq(ops[1].color, F.Color.{ 255, 0, 0, 255 }), "四边共用同一个颜色");
     expect(state, ops[2].y0 == 45 && ops[2].y1 == 50, "下边");
     expect(state, ops[3].x0 == 0 && ops[3].x1 == 2 && ops[3].y1 == 50, "左边");
     expect(state, ops[4].x0 == 97 && ops[4].x1 == 100, "右边");
@@ -1754,7 +1744,7 @@ ui_translate_translates_command_fields :: (state: *Test_State) {
                  ops[5].clip_w == 70 && ops[5].clip_h == 80, "裁剪起点取 boundingBox");
     expect(state, ops[6].kind == .Scissor_End, "裁剪终点");
     // ui_translate_into 复用输出容量，不清空调用方数组以外的状态。
-    array := clay.RenderCommandArray.{
+    array := clay.ClayArray(clay.RenderCommand).{
         capacity = cast(s32) commands.count,
         length = cast(s32) commands.count,
         internalArray = commands.data,
@@ -1805,35 +1795,27 @@ focus_ring_insert_position_between_siblings :: (state: *Test_State) {
     ui_begin(*ctx, 1.0 / 60);
     ctxp := *ctx;   // #code 里看到的是调用方名字，不是宏里的 ctx
     themep := *theme;
-    ui_element(ui_row_decl(0), children = #code {
+    clay.UI(ui_row_decl(0), #code {
         // 自定义控件：ui_interact 之后自己登记焦点框样式，否则沿用零值（无色）。
         ring_state := ui_interact(ctxp, "first");
         ui_focus_style(ctxp, themep, ring_state);
-        ui_element(UI_Decl.{
+        clay.UI(clay.ElementDeclaration.{
             id = clay.ID("first"),
             layout = .{ sizing = .{ width = clay.SizingFixed(50), height = clay.SizingFixed(50) } },
-            has_rect = true,
-            rect = .{ color = .{ 1, 1, 1, 1 } },
-            has_border = true,
-            border = .{
-                left = .{ width = 1, color = .{ 0, 0, 0, 1 } },
-                right = .{ width = 1, color = .{ 0, 0, 0, 1 } },
-                top = .{ width = 1, color = .{ 0, 0, 0, 1 } },
-                bottom = .{ width = 1, color = .{ 0, 0, 0, 1 } },
-            },
-        }, children = #code {
-            ui_element(UI_Decl.{
+            backgroundColor = .[ 1, 1, 1, 1 ],
+            border = .{ color = .[ 0, 0, 0, 1 ],
+                        width = .{ left = 1, right = 1, top = 1, bottom = 1 } },
+        }, #code {
+            clay.UI(clay.ElementDeclaration.{
                 id = clay.ID("first-child"),
                 layout = .{ sizing = .{ width = clay.SizingFixed(10), height = clay.SizingFixed(10) } },
-                has_rect = true,
-                rect = .{ color = .{ 0, 1, 1, 1 } },
+                backgroundColor = .[ 0, 1, 1, 1 ],
             });
         });
-        ui_element(UI_Decl.{
+        clay.UI(clay.ElementDeclaration.{
             id = clay.ID("second"),
             layout = .{ sizing = .{ width = clay.SizingFixed(50), height = clay.SizingFixed(50) } },
-            has_rect = true,
-            rect = .{ color = .{ 1, 0, 1, 1 } },
+            backgroundColor = .[ 1, 0, 1, 1 ],
         });
     });
     ui_translate_into(*ctx, ui_end(*ctx), *ctx.ops);

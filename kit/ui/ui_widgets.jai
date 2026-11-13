@@ -1,11 +1,12 @@
 // ui:widgets —— 主题、基础控件、图像、滑条、进度和容器。
 //
-// clay 0.12 语法映射（相对 olib 的 0.14 声明式）：
-//   ElementDeclaration{id, layout, backgroundColor, cornerRadius, border, floating, clip}
-//     → UI_Decl{id, layout, rect{color,cornerRadius}, border, floating, scroll}
-//   clay.UI()(decl) { 子内容 } → ui_element(decl, children = #code { 子内容 })
-//   枚举成员大写：.CENTER/.LEFT/.RIGHT/.TOP/.BOTTOM、.LEFT_TO_RIGHT/.TOP_TO_BOTTOM、.CAPTURE
-//   clay.PaddingAll → ui_padding_all（0.12 没有这个助手）
+// 声明写法与 olib 的 0.14 完全一致：
+//   if clay.UI()(decl) { 子内容 }        → clay.UI(decl, #code { 子内容 })
+//   clay.ElementDeclaration{...}         → 同名同字段（backgroundColor/cornerRadius/border/
+//                                          floating/clip/custom/image）
+//   枚举成员大写下划线：.CENTER/.LEFT/.RIGHT/.TOP/.BOTTOM、.LEFT_TO_RIGHT/.TOP_TO_BOTTOM、.CAPTURE
+// presence 由字段值决定（backgroundColor.a > 0、cornerRadius != 0、border.width != 0、
+// clip.horizontal/vertical、floating.attachTo != .NONE、custom.customData != null），没有 has_* 标志。
 
 //@region 主题
 
@@ -73,18 +74,22 @@ UI_THEME_DARK :: UI_Theme.{
 
 // clay 颜色换算（F.Color 的 u8 通道 -> clay 的 0..1）。
 ui_clay_color :: (c: F.Color) -> clay.Color {
-    return .{ cast(float32) c.r / 255, cast(float32) c.g / 255,
-              cast(float32) c.b / 255, cast(float32) c.a / 255 };
+    return .[ cast(float32) c.r / 255, cast(float32) c.g / 255,
+               cast(float32) c.b / 255, cast(float32) c.a / 255 ];
 }
 
-// clay 0.12 没有 PaddingAll。
-ui_padding_all :: (p: u16) -> clay.Padding {
-    return .{ left = p, right = p, top = p, bottom = p };
+// F.Color 的全零判定（Jai 里 `==` 要求声明它的模块在作用域内，统一走这个助手）。
+ui_fcolor_is_zero :: (c: F.Color) -> bool {
+    return c.r == 0 && c.g == 0 && c.b == 0 && c.a == 0;
 }
 
-ui_layout_fill :: () -> clay.LayoutConfig {
-    return .{ sizing = .{ width = clay.SizingGrow(), height = clay.SizingGrow() } };
+// clay 0.14 的边框是「一个颜色 + 四边宽度」：不再有 per-side 颜色。
+// 需要四边同宽时用这个助手，省掉每次都写 width 的四个字段。
+ui_clay_border :: (width: u16, color: clay.Color) -> clay.BorderElementConfig {
+    return .{ color = color,
+              width = .{ left = width, right = width, top = width, bottom = width } };
 }
+
 //@endregion
 
 //@region 控件
@@ -141,19 +146,19 @@ ui_button_ex :: (ctx: *UI_Context, theme: *UI_Theme, id: string, label: string,
     min_width: float32;
     if style == .Ghost min_width = 0;
     else min_width = 80;
-    ui_element(UI_Decl.{
+    clay.UI(clay.ElementDeclaration.{
         id = clay.ID(id),
         layout = .{
             sizing = .{
                 width = clay.SizingFit(.{ min = min_width, max = 400 }),
                 height = clay.SizingFit(),
             },
-            padding = ui_padding_all(theme.padding),
+            padding = clay.PaddingAll(theme.padding),
             childAlignment = .{ x = .CENTER, y = .CENTER },
         },
-        has_rect = true,
-        rect = .{ color = ui_clay_color(bg), cornerRadius = clay.CornerRadiusAll(theme.corner_radius) },
-    }, children = #code {
+        backgroundColor = ui_clay_color(bg),
+        cornerRadius = clay.CornerRadiusAll(theme.corner_radius),
+    }, #code {
         ui_label_ex(ctx, theme, label, label_col, theme.body_font_size);
     });
     return clicked;
@@ -181,7 +186,7 @@ ui_label_ex :: (ctx: *UI_Context, theme: *UI_Theme, text: string, color: F.Color
         textColor = ui_clay_color(color),
     });
     if config == null return;
-    ui_text_element(ctx, text, config); // 不用裸 clay.Text：文本元素要进视觉树
+    clay.TextDynamic(text, config); // 0.14：TextDynamic 直接吃 string，元素 id 由 clay 派生
 }
 
 // 开关：点击翻转 *value，返回新值。胶囊轨道 + 圆形滑块。
@@ -199,22 +204,22 @@ ui_toggle :: (ctx: *UI_Context, theme: *UI_Theme, id: string, value: *bool,
     if value.* align = .{ x = .RIGHT, y = .CENTER };
     track_color := track;
     if state.disabled track_color = theme.panel;
-    ui_element(UI_Decl.{
+    clay.UI(clay.ElementDeclaration.{
         id = clay.ID(id),
         layout = .{
             sizing = .{ width = clay.SizingFixed(36), height = clay.SizingFixed(20) },
             padding = .{ left = 2, right = 2, top = 2, bottom = 2 },
             childAlignment = align,
         },
-        has_rect = true,
-        rect = .{ color = ui_clay_color(track_color), cornerRadius = clay.CornerRadiusAll(10) }, // 半高 = 胶囊
-    }, children = #code {
-        ui_element(UI_Decl.{
+        backgroundColor = ui_clay_color(track_color),
+        cornerRadius = clay.CornerRadiusAll(10), // 半高 = 胶囊
+    }, #code {
+        clay.UI(clay.ElementDeclaration.{
             // 下标 1：滑块子元素的稳定 id
             id = clay.ID(id, 1),
             layout = .{ sizing = .{ width = clay.SizingFixed(16), height = clay.SizingFixed(16) } },
-            has_rect = true,
-            rect = .{ color = ui_clay_color(theme.text), cornerRadius = clay.CornerRadiusAll(8) }, // 半宽 = 圆
+            backgroundColor = ui_clay_color(theme.text),
+            cornerRadius = clay.CornerRadiusAll(8), // 半宽 = 圆
         });
     });
     return value.*;
@@ -222,16 +227,15 @@ ui_toggle :: (ctx: *UI_Context, theme: *UI_Theme, id: string, value: *bool,
 
 // 分隔线：横贯父容器宽度的 1px 细线。
 ui_separator :: (ctx: *UI_Context, theme: *UI_Theme) {
-    ui_element(UI_Decl.{
+    clay.UI(clay.ElementDeclaration.{
         layout = .{ sizing = .{ width = clay.SizingGrow(), height = clay.SizingFixed(1) } },
-        has_rect = true,
-        rect = .{ color = ui_clay_color(theme.panel_border) },
+        backgroundColor = ui_clay_color(theme.panel_border),
     });
 }
 
 // 水平行容器声明（gap 像素间距，子元素垂直居中）。子内容在
-// ui_element(ui_row_decl(...), children = #code { ... }) 里声明。
-ui_row_decl :: (gap: u16 = 8) -> UI_Decl {
+// clay.UI(ui_row_decl(...), #code { ... }) 里声明。
+ui_row_decl :: (gap: u16 = 8) -> clay.ElementDeclaration {
     return .{
         layout = .{
             sizing = .{ width = clay.SizingGrow(), height = clay.SizingFit() },
@@ -243,38 +247,32 @@ ui_row_decl :: (gap: u16 = 8) -> UI_Decl {
 
 // 占位元素：吃掉行内剩余空间（推右对齐用）。
 ui_spacer :: () {
-    ui_element(UI_Decl.{
+    clay.UI(clay.ElementDeclaration.{
         layout = .{ sizing = .{ width = clay.SizingGrow(), height = clay.SizingFixed(1) } },
     });
 }
 
-// 面板：带内边距与圆角的容器声明（子内容在 ui_element 的 children 块里声明）。
-ui_panel_decl :: (theme: *UI_Theme, gap: u16 = 8, width: float32 = 0) -> UI_Decl {
+// 面板：带内边距与圆角的容器声明（子内容在 clay.UI 的 #code 块里声明）。
+ui_panel_decl :: (theme: *UI_Theme, gap: u16 = 8, width: float32 = 0) -> clay.ElementDeclaration {
     sizing: clay.SizingAxis = clay.SizingGrow();
     if width > 0 sizing = clay.SizingFixed(width);
     return .{
         layout = .{
             sizing = .{ width = sizing, height = clay.SizingFit() },
             layoutDirection = .TOP_TO_BOTTOM, childGap = gap,
-            padding = ui_padding_all(cast(u16) (theme.padding * 2)),
+            padding = clay.PaddingAll(cast(u16) (theme.padding * 2)),
         },
-        has_rect = true,
-        rect = .{
-            color = ui_clay_color(theme.panel),
-            cornerRadius = clay.CornerRadiusAll(theme.corner_radius + 2),
-        },
+        backgroundColor = ui_clay_color(theme.panel),
+        cornerRadius = clay.CornerRadiusAll(theme.corner_radius + 2),
     };
 }
 
 // 面板描边容器：padding 1px + 边框色圆角底，包在 panel 外层即得 1px 边框。
-ui_panel_border_decl :: (theme: *UI_Theme) -> UI_Decl {
+ui_panel_border_decl :: (theme: *UI_Theme) -> clay.ElementDeclaration {
     return .{
         layout = .{ padding = .{ left = 1, right = 1, top = 1, bottom = 1 } },
-        has_rect = true,
-        rect = .{
-            color = ui_clay_color(theme.panel_border),
-            cornerRadius = clay.CornerRadiusAll(theme.corner_radius + 3),
-        },
+        backgroundColor = ui_clay_color(theme.panel_border),
+        cornerRadius = clay.CornerRadiusAll(theme.corner_radius + 3),
     };
 }
 //@endregion
@@ -286,7 +284,7 @@ ui_panel_border_decl :: (theme: *UI_Theme) -> UI_Decl {
 ui_focus_style :: (ctx: *UI_Context, theme: *UI_Theme, state: UI_Interaction) {
     if !state.focused || state.disabled return;
     style := theme.focus;
-    if style.color == F.Color.{} style.color = theme.accent;
+    if ui_fcolor_is_zero(style.color) style.color = theme.accent;
     if style.width <= 0 style.width = 2;
     ctx.focus_style = style;
 }
@@ -294,12 +292,11 @@ ui_focus_style :: (ctx: *UI_Context, theme: *UI_Theme, state: UI_Interaction) {
 UI_Image_Data :: struct {
     sub: F.Subtexture;
     source_border, border: float32;
-    tint: F.Color; // clay 0.12 的 Custom 命令没有 backgroundColor，染色存在这里
 }
 
 // 可容纳文字/图标的图片背景声明。纹理由调用者持有，颜色使用预乘 alpha。
-ui_image_decl :: (ctx: *UI_Context, sub: F.Subtexture, tint: F.Color = .{ 255, 255, 255, 255 }) -> UI_Decl {
-    decl := UI_Decl.{
+ui_image_decl :: (ctx: *UI_Context, sub: F.Subtexture, tint: F.Color = .{ 255, 255, 255, 255 }) -> clay.ElementDeclaration {
+    decl := clay.ElementDeclaration.{
         layout = .{ sizing = .{ width = clay.SizingGrow(), height = clay.SizingGrow() } },
     };
     if sub.Tex == null || ctx.image_len >= ctx.image_pool.count {
@@ -307,22 +304,24 @@ ui_image_decl :: (ctx: *UI_Context, sub: F.Subtexture, tint: F.Color = .{ 255, 2
         return decl;
     }
     data := *ctx.image_pool[ctx.image_len];
-    data.* = .{ sub = sub, tint = tint };
+    data.* = .{ sub = sub };
     ctx.image_len += 1;
-    decl.has_custom = true;
-    decl.custom = cast(*void) data;
+    // 染色写进声明：clay 把 shared backgroundColor 塞进 IMAGE / CUSTOM 渲染命令的
+    // backgroundColor，后端据此染色（与 olib 一致）。
+    decl.backgroundColor = ui_clay_color(tint);
+    decl.custom = .{ customData = cast(*void) data };
     return decl;
 }
 
 // 整张纹理的对称九宫格背景。source_border 为源图片像素，border 为逻辑像素。
 // 保留四角比例，边缘仅沿对应方向拉伸；透明圆角需由图片自身提供。
 ui_nine_slice_decl :: (ctx: *UI_Context, texture: *F.Texture, source_border: float32, border: float32,
-                       tint: F.Color = .{ 255, 255, 255, 255 }) -> UI_Decl {
+                       tint: F.Color = .{ 255, 255, 255, 255 }) -> clay.ElementDeclaration {
     sub: F.Subtexture;
     if texture != null sub = F.subtexture_make_full(texture);
     decl := ui_image_decl(ctx, sub, tint);
-    if decl.custom != null {
-        data := cast(*UI_Image_Data) decl.custom;
+    if decl.custom.customData != null {
+        data := cast(*UI_Image_Data) decl.custom.customData;
         data.source_border = clamp(source_border, 0, min(sub.Frame.w, sub.Frame.h) * 0.5);
         data.border = max(border, 0);
     }
@@ -334,12 +333,12 @@ ui_nine_slice_decl :: (ctx: *UI_Context, texture: *F.Texture, source_border: flo
 ui_image :: (ctx: *UI_Context, sub: F.Subtexture, width: float32, height: float32,
              tint: F.Color = .{ 255, 255, 255, 255 }) {
     decl := ui_image_decl(ctx, sub, tint);
-    if decl.custom == null return;
+    if decl.custom.customData == null return;
     decl.layout.sizing = .{
         width = clay.SizingFixed(max(width, 0)),
         height = clay.SizingFixed(max(height, 0)),
     };
-    ui_element(decl);
+    clay.UI(decl);
 }
 
 ui_image_button :: (ctx: *UI_Context, theme: *UI_Theme, id: string, sub: F.Subtexture,
@@ -354,12 +353,12 @@ ui_image_button :: (ctx: *UI_Context, theme: *UI_Theme, id: string, sub: F.Subte
         bg = theme.panel;
         tint = theme.text_dim;
     }
-    ui_element(UI_Decl.{
+    clay.UI(clay.ElementDeclaration.{
         id = clay.ID(id),
-        layout = .{ padding = ui_padding_all(theme.padding) },
-        has_rect = true,
-        rect = .{ color = ui_clay_color(bg), cornerRadius = clay.CornerRadiusAll(theme.corner_radius) },
-    }, children = #code {
+        layout = .{ padding = clay.PaddingAll(theme.padding) },
+        backgroundColor = ui_clay_color(bg),
+        cornerRadius = clay.CornerRadiusAll(theme.corner_radius),
+    }, #code {
         ui_image(ctx, sub, size, size, tint);
     });
     return state.clicked;
@@ -369,26 +368,23 @@ ui_image_button :: (ctx: *UI_Context, theme: *UI_Theme, id: string, sub: F.Subte
 ui_progress_bar :: (ctx: *UI_Context, theme: *UI_Theme, value: float32,
                     width: float32 = 200, height: float32 = 12) {
     clamped_value := clamp(value, 0, 1);
-    ui_element(UI_Decl.{
+    clay.UI(clay.ElementDeclaration.{
         layout = .{
             sizing = .{ width = clay.SizingFixed(max(width, 0)), height = clay.SizingFixed(max(height, 0)) },
         },
-        has_rect = true,
-        rect = .{ color = ui_clay_color(theme.button), cornerRadius = clay.CornerRadiusAll(height * 0.5) },
-    }, children = #code {
+        backgroundColor = ui_clay_color(theme.button),
+        cornerRadius = clay.CornerRadiusAll(height * 0.5),
+    }, #code {
         if clamped_value > 0 {
-            ui_element(UI_Decl.{
+            clay.UI(clay.ElementDeclaration.{
                 layout = .{
                     sizing = .{
                         width = clay.SizingFixed(max(width, 0) * clamped_value),
                         height = clay.SizingFixed(max(height, 0)),
                     },
                 },
-                has_rect = true,
-                rect = .{
-                    color = ui_clay_color(theme.accent),
-                    cornerRadius = clay.CornerRadiusAll(height * 0.5),
-                },
+                backgroundColor = ui_clay_color(theme.accent),
+                cornerRadius = clay.CornerRadiusAll(height * 0.5),
             });
         }
     });
@@ -422,19 +418,19 @@ ui_slider :: (ctx: *UI_Context, theme: *UI_Theme, id: string, value: *float32,
     if state.disabled track_color = theme.panel;
     knob_color := theme.accent;
     if state.disabled knob_color = theme.text_dim;
-    ui_element(UI_Decl.{
+    clay.UI(clay.ElementDeclaration.{
         id = clay.ID(id),
         layout = .{
             sizing = .{ width = clay.SizingFixed(min_width), height = clay.SizingFixed(24) },
             padding = .{ left = cast(u16) (t * (min_width - 16)), top = 4 },
         },
-        has_rect = true,
-        rect = .{ color = ui_clay_color(track_color), cornerRadius = clay.CornerRadiusAll(12) },
-    }, children = #code {
-        ui_element(UI_Decl.{
+        backgroundColor = ui_clay_color(track_color),
+        cornerRadius = clay.CornerRadiusAll(12),
+    }, #code {
+        clay.UI(clay.ElementDeclaration.{
             layout = .{ sizing = .{ width = clay.SizingFixed(16), height = clay.SizingFixed(16) } },
-            has_rect = true,
-            rect = .{ color = ui_clay_color(knob_color), cornerRadius = clay.CornerRadiusAll(8) },
+            backgroundColor = ui_clay_color(knob_color),
+            cornerRadius = clay.CornerRadiusAll(8),
         });
     });
     return before != value.*;
@@ -443,7 +439,7 @@ ui_slider :: (ctx: *UI_Context, theme: *UI_Theme, id: string, value: *float32,
 
 //@region 容器 —— 列 / 滚动区域 / 全屏模态遮罩
 
-ui_column_decl :: (gap: u16 = 8) -> UI_Decl {
+ui_column_decl :: (gap: u16 = 8) -> clay.ElementDeclaration {
     decl := ui_row_decl(gap);
     decl.layout.layoutDirection = .TOP_TO_BOTTOM;
     decl.layout.childAlignment = .{ x = .LEFT, y = .TOP };
@@ -458,18 +454,19 @@ UI_Scroll_Entry :: struct {
 }
 
 ui_scroll_decl :: (ctx: *UI_Context, id: string, height: float32,
-                   width: float32 = 0, gap: u16 = 8) -> UI_Decl {
+                   width: float32 = 0, gap: u16 = 8) -> clay.ElementDeclaration {
     ui_block_pointer(ctx, id);
     decl := ui_column_decl(gap);
     decl.id = clay.ID(id);
     width_axis: clay.SizingAxis = clay.SizingGrow();
     if width > 0 width_axis = clay.SizingFixed(width);
     decl.layout.sizing = .{ width = width_axis, height = clay.SizingFixed(height) };
-    // clay 0.12 的裁剪就是 Scroll 容器（没有独立的 Clip 配置）。
-    decl.has_scroll = true;
-    decl.scroll = .{ vertical = true, horizontal = true };
+    decl.clip = .{ horizontal = true, vertical = true };
+    // childOffset 是 clay 布局时真正用来偏移子元素的值：把上一帧读到的滚动位置写回去，
+    // 滚动才看得见（clay 内部只维护 scrollPosition 状态，不回写声明）。
     for *scroll: ctx.scrolls {
         if scroll.id == decl.id.id {
+            decl.clip.childOffset = scroll.offset;
             scroll.seen = true;
             return decl;
         }
@@ -479,22 +476,15 @@ ui_scroll_decl :: (ctx: *UI_Context, id: string, height: float32,
 }
 
 // 配合 ui_set_modal/ui_set_scope；尺寸覆盖逻辑 viewport，内容居中。
-ui_modal_decl :: (ctx: *UI_Context, id: string) -> UI_Decl {
+ui_modal_decl :: (ctx: *UI_Context, id: string) -> clay.ElementDeclaration {
     return .{
         id = clay.ID(id),
         layout = .{
             sizing = .{ width = clay.SizingFixed(ctx.width), height = clay.SizingFixed(ctx.height) },
             childAlignment = .{ x = .CENTER, y = .CENTER },
         },
-        has_rect = true,
-        rect = .{ color = .{ 0, 0, 0, 0.65 } },
-        // olib: floating = {attachTo = .Root, zIndex = 100}；0.12 用 parentId 指根容器。
-        has_floating = true,
-        floating = .{
-            parentId = clay.ID(UI_ROOT_ID).id,
-            zIndex = 100,
-            pointerCaptureMode = .CAPTURE,
-        },
+        backgroundColor = .[ 0, 0, 0, 0.65 ],
+        floating = .{ attachTo = .ROOT, zIndex = 100, pointerCaptureMode = .CAPTURE },
     };
 }
 //@endregion

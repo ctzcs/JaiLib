@@ -1,11 +1,11 @@
 // ui:visual —— 子树视觉变换 / Tween 插值 / 变换感知命中测试 / 按 ID 的状态驱动动效。
 //
-// 与本仓库 clay 0.12 的差异：没有 Clay_SetPointerHitTestFunction（见 ui.jai 头部差异 C），
-// 所以命中链由本文件末尾的「命中测试」区自己实现：帧末快照每个元素的布局框 + 合成变换，
-// 帧开始把指针逐级逆变换进元素局部空间判定，并检查裁剪祖先与浮动层上下序。
-// 变换本身、父子合成、透明度继承、反算指针到逻辑坐标（ui_pointer_local）与发射时的
-// 裁剪/颜色处理都完整保留。视觉树不再来自 Clay_GetLayoutElementInfo，而是
-// ui_element 声明期记录的 UI_Element_Info。
+// 视觉树直接来自 clay.GetLayoutElementInfo（EndLayout 之后整棵元素树，带 parentId / clipId /
+// 包围盒），命中测试通过 clay.SetPointerHitTestFunction 装成 clay 自己的命中回调
+// （本文件末尾的「命中测试」区，与 olib ui_visual.odin 一一对应）。于是：
+//   * clay.PointerOver / pointerOverIds / 滚动优先级 / onHover 全部按显示变换判定；
+//   * 变换本身、父子合成、透明度继承、反算指针到逻辑坐标（ui_pointer_local）与发射时的
+//     裁剪/颜色处理都在这一层，绘制与输入共用同一套矩阵。
 
 //@region 视觉属性 —— 不改变布局占位；零值不可见，请从 UI_VISUAL_DEFAULT 开始。
 
@@ -38,12 +38,10 @@ ui_visual_lerp :: (a: UI_Visual, b: UI_Visual, t: float32) -> UI_Visual {
 }
 
 UI_Visual_Element :: struct {
-    id, parent: u32;
-    clip_id:    u32;
-    box:        clay.BoundingBox;
-    transform:  F.Matrix3x2;
-    opacity:    float32;
-    inert:      bool; // 位于退场中的 presence 子树：不命中、不参与导航
+    info:      clay.LayoutElementInfo; // id / parentId / clipId / boundingBox
+    transform: F.Matrix3x2;
+    opacity:   float32;
+    inert:     bool; // 位于退场中的 presence 子树：不命中、不参与导航
     resolved, resolving: bool;
 }
 
@@ -52,43 +50,30 @@ UI_VISUAL_IDENTITY :: F.Matrix3x2.{ 1, 0, 0, 1, 0, 0 };
 
 //@region 布局快照 —— 保存数值，不保留 clay 帧内指针
 
+// 把 [..]T 当 []T 只读视图（Jai 没有动态数组到切片的隐式转换，也没有切片语法）。
+ui_layout_info_view :: (elements: [..] clay.LayoutElementInfo) -> [] clay.LayoutElementInfo {
+    result: [] clay.LayoutElementInfo;
+    result.data = elements.data;
+    result.count = elements.count;
+    return result;
+}
+
 ui_visual_snapshot :: (ctx: *UI_Context) {
     table_reset(*ctx.visual_elements);
     if ctx.visuals.count == 0 && ctx.inert.count == 0 return;
-    if ctx.frame_elements.count == 0 return;
-    for info: ctx.frame_elements {
-        // 文本元素只在声明期算出的 id 上登记；算错时宁可退回「不继承变换」，
-        // 也不能覆盖同 id 的普通元素（那会连带毁掉它的变换）。
-        if info.is_text {
-            found_existing, _ := table_find(*ctx.visual_elements, info.id);
-            if found_existing continue;
-        }
-        box := clay.GetElementData(.{ id = info.id }).boundingBox;
+    // 先问长度再取内容：GetLayoutElementInfo 在缓冲区不够时只返回所需长度。
+    count := clay.GetLayoutElementInfo(.[]);
+    if count <= 0 { ctx.visual_layout.count = 0; return; }
+    array_resize(*ctx.visual_layout, count);
+    clay.GetLayoutElementInfo(ui_layout_info_view(ctx.visual_layout));
+    for info: ctx.visual_layout {
         table_set(*ctx.visual_elements, info.id, UI_Visual_Element.{
-            id = info.id,
-            parent = info.parent,
-            clip_id = 0, // 下面按父链补算
-            box = box,
+            info = info,
             transform = UI_VISUAL_IDENTITY,
             opacity = 1,
         });
     }
-    // 最近的裁剪祖先（声明期的 clip 标记），供 ui_visual_clip 与调试使用。
-    for *e, id: *ctx.visual_elements {
-        parent := e.parent;
-        depth := 0;
-        while parent != 0 && depth < ctx.frame_elements.count {
-            found, p := table_find(*ctx.visual_elements, parent);
-            if !found break;
-            if p.clip_id != 0 {
-                e.clip_id = p.clip_id;
-                break;
-            }
-            parent = p.parent;
-            depth += 1;
-        }
-    }
-    for info: ctx.frame_elements _ = ui_visual_resolve(ctx, info.id);
+    for info: ctx.visual_layout _ = ui_visual_resolve(ctx, info.id);
 }
 
 ui_visual_resolve :: (ctx: *UI_Context, id: u32) -> UI_Visual_Element {
@@ -97,7 +82,7 @@ ui_visual_resolve :: (ctx: *UI_Context, id: u32) -> UI_Visual_Element {
     if e.resolved return e;
     e.resolving = true;
     table_set(*ctx.visual_elements, id, e);
-    parent := ui_visual_resolve(ctx, e.parent);
+    parent := ui_visual_resolve(ctx, e.info.parentId);
     e.transform = parent.transform;
     e.opacity = parent.opacity;
     e.inert = parent.inert;
@@ -106,7 +91,7 @@ ui_visual_resolve :: (ctx: *UI_Context, id: u32) -> UI_Visual_Element {
     if is_inert e.inert = true;
     ok, v := table_find(*ctx.visuals, id);
     if ok {
-        bb := e.box;
+        bb := e.info.boundingBox;
         pivot := F.Vector2.{ bb.x + bb.width * v.pivot.x, bb.y + bb.height * v.pivot.y };
         c := JM.cos(v.rotation);
         s := JM.sin(v.rotation);
@@ -173,7 +158,7 @@ ui_visual_pointer :: (ctx: *UI_Context, id: u32, point: F.Vector2) -> (F.Vector2
 ui_visual_inverse_point :: (m: F.Matrix3x2, opacity: float32, point: F.Vector2) -> (F.Vector2, bool) {
     det := m.m11 * m.m22 - m.m12 * m.m21;
     if JM.abs(det) < UI_VISUAL_SINGULAR_EPSILON || opacity <= 0 return .{ 0, 0 }, false;
-    p := point - F.Vector2.{ m.m31, m.m32 };
+    p := F.Vector2.{ point.x - m.m31, point.y - m.m32 };
     return .{ (p.x * m.m22 - p.y * m.m21) / det,
               (p.y * m.m11 - p.x * m.m12) / det }, true;
 }
@@ -386,130 +371,50 @@ ui_motion_prune_presences :: (ctx: *UI_Context) {
 //@endregion
 //@endregion
 
-//@region 命中测试 —— 变换感知（补上 clay 0.12 缺失的 Clay_SetPointerHitTestFunction）
+//@region 命中测试 —— clay 的可插拔命中回调（SetPointerHitTestFunction）
 
-// 一个元素的命中快照：box 在元素**自身局部空间**（布局框，视觉变换不改它），
-// transform 把局部坐标映射到窗口逻辑坐标（与 ui_visual_point / ui_pointer_local 同一套矩阵）。
-// 数组顺序就是声明序，后面的在上层。
-UI_Hit_Element :: struct {
-    id, parent: u32;
-    clip:       bool;  // 裁剪容器：后代必须落在它的局部框内
-    box:        clay.BoundingBox;
-    transform:  F.Matrix3x2;
-    opacity:    float32;
-    z:          float32; // 浮动层有效 z（祖先链最大值），决定上下层
-    inert:      bool;    // 退场子树（ui_presence）：不命中
-    floating:   bool;    // 浮动元素是布局树的独立根：命中链到它为止，不继续到声明父
-}
+// clay 在 _BackendPointInside 里调用它（clay_layout 的 pointerOverIds / 滚动优先级 / onHover 都
+// 走这里）。两种调用形态：
+//   clip = false：id 是**被测试的元素**，bounds 是它的布局框 —— 指针要逆变换进该元素的局部空间；
+//   clip = true ：id 是**裁剪祖先**，bounds 是它的布局框 —— clay 原生只检查最近一级裁剪，为了与
+//                 完整嵌套 scissor 一致，这里先用裁剪祖先自己的变换把框变到屏幕空间再判。
+// 视口外与退场（presence 的 inert）子树一律不命中；奇异变换（不可逆）或整体透明同样不命中，
+// 这也正是「奇异变换下不产生捕获」的依据。
 
-// 帧末快照。布局已结束、视觉变换已解析，此时记下的数据供**下一帧**的命中查询使用；
-// clay 自己的 PointerOver 也只看上一帧布局，时序一致。
-ui_hit_snapshot :: (ctx: *UI_Context) {
-    ctx.hit_elements.count = 0;
-    table_reset(*ctx.hit_index);
-    if ctx.frame_elements.count == 0 return;
-    for info: ctx.frame_elements {
-        found, visual := table_find(*ctx.visual_elements, info.id);
-        e := UI_Hit_Element.{
-            id = info.id, parent = info.parent, clip = info.clip, z = info.z,
-            transform = UI_VISUAL_IDENTITY,
-            opacity = 1,
-            floating = info.floating,
-        };
-        if found {
-            // 视觉快照里已有同一次 GetElementData 的结果，不重复查询。
-            e.box = visual.box;
-            e.transform = visual.transform;
-            e.opacity = visual.opacity;
-            e.inert = visual.inert;
-        } else {
-            e.box = clay.GetElementData(.{ id = info.id }).boundingBox;
+ui_visual_hit :: (id: u32, position: clay.Vector2, bounds_arg: clay.BoundingBox,
+                  clip: bool, user_data: *void) -> bool {
+    bounds := bounds_arg;
+    ctx := cast(*UI_Context) user_data;
+    if ctx == null return false;
+    p := F.Vector2.{ position[0], position[1] };
+    push_context ctx.callback_context {
+        if !ui_visual_inside(p, .{ 0, 0, ctx.width, ctx.height }) || ui_visual_inert(ctx, id) {
+            return false;
         }
-        // 浮动子树整体位于普通内容之上：z 沿祖先链取最大值（父元素总是先声明）。
-        if e.parent != 0 {
-            pfound, pidx := table_find(*ctx.hit_index, e.parent);
-            if pfound && cast(int) pidx < ctx.hit_elements.count &&
-               ctx.hit_elements[cast(int) pidx].z > e.z {
-                e.z = ctx.hit_elements[cast(int) pidx].z;
+        if clip {
+            found, e := table_find(*ctx.visual_elements, id);
+            if found bounds = ui_visual_clip(e.transform, bounds);
+        } else {
+            local, ok := ui_visual_pointer(ctx, id, p);
+            if !ok return false;
+            p = local;
+            // clay 原生只检查最近一级裁剪；动画命中需要与完整嵌套 scissor 相交一致。
+            found, e := table_find(*ctx.visual_elements, id);
+            if found {
+                clip_id := e.info.clipId;
+                depth := 0;
+                while clip_id != 0 && depth < ctx.visual_elements.count {
+                    ancestor_found, ancestor := table_find(*ctx.visual_elements, clip_id);
+                    if !ancestor_found break;
+                    bb := ui_visual_clip(ancestor.transform, ancestor.info.boundingBox);
+                    if !ui_visual_inside(F.Vector2.{ position[0], position[1] }, bb) return false;
+                    clip_id = ancestor.info.clipId;
+                    depth += 1;
+                }
             }
         }
-        table_set(*ctx.hit_index, e.id, cast(u32) ctx.hit_elements.count);
-        array_add(*ctx.hit_elements, e);
+        return ui_visual_inside(p, bounds);
     }
 }
 
-// 指针反算进元素局部空间；ok=false 表示奇异变换或整体透明——都算没命中。
-ui_hit_local :: (e: UI_Hit_Element, point: F.Vector2) -> (F.Vector2, bool) {
-    return ui_visual_inverse_point(e.transform, e.opacity, point);
-}
-
-// 该元素是否被指针命中：指针落在自己的局部框内，且落在每一级裁剪祖先的局部框内。
-// 裁剪祖先也用**它自己的**逆变换判定，所以旋转/缩放的滚动容器照样裁得对。
-ui_hit_contains :: (ctx: *UI_Context, index: int, point: F.Vector2) -> bool {
-    if index < 0 || index >= ctx.hit_elements.count return false;
-    e := ctx.hit_elements[index];
-    if e.inert return false;
-    local, ok := ui_hit_local(e, point);
-    if !ok return false;
-    if !ui_visual_inside(local, e.box) return false;
-    parent := e.parent;
-    depth := 0;
-    while parent != 0 && depth <= ctx.hit_elements.count {
-        found, pidx := table_find(*ctx.hit_index, parent);
-        if !found break;
-        p := ctx.hit_elements[cast(int) pidx];
-        if p.clip {
-            plocal, pok := ui_hit_local(p, point);
-            if !pok return false; // 奇异裁剪容器：不认为能看到里面
-            if !ui_visual_inside(plocal, p.box) return false;
-        }
-        parent = p.parent;
-        depth += 1;
-    }
-    return true;
-}
-
-// 每帧 ui_begin 调用一次：按上一帧快照 + 本帧指针算出命中链。
-// 挑最上层元素（浮动 z 大者优先，同 z 取声明靠后的），再把它的祖先补进链里，
-// 于是 ui_hovered 的语义与 clay.PointerOver 一致（元素本身或其祖先被覆盖）。
-ui_hit_update :: (ctx: *UI_Context) {
-    ctx.hover_path.count = 0;
-    ctx.hover_id = 0;
-    if ctx.hit_elements.count == 0 return;
-    point := F.Vector2.{ ctx.pointer_x, ctx.pointer_y };
-    best := -1;
-    best_z: float32;
-    for i: 0 .. ctx.hit_elements.count - 1 {
-        z := ctx.hit_elements[i].z;
-        if best >= 0 && z < best_z continue; // 更低层不可能赢，跳过逆变换
-        if !ui_hit_contains(ctx, i, point) continue;
-        best = i;
-        best_z = z;
-    }
-    if best < 0 return;
-    ctx.hover_id = ctx.hit_elements[best].id;
-    array_add(*ctx.hover_path, ctx.hover_id);
-    parent := ctx.hit_elements[best].parent;
-    depth := 0;
-    while parent != 0 && depth <= ctx.hit_elements.count {
-        found, pidx := table_find(*ctx.hit_index, parent);
-        if !found break;
-        array_add(*ctx.hover_path, parent);
-        // 浮动元素是 clay 布局树的独立根：声明它的父元素不算被指针覆盖，否则
-        // 「浮层在按钮上方」会被判成「按钮也被覆盖」，按下就落到按钮上（下拉框选不中）。
-        if ctx.hit_elements[cast(int) pidx].floating break;
-        parent = ctx.hit_elements[cast(int) pidx].parent;
-        depth += 1;
-    }
-}
-
-// 指针是否覆盖该元素（含它的后代）。交互判定统一走它，代替 clay.PointerOver。
-ui_hovered :: (ctx: *UI_Context, id: string) -> bool {
-    key := clay.ID(id).id;
-    for hit: ctx.hover_path if hit == key return true;
-    return false;
-}
-
-// 最上层的命中元素 id（没有命中为 0）；调试与自定义控件用。
-ui_hover_id :: (ctx: *UI_Context) -> u32 { return ctx.hover_id; }
 //@endregion

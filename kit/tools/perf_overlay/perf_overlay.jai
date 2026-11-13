@@ -17,7 +17,7 @@
 //   | `slice.clone` + `slice.sort`                | NewArray(temporary_allocator) + 本文件的插入排序         |
 //   | `fmt.eprintln("Perf overlay:", reason)`     | print("%\n")（Jai 的 Basic 没有 stderr 版本）            |
 //   | `clay.PaddingAll(n)` / `CornerRadiusAll(n)` | Padding 是结构体（CornerRadiusAll 仍在 clay 里）          |
-//   | `clay.UI()(decl) { … }`                     | ui_element(decl, children = #code { … })              |
+//   | `clay.UI()(decl) { … }`                     | clay.UI(decl, #code { … })              |
 //   | `decl.backgroundColor` / `.cornerRadius`    | decl.has_rect + decl.rect.{ color, cornerRadius }      |
 //   | `decl.floating = { attachTo = .Root, … }`   | floating = { parentId = clay.ID(UI_ROOT_ID).id, … }   |
 //   | `clay.ChildAlignment{x = .Right}`           | Jai 枚举是大写 `.RIGHT` / `.BOTTOM`                     |
@@ -240,49 +240,47 @@ panel_layout :: (o: *Overlay) {
     attach: clay.FloatingAttachPointType;
     offset: clay.Vector2;
     if o.corner == {
-        case .Top_Right;    attach = .RIGHT_TOP;    offset = .{ -12, 12 };
-        case .Top_Left;     attach = .LEFT_TOP;     offset = .{ 12, 12 };
-        case .Bottom_Right; attach = .RIGHT_BOTTOM; offset = .{ -12, -12 };
-        case .Bottom_Left;  attach = .LEFT_BOTTOM;  offset = .{ 12, -12 };
+        case .Top_Right;    attach = .RIGHT_TOP;    offset = .[ -12, 12 ];
+        case .Top_Left;     attach = .LEFT_TOP;     offset = .[ 12, 12 ];
+        case .Bottom_Right; attach = .RIGHT_BOTTOM; offset = .[ -12, -12 ];
+        case .Bottom_Left;  attach = .LEFT_BOTTOM;  offset = .[ 12, -12 ];
     }
     panel := ui.ui_column_decl(6);
     pad := cast(u16) PANEL_PADDING;
     panel.layout.padding = clay.Padding.{ left = pad, right = pad, top = pad, bottom = pad };
     panel.layout.sizing.width = clay.SizingFixed(cast(float) PANEL_WIDTH);
-    panel.has_rect = true;
-    panel.rect = .{
-        color = ui.ui_clay_color(F.Color.{ 16, 18, 24, 225 }),
-        cornerRadius = clay.CornerRadiusAll(6),
-    };
-    panel.has_floating = true;
+    // clay 0.14 没有 has_rect / has_floating 标志位：presence 由字段值决定
+    // （backgroundColor 的 alpha > 0、floating.attachTo != .NONE）。
+    panel.backgroundColor = ui.ui_clay_color(F.Color.{ 16, 18, 24, 225 });
+    panel.cornerRadius = clay.CornerRadiusAll(6);
     panel.floating = .{
-        parentId = clay.ID(ui.UI_ROOT_ID).id, // olib: attachTo = .Root
+        attachTo = .ROOT, // olib: attachTo = .Root
         attachment = .{ element = attach, parent = attach },
         offset = offset,
         zIndex = PANEL_Z,
         pointerCaptureMode = .PASSTHROUGH,
     };
-    ui.ui_element(panel, children = #code { panel_contents(o); });
+    ui.clay.UI(panel, #code { panel_contents(o); });
 }
 
 panel_contents :: (o: *Overlay) {
     s := o.summary;
-    ui.ui_element(ui.ui_row_decl(), children = #code {
+    ui.clay.UI(ui.ui_row_decl(), #code {
         ui.ui_label_ex(*o.ctx, *o.theme, tprint("% FPS", s.fps), rating_color(s.avg_ms), 20);
         ui.ui_spacer();
         ui.ui_label_ex(*o.ctx, *o.theme, tprint("% ms", s.avg_ms), o.theme.text, 16);
     });
     ui.ui_label_dim(*o.ctx, *o.theme,
-                    tprint("min %  max % ms  1% low % FPS", s.min_ms, s.max_ms, s.low1_fps));
+                    tprint("min %  max % ms  1\% low % FPS", s.min_ms, s.max_ms, s.low1_fps));
     graph(o);
     if o.scope_count == 0 return;
-    ui.ui_element(ui.ui_row_decl(4), children = #code {
+    ui.clay.UI(ui.ui_row_decl(4), #code {
         cell(o, "scope", 0, o.theme.text_dim);
         cell(o, "ms/frame", 64, o.theme.text_dim);
         cell(o, "calls", 44, o.theme.text_dim);
     });
     for row: array_view(o.scopes, 0, o.scope_count) {
-        ui.ui_element(ui.ui_row_decl(4), children = #code {
+        ui.clay.UI(ui.ui_row_decl(4), #code {
             cell(o, row.name, 0, o.theme.text);
             cell(o, tprint("%", row.ms_per_frame), 64, o.theme.text);
             cell(o, tprint("%", row.calls_per_frame), 44, o.theme.text_dim);
@@ -295,42 +293,38 @@ graph :: (o: *Overlay) {
     bars := min(o.count, GRAPH_BARS);
     top: float32 = 2 * TARGET_MS;
     for i: 0..bars - 1 top = max(top, history_at(o, i));
-    ui.ui_element(ui.UI_Decl.{
+    ui.clay.UI(ui.clay.ElementDeclaration.{
         layout = .{
             sizing = .{ width = clay.SizingFixed(cast(float) (GRAPH_BARS * GRAPH_BAR_WIDTH)),
                         height = clay.SizingFixed(cast(float) GRAPH_HEIGHT) },
             childAlignment = .{ x = .RIGHT, y = .BOTTOM },
         },
-        has_rect = true,
-        rect = .{ color = ui.ui_clay_color(F.Color.{ 0, 0, 0, 90 }) },
-    }, children = #code { graph_bars(o, bars, top); });
+        backgroundColor = ui.ui_clay_color(F.Color.{ 0, 0, 0, 90 }),
+    }, #code { graph_bars(o, bars, top); });
 }
 
 graph_bars :: (o: *Overlay, bars: int, top: float32) {
     i := bars - 1;
     while i >= 0 {
         ms := history_at(o, i);
-        ui.ui_element(ui.UI_Decl.{
+        ui.clay.UI(ui.clay.ElementDeclaration.{
             layout = .{ sizing = .{
                 width = clay.SizingFixed(cast(float) GRAPH_BAR_WIDTH),
                 height = clay.SizingFixed(max(1.0, ms / top * cast(float32) GRAPH_HEIGHT)),
             } },
-            has_rect = true,
-            rect = .{ color = ui.ui_clay_color(rating_color(ms)) },
+            backgroundColor = ui.ui_clay_color(rating_color(ms)),
         });
         i -= 1;
     }
-    ui.ui_element(ui.UI_Decl.{
+    ui.clay.UI(ui.clay.ElementDeclaration.{
         layout = .{ sizing = .{
             width = clay.SizingFixed(cast(float) (GRAPH_BARS * GRAPH_BAR_WIDTH)),
             height = clay.SizingFixed(1),
         } },
-        has_rect = true,
-        rect = .{ color = ui.ui_clay_color(F.Color.{ 255, 255, 255, 110 }) },
-        has_floating = true,
+        backgroundColor = ui.ui_clay_color(F.Color.{ 255, 255, 255, 110 }),
         floating = .{
             attachment = .{ element = .LEFT_BOTTOM, parent = .LEFT_BOTTOM },
-            offset = .{ 0, -TARGET_MS / top * cast(float32) GRAPH_HEIGHT },
+            offset = .[ 0, -TARGET_MS / top * cast(float32) GRAPH_HEIGHT ],
             zIndex = PANEL_Z + 1,
             pointerCaptureMode = .PASSTHROUGH,
         },
@@ -350,17 +344,16 @@ cell :: (o: *Overlay, text: string, width: float32, color: F.Color) {
         width_axis = clay.SizingFixed(width);
         align_x = .RIGHT;
     }
-    decl := ui.UI_Decl.{
+    decl := ui.clay.ElementDeclaration.{
         layout = .{
             sizing = .{ width = width_axis },
             childAlignment = .{ x = align_x },
         },
-        // olib 的 clip = {horizontal = width == 0}：clay 0.12 的裁剪容器就是 Scroll。
-        has_scroll = width == 0,
-        scroll = .{ horizontal = width == 0 },
-        force_clip = true,
+        // olib 的 clip = {horizontal = width == 0}：0.14 的 ClipElementConfig 就是它本身，
+        // horizontal/vertical 任一为真即挂上裁剪（没有 has_scroll / force_clip）。
+        clip = .{ horizontal = width == 0 },
     };
-    ui.ui_element(decl, children = #code {
+    ui.clay.UI(decl, #code {
         ui.ui_label_ex(*o.ctx, *o.theme, text, color, o.theme.small_font_size + 1);
     });
 }

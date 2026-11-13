@@ -70,7 +70,7 @@ ui_set_scope :: (ctx: *UI_Context, id: string) {
 
 // 非交互面板也应挡住世界点击；声明前按上一帧的布局查询。
 ui_block_pointer :: (ctx: *UI_Context, id: string) {
-    if (ctx.modal_id == 0 || ctx.scope_id == ctx.modal_id) && ui_hovered(ctx, id) {
+    if (ctx.modal_id == 0 || ctx.scope_id == ctx.modal_id) && clay.PointerOver(clay.ID(id)) {
         ctx.input.pointer = true;
     }
 }
@@ -107,15 +107,15 @@ ui_focus_scroll :: (ctx: *UI_Context) {
         data := clay.GetScrollContainerData(.{ id = scroll.id });
         if !container.found || !data.found || data.scrollPosition == null continue;
         view := container.boundingBox;
-        top := view.y + data.scrollPosition.y;
+        top := view.y + data.scrollPosition.*[1];
         if bb.x < view.x - 0.5 || bb.x + bb.width > view.x + view.width + 0.5 ||
            bb.y < top - 0.5 || bb.y + bb.height > top + data.contentDimensions.height + 0.5 {
             continue;
         }
-        next := data.scrollPosition.y;
+        next := data.scrollPosition.*[1];
         if bb.y < view.y next += view.y - bb.y;
         else if bb.y + bb.height > view.y + view.height next -= bb.y + bb.height - (view.y + view.height);
-        data.scrollPosition.y = clamp(next, -max(data.contentDimensions.height - view.height, 0), 0);
+        data.scrollPosition.*[1] = clamp(next, -max(data.contentDimensions.height - view.height, 0), 0);
     }
 }
 
@@ -168,9 +168,10 @@ ui_interact :: (ctx: *UI_Context, id: string, options: UI_Widget_Options = .{}) 
     }
     allowed := ctx.modal_id == 0 || ctx.scope_id == ctx.modal_id;
     state := UI_Interaction.{ disabled = options.disabled || !allowed };
-    // 变换感知命中（ui_visual.jai 的「命中测试」区）：指针先逆变换进该元素局部空间，
-    // 再判断是否落在布局框与各级裁剪祖先内；奇异变换/不可见一律不命中，因此不产生捕获。
-    state.hovered = allowed && ui_hovered(ctx, id);
+    // 命中走 clay 自己的 pointerOverIds：命中回调由 kit 装上（SetPointerHitTestFunction），
+    // 所以这里与 olib 一样直接问 clay.PointerOver —— 它会跟随 ui_set_visual 的变换，
+    // 也自动处理浮动层的上下序与裁剪祖先。
+    state.hovered = allowed && clay.PointerOver(element);
     if state.hovered ctx.input.pointer = true;
     if state.disabled {
         if ctx.active_id == element.id ctx.active_id = 0;

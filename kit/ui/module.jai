@@ -34,6 +34,7 @@ tw :: #import "core/tween";   // spring
 clay :: #import "thirdparty/clay/module"; // clay 0.12 绑定
 HASH :: #import "Hash_Table";
 using HASH;   // `for value, key: table` 的 for_expansion 必须在同一作用域可见
+using JM;     // Vector2 / Color 的 + - * == 运算符（clay.Color 与 F.Vector2 都靠它）
 
 #load "ui.jai";
 #load "ui_text.jai";

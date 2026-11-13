@@ -1,10 +1,10 @@
 // ui:backend —— clay RenderCommand -> UI_Op 翻译（CPU 可测）+ Render2D 发射。
 //
-// clay 0.12 与 olib 用的 0.14 在渲染命令上的差异（都已在这一层吸收）：
-//   - 命令字段是 {boundingBox, config, text, id, commandType}，没有 renderData/elementId；
-//     元素 id 是 cmd.id，矩形配置是 config.rectangleElementConfig（颜色字段叫 color 不叫 backgroundColor）。
-//   - CustomElementConfig 只有 customData，没有 backgroundColor：图片/九宫格的染色改为
-//     UI_Image_Data.tint（ui_image_decl / ui_nine_slice_decl 的 tint 参数已写进去）。
+// clay 0.14 的渲染命令带 elementId + renderData（与 olib 同款）：
+//   - elementId 是命令所属的元素（文字行、描边、scissor 结束也都填了），所以视觉变换直接按它
+//     查视觉树，不再需要「命令 id -> 元素 id」的派生 id 表；
+//   - renderData 是 {rectangle|border|text|image|custom|clip} 的 union，颜色字段叫 backgroundColor；
+//   - 图片与九宫格的染色走 renderData.image/custom.backgroundColor（声明时写 tint）。
 
 //@region 翻译
 
@@ -33,65 +33,22 @@ UI_Op :: struct {
     clip_x, clip_y, clip_w, clip_h: float32;
 }
 
-// clay 0.12 的渲染命令 id 不总是元素 id：
-//   - 文字：HashNumber(行号, 文本元素 id)                        （clay.c:2745）
-//   - 描边：RehashWithNumber(元素 id, 4)                         （clay.c:2839）
-//   - 子间分隔线：RehashWithNumber(元素 id, 5 + i)                （clay.c:2854/2867）
-//   - 裁剪起止：RehashWithNumber(元素 id, 10) / (元素 id, 11)     （clay.c:2612/2938）
-// 视觉树里登记的是元素 id，所以这里把本帧的派生 id 展开成「命令 id -> 元素 id」。
-// 不建这张表时，描边/裁剪命令查不到元素，就会出现「父底子底都是 a=127 & transformed，
-// 唯独描边 a=255 不跟变换」——文本已经这么处理，描边照同一思路补上。
-// 行数超过 UI_TEXT_TRACKED_LINES 的段落、以及 betweenChildren 分隔线继承不到变换（仍正常绘制）。
-UI_TEXT_TRACKED_LINES :: 8;
-UI_CMD_BORDER_NUMBER :: 4;
-UI_CMD_SCISSOR_START_NUMBER :: 10;
-UI_CMD_SCISSOR_END_NUMBER :: 11;
-
-ui_translate_build_command_map :: (ctx: *UI_Context) {
-    table_reset(*ctx.cmd_owner_map);
-    if ctx.visuals.count == 0 && ctx.inert.count == 0 return; // 没有变换就不必建表
-    for text_id: ctx.text_ids {
-        for line: 0 .. UI_TEXT_TRACKED_LINES - 1 {
-            table_set(*ctx.cmd_owner_map, clay.HashNumber(cast(u32) line, text_id).id, text_id);
-        }
-    }
-    // 每个非文本元素最多三条派生命令 id。视觉树快照包含全部元素（祖先的变换是逐元素合成的），
-    // 所以子孙的描边命令也得能换回自己的元素 id。
-    for info: ctx.frame_elements {
-        if info.is_text continue;
-        table_set(*ctx.cmd_owner_map, clay.RehashWithNumber(info.id, UI_CMD_BORDER_NUMBER), info.id);
-        table_set(*ctx.cmd_owner_map, clay.RehashWithNumber(info.id, UI_CMD_SCISSOR_START_NUMBER), info.id);
-        table_set(*ctx.cmd_owner_map, clay.RehashWithNumber(info.id, UI_CMD_SCISSOR_END_NUMBER), info.id);
-    }
-}
-
-// 命令 id 的所有者（派生命令换成它的元素 id，其余原样返回）。
-ui_translate_owner_id :: (ctx: *UI_Context, id: u32) -> u32 {
-    ok, owner := table_find(*ctx.cmd_owner_map, id);
-    if ok return owner;
-    return id;
-}
-
 // 把 clay 渲染命令翻译成操作流（调用方 ui_ops_dispose）。
-ui_translate :: (ctx: *UI_Context, commands: clay.RenderCommandArray) -> [..] UI_Op {
+ui_translate :: (ctx: *UI_Context, commands: clay.ClayArray(clay.RenderCommand)) -> [..] UI_Op {
     ops: [..] UI_Op;
     ui_translate_into(ctx, commands, *ops);
     return ops;
 }
 
 // 复用输出容量；命令、字体纹理指针仅在本帧内有效。
-ui_translate_into :: (ctx: *UI_Context, commands: clay.RenderCommandArray, ops: *[..] UI_Op) {
-    ops.count = 0;
-    ui_translate_build_command_map(ctx);
-    // 焦点元素的描边/裁剪命令带 clay 的派生 id。没有视觉变换时上面那张表是空的，
-    // 这里单独把焦点元素的派生 id 补登记，否则焦点框会落在元素自己的裁剪之内。
-    if ctx.focused_id != 0 {
-        q := ctx.focused_id;
-        table_set(*ctx.cmd_owner_map, clay.RehashWithNumber(q, UI_CMD_BORDER_NUMBER), q);
-        table_set(*ctx.cmd_owner_map, clay.RehashWithNumber(q, UI_CMD_SCISSOR_START_NUMBER), q);
-        table_set(*ctx.cmd_owner_map, clay.RehashWithNumber(q, UI_CMD_SCISSOR_END_NUMBER), q);
-    }
 
+// clay 的 Color 是 [4] float，数组不能直接 ==；零值判断单独写一个。
+ui_color_is_zero :: (c: clay.Color) -> bool {
+    return c[0] == 0 && c[1] == 0 && c[2] == 0 && c[3] == 0;
+}
+
+ui_translate_into :: (ctx: *UI_Context, commands: clay.ClayArray(clay.RenderCommand), ops: *[..] UI_Op) {
+    ops.count = 0;
     // 焦点框插在焦点元素最后一条命令（clay 的描边在子元素之后）之后：同一层、同一裁剪。
     ring_at := -1;
     ring_bb: clay.BoundingBox;
@@ -102,54 +59,51 @@ ui_translate_into :: (ctx: *UI_Context, commands: clay.RenderCommandArray, ops: 
         bb := cmd.boundingBox;
         op_start := ops.count;
         // 带裁剪的焦点元素（如文本框）：焦点框放在它自己的裁剪结束之后，外扩部分不被裁掉。
-        // 命令 id 可能是元素 id 的派生 id（描边 4 / 裁剪 10、11），先换回所有者再比较。
-        focused := ctx.focused_id != 0 && ui_translate_owner_id(ctx, cmd.id) == ctx.focused_id;
-        if focused && ring_at < 0 && cmd.commandType != .SCISSOR_START && cmd.commandType != .SCISSOR_END {
+        // SCISSOR_START 不算「自己的命令」：浮动根（如文本框的光标）的根级裁剪起点也带
+        // 焦点元素的 elementId（clay 用 root.clipElementId 填 elementId），若把它算进来，
+        // ring_at 会停在那条 SCISSOR_START 之后，焦点框就落进这条裁剪里了。
+        // clay 的根级 SCISSOR_END 不带 elementId（默认 0），也就无法把 ring_at 挪回来。
+        focused := ctx.focused_id != 0 && cmd.elementId == ctx.focused_id
+                && cmd.commandType != .SCISSOR_START;
+        if focused && ring_at < 0 && cmd.commandType != .SCISSOR_END {
             ring_bb = bb;
         }
 
         if cmd.commandType == .RECTANGLE {
-            cfg := cmd.config.rectangleElementConfig;
-            if cfg == null {
-                append_rect_op(ops, bb, .{ 255, 0, 255, 255 }, 0);
-            } else {
-                r := cfg.cornerRadius;
-                radius := min(min(r.topLeft, r.topRight), min(r.bottomLeft, r.bottomRight));
-                append_rect_op(ops, bb, ui_color(cfg.color), radius);
-            }
+            r := cmd.renderData.rectangle.cornerRadius;
+            radius := min(min(r.topLeft, r.topRight), min(r.bottomLeft, r.bottomRight));
+            append_rect_op(ops, bb, ui_color(cmd.renderData.rectangle.backgroundColor), radius);
         } else if cmd.commandType == .BORDER {
             // 四边展开（betweenChildren 的内部分隔线不在此路径）
-            b := cmd.config.borderElementConfig;
-            if b != null {
-                l := cast(float32) b.left.width;
-                r := cast(float32) b.right.width;
-                t := cast(float32) b.top.width;
-                bo := cast(float32) b.bottom.width;
-                col := ui_color(b.left.color);
-                x0, y0 := bb.x, bb.y;
-                x1, y1 := bb.x + bb.width, bb.y + bb.height;
-                if t > 0 array_add(ops, quad(x0, y0, x1, y0 + t, col));
-                if bo > 0 array_add(ops, quad(x0, y1 - bo, x1, y1, col));
-                if l > 0 array_add(ops, quad(x0, y0, x0 + l, y1, col));
-                if r > 0 array_add(ops, quad(x1 - r, y0, x1, y1, col));
-            }
+            b := cmd.renderData.border;
+            l := cast(float32) b.width.left;
+            r := cast(float32) b.width.right;
+            t := cast(float32) b.width.top;
+            bo := cast(float32) b.width.bottom;
+            col := ui_color(b.color);
+            x0, y0 := bb.x, bb.y;
+            x1, y1 := bb.x + bb.width, bb.y + bb.height;
+            if t > 0 array_add(ops, quad(x0, y0, x1, y0 + t, col));
+            if bo > 0 array_add(ops, quad(x0, y1 - bo, x1, y1, col));
+            if l > 0 array_add(ops, quad(x0, y0, x0 + l, y1, col));
+            if r > 0 array_add(ops, quad(x1 - r, y0, x1, y1, col));
         } else if cmd.commandType == .IMAGE {
-            data := cmd.config.imageElementConfig;
-            if data != null {
-                texture := cast(*F.Texture) data.imageData;
-                // clay 原生图像声明未指定颜色时按无染色处理。
-                array_add(ops, UI_Op.{
-                    kind = .Quad,
-                    x0 = bb.x, y0 = bb.y, x1 = bb.x + bb.width, y1 = bb.y + bb.height,
-                    color = F.Color_White,
-                    texture = texture,
-                    u1 = 1, v1 = 1,
-                });
-            }
+            data := cmd.renderData.image;
+            texture := cast(*F.Texture) data.imageData;
+            // clay 原生图像声明未指定颜色时按无染色处理。
+            tint := F.Color_White;
+            if !ui_color_is_zero(data.backgroundColor) tint = ui_color(data.backgroundColor);
+            array_add(ops, UI_Op.{
+                kind = .Quad,
+                x0 = bb.x, y0 = bb.y, x1 = bb.x + bb.width, y1 = bb.y + bb.height,
+                color = tint,
+                texture = texture,
+                u1 = 1, v1 = 1,
+            });
         } else if cmd.commandType == .CUSTOM {
             // 只接受当前帧 image_pool 中对齐的指针，避免解释调用者的 customData。
-            custom := cmd.config.customElementConfig;
-            if custom != null && custom.customData != null {
+            custom := cmd.renderData.custom;
+            if custom.customData != null {
                 address := cast(u64) custom.customData;
                 base := cast(u64) ctx.image_pool.data;
                 if address >= base {
@@ -159,9 +113,10 @@ ui_translate_into :: (ctx: *UI_Context, commands: clay.RenderCommandArray, ops: 
                        offset % stride == 0 {
                         data := ctx.image_pool[cast(int) (offset / stride)];
                         sub := data.sub;
+                        tint := ui_color(custom.backgroundColor);
                         if sub.Frame.w > 0 && sub.Frame.h > 0 {
                             if data.source_border > 0 {
-                                ui_translate_nine_slice(ops, bb, data, data.tint);
+                                ui_translate_nine_slice(ops, bb, data, tint);
                             } else {
                                 sx := bb.width / sub.Frame.w;
                                 sy := bb.height / sub.Frame.h;
@@ -170,7 +125,7 @@ ui_translate_into :: (ctx: *UI_Context, commands: clay.RenderCommandArray, ops: 
                                     x1 = bb.x + sub.DrawCoords[2].x * sx, y1 = bb.y + sub.DrawCoords[2].y * sy,
                                     u0 = sub.TexCoords[0].x, v0 = sub.TexCoords[0].y,
                                     u1 = sub.TexCoords[2].x, v1 = sub.TexCoords[2].y,
-                                    texture = sub.Tex, color = data.tint,
+                                    texture = sub.Tex, color = tint,
                                 });
                             }
                         }
@@ -178,12 +133,12 @@ ui_translate_into :: (ctx: *UI_Context, commands: clay.RenderCommandArray, ops: 
                 }
             }
         } else if cmd.commandType == .TEXT {
-            data := cmd.config.textElementConfig;
+            data := cmd.renderData.text;
             font := ui_font_of(ctx, cast(int) data.fontId);
-            if data != null && font != null && font.Size > 0 {
+            if font != null && font.Size > 0 {
                 aw, ah := ui_msdf_atlas_size(font);
                 if aw > 0 && ah > 0 {
-                    text := string.{ count = cast(s64) cmd.text.length, data = cast(*u8) cmd.text.chars };
+                    text := string.{ count = cast(s64) data.stringContents.length, data = cast(*u8) data.stringContents.chars };
                     col := ui_color(data.textColor);
                     texture := ui_texture_of(ctx, cast(int) data.fontId);
                     scale := cast(float32) data.fontSize / font.Size;
@@ -238,8 +193,8 @@ ui_translate_into :: (ctx: *UI_Context, commands: clay.RenderCommandArray, ops: 
         }
 
         // 视觉变换覆盖本命令产生的全部 op（也覆盖提前 continue 的路径）。
-        // 文本命令的 id 是 clay 的「行号 + 文本元素 id」哈希，先换回文本元素 id 才能继承子树变换。
-        ui_visual_apply_ops(ctx, ui_translate_owner_id(ctx, cmd.id), ops, op_start);
+        // cmd.elementId 连文字行、描边、scissor 结束命令都填了，直接查视觉树即可。
+        ui_visual_apply_ops(ctx, cmd.elementId, ops, op_start);
         // 焦点框放在焦点元素最后一条命令之后；SCISSOR_END 也算（裁剪元素要画在自己的裁剪之外）。
         if focused ring_at = ops.count;
     }
@@ -265,11 +220,11 @@ ui_translate_focus_ring :: (ctx: *UI_Context, ops: *[..] UI_Op, at: int, element
     defer array_free(ring);
     if style.image.Tex != null && style.image.Frame.w > 0 && style.image.Frame.h > 0 {
         tint := style.color;
-        if tint == F.Color.{} tint = F.Color_White;
+        if ui_fcolor_is_zero(tint) tint = F.Color_White;
         if style.image_source_border > 0 {
             ui_translate_nine_slice(*ring, bb, UI_Image_Data.{
                 sub = style.image, source_border = style.image_source_border,
-                border = style.image_border, tint = tint,
+                border = style.image_border,
             }, tint);
         } else {
             sub := style.image;
@@ -540,11 +495,11 @@ quad :: (x0: float32, y0: float32, x1: float32, y1: float32, color: F.Color) -> 
 
 // clay 的颜色是 0..1 浮点 + 直通 alpha；UI 颜色是预乘 u8。
 ui_color :: (c: clay.Color) -> F.Color {
-    a := clamp(c.a, 0, 1);
+    a := clamp(c[3], 0.0, 1.0);
     return F.Color.{
-        cast(u8) (clamp(c.r, 0, 1) * a * 255 + 0.5),
-        cast(u8) (clamp(c.g, 0, 1) * a * 255 + 0.5),
-        cast(u8) (clamp(c.b, 0, 1) * a * 255 + 0.5),
+        cast(u8) (clamp(c[0], 0.0, 1.0) * a * 255 + 0.5),
+        cast(u8) (clamp(c[1], 0.0, 1.0) * a * 255 + 0.5),
+        cast(u8) (clamp(c[2], 0.0, 1.0) * a * 255 + 0.5),
         cast(u8) (a * 255 + 0.5),
     };
 }

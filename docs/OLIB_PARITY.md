@@ -121,7 +121,7 @@ JaiLib 的 `run_tests.bat` 照旧全绿。
 
 | 目录 | 内容 | 对应 olib |
 | --- | --- | --- |
-| `thirdparty/clay/` | clay 的 Jai 绑定（`module.jai`、`clay.c`、`generate.jai`、`windows/clay.lib`） | `thirdparty/clay/`（Odin 移植） |
+| `thirdparty/clay/` | **Clay v0.14 纯 Jai 移植**（7 文件 / 约 7,000 行，不再链接 C 库）；与 Odin 版逐字节对拍：8 普通帧 1616 行 + 属性面板 1767 行 + 折叠行 973 行 **diff 全为空**，`MinMemorySize() == 6460992` 两侧相同 | `thirdparty/clay/`（Odin 移植） |
 | `thirdparty/clay_foster.jai` | clay → jfoster 的渲染/输入后端 | olib 的 `kit/ui/ui_backend` 一侧 |
 | `thirdparty/imgui_foster.jai` | ImGui → jfoster 后端（绘制/键位/剪贴板/光标） | `thirdparty/imgui/`（dcimgui 绑定） |
 
@@ -142,7 +142,7 @@ JaiLib 的 `run_tests.bat` 照旧全绿。
 | `kit/rendering/shader` | 2,770 | `kit/rendering/shader` | 已移植并验证（1,030 断言，含 HLSL 逐字节黄金文本）；外部 shadercross/dxc 走可注入过程指针 |
 | `kit/rendering/3d` | 1,628 | `kit/rendering/3d` | 已移植：Mesh/渲染队列/LOD/DebugDraw3D/uniform 打包（727 断言） |
 | `kit/rendering/material` | 1,136 | `kit/rendering/material` | 已移植并验证（334 断言） |
-| `kit/ui` | 2,762 | `kit/ui` | 已移植并验证：45 用例 / 543,119 断言；自带变换感知命中测试（补 clay 0.12 缺 `SetPointerHitTestFunction`） |
+| `kit/ui` | 2,762 | `kit/ui` | 已迁到 clay 0.14 原生 API（ElementDeclaration + UI 宏 + ClipElementConfig + clay 自带 `SetPointerHitTestFunction` 命中回调）；543,119 断言全绿 |
 | `kit/gizmo` | 1,285 | `kit/gizmo` | 已移植：平移/旋转/缩放 gizmo、2D 变换、线框（99,010 断言） |
 | `kit/tools` | 5,020 | `kit/tools` | 已移植：shader_lab / perf_overlay / scene_notes / tween_preview + lab_imgui 包装层；`-no_dce` 零 error，**测试未写** |
 

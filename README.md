@@ -44,7 +44,7 @@ kit/             扩展层（依赖 jfoster + core）
   tools/           shader_lab / perf_overlay / scene_notes / tween_preview
 
 thirdparty/      第三方绑定（对齐 olib 的 thirdparty/）
-  clay/            clay 的 Jai 绑定 + 预编译 clay.lib
+  clay/            Clay v0.14 的纯 Jai 移植（不再链接 C 库）
   imgui_foster.jai ImGui → jfoster 后端（含 kit/tools 用的 lab_imgui 包装层在 kit/tools/）
 
 Tests/
@@ -61,7 +61,7 @@ docs/
 ## 构建与运行
 
 ```bat
-run_tests.bat          :: core + kit 全量回归（core 14 模块 11,492 断言；kit 13 模块 682,586 断言）
+run_tests.bat          :: core + kit 全量回归（core 14 模块 11,492 断言；kit 13 模块 682,581 断言）
 run_core_tests.bat     :: 只跑 core
 run_kit_tests.bat      :: 只跑 kit
 run_hello_kit.bat      :: 构建并运行新树最小示例（auto = 120 帧 + GPU 像素自检）

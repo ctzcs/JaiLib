@@ -132,6 +132,14 @@ material_shader_gpu_clear :: (shader: *Material_Shader) {
     for program: shader.instanced_vertex {
         material_shader_release(program);
     }
+    for *program: shader.code {
+        if program.vertex.data != null free(program.vertex.data);
+        if program.fragment.data != null free(program.fragment.data);
+        if program.instanced_vertex.data != null free(program.instanced_vertex.data);
+        program.* = Material_Program_Code.{};
+    }
+    if shader.code.data != null free(shader.code.data);
+    shader.code = .[];
     if shader.gpu.data != null array_free(shader.gpu);
     if shader.vertex.data != null array_free(shader.vertex);
     if shader.fragment.data != null array_free(shader.fragment);
@@ -175,9 +183,25 @@ material_register :: (library: *Material_Library, shader: sh.Shader_Desc, schema
     entry.schemas = sh.shader_alloc_array(sh.Schema, schemas.count);
     entry.code = sh.shader_alloc_array(Material_Program_Code, code.count);
     if code.count > 0 memcpy(entry.code.data, code.data, code.count * size_of(Material_Program_Code));
+    // 0.35.1 没有 #load_directory，字节码通常由 material_load_directory 在运行期读入；
+    // olib 那份是 #load 的静态数据，可以借用，这里必须自己持有一份，否则调用方释放
+    // 目录缓冲后惰性创建的 Shader 会读到已释放内存（SDl 报 "not valid DXIL/SPIR-V"）。
+    for *program: entry.code {
+        program.vertex = material_owned_bytes(program.vertex);
+        program.fragment = material_owned_bytes(program.fragment);
+        program.instanced_vertex = material_owned_bytes(program.instanced_vertex);
+    }
     for schema, i: schemas entry.schemas[i] = sh.schema_clone(schema);
     array_add(*library.shaders, entry);
     return "";
+}
+
+// 复制一段字节码；空切片返回空切片（dispose 用 .data != null 判空）。
+material_owned_bytes :: (source: [] u8) -> [] u8 {
+    if source.count <= 0 return .[];
+    dest := sh.shader_alloc_array(u8, source.count);
+    memcpy(dest.data, source.data, source.count);
+    return dest;
 }
 
 // Web 后端只支持 foster 的 uniform 布局（矩阵与一个片元 float），没有 storage buffer 与实例缓冲。

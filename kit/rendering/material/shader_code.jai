@@ -222,10 +222,7 @@ compiled_manifest_parse :: (data: [] u8, parsed: *Compiled_Manifest) -> string {
         manifest.schemas = sh.shader_alloc_array(sh.Schema, member.array_val.count);
         for *slot: manifest.schemas slot.* = sh.Schema.{};
         for element, i: member.array_val {
-            if !material_json_schema(<<element, *manifest.schemas[i]) {
-                // 借用 JSON 文档的字符串不能 dispose（它们不归本函数所有）。
-                return "Invalid compiled shader manifest";
-            }
+            if !material_json_schema(<<element, *manifest.schemas[i]) return "Invalid compiled shader manifest";
         }
     }
     if sh.shader_json_member(document, "effect", *member) {
@@ -233,16 +230,8 @@ compiled_manifest_parse :: (data: [] u8, parsed: *Compiled_Manifest) -> string {
             return "Invalid compiled shader manifest";
         }
     }
-    // 到这里为止所有字符串都借用 JSON 文档（temp）；登记与释放都要求自有内存，
-    // 所以统一克隆一份（olib 的 json.unmarshal 本来就为字符串分配新内存）。
-    if manifest.schemas.count > 0 {
-        owned := sh.shader_alloc_array(sh.Schema, manifest.schemas.count);
-        for *slot: owned slot.* = sh.Schema.{};
-        for schema, i: manifest.schemas owned[i] = sh.schema_clone(schema);
-        manifest.schemas = owned;
-    }
-    manifest.shader = sh.shader_clone(manifest.shader);
-
+    // material_json_* 的字符串统一经 shader_json_string 复制（与 olib 的 json.unmarshal 相同），
+    // 因此 manifest.schemas / manifest.shader 已经自有内存，登记与 dispose 都不再克隆一遍。
     parsed.* = manifest;
     if parsed.version != MANIFEST_VERSION return "Compiled shader manifest is outdated; re-run tools/shaders";
     return "";
@@ -279,15 +268,27 @@ material_json_bool :: (value: JSON.Json_Value, out: *bool) -> bool {
     return true;
 }
 
-// 枚举按成员名读写（odin 的 json 编码同样写成员名，例如 "Scalar" / "Less_Equal"）。
+// 枚举按成员名读写（本仓库 tools/shaders 写成员名，例如 "Scalar" / "Less_Equal"）。
+// olib 的 Shader Lab 产物写的是枚举序号（"kind": 4），两份清单顺序相同，
+// 所以整数也按序号接受：olib_sample 的 Compiled 目录因此可以直接登记。
 material_json_enum :: (value: JSON.Json_Value, out: *$E) -> bool {
-    if value.kind != .String return false;
     names := enum_names(E);
     numbers := enum_values_as_s64(E);
-    for name, i: names {
-        if name == value.string_val {
-            out.* = cast(E) numbers[i];
-            return true;
+    if value.kind == .String {
+        for name, i: names {
+            if name == value.string_val {
+                out.* = cast(E) numbers[i];
+                return true;
+            }
+        }
+        return false;
+    }
+    if value.kind == .Integer {
+        for number: numbers {
+            if number == value.int_val {
+                out.* = cast(E) number;
+                return true;
+            }
         }
     }
     return false;

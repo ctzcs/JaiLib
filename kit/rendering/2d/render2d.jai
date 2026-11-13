@@ -532,15 +532,9 @@ submit :: (r: *Render2D, view: View) -> mat.Draw_Error {
                 F.material_stage_set_uniform(*snapshot.Fragment, 0, render2d_bytes([SPRITE_FRAME_BLOCK_SIZE / 4] float32, *frame));
             }
             command: F.Draw_Command;
-            shifted: F.Graphics_Buffer;
             if run.buffer != null {
-                // 角点网格的属性后移，让实例属性占据 0..4+slots；浅拷贝只换格式，共享 GPU 资源。
+                // 角点保持 TEXCOORD0，实例属性用 TEXCOORD6 起（见 sprite_instance_format），不需要改编号。
                 command = F.draw_command_from_mesh(view.target, r.corner_mesh, snapshot);
-                shifted = r.corner_mesh.VertexBuffer.*;
-                for k: 0..shifted.Format.ElementCount - 1 {
-                    shifted.Format.Elements[k].Index += cast(s32) (sh.INSTANCE_FIXED_ATTRIBUTES + run.buffer.slots);
-                }
-                command.VertexBuffers[0].Buffer = *shifted;
                 command.VertexBuffers[1] = F.Vertex_Buffer_Binding.{ Buffer = run.buffer.buffer, InstanceInputRate = true };
                 command.VertexBufferCount = 2;
                 command.InstanceCount = cast(s32) run.instance_count;
@@ -910,11 +904,14 @@ sprite_stride :: (slots: int) -> int {
     return sh.INSTANCE_FIXED_ATTRIBUTES * 16 + 16 * slots;
 }
 
-// 实例缓冲的顶点格式：每个 float4 一个属性，位置 0..4+slots（角点网格的属性整体后移）。
+// 实例缓冲的顶点格式：每个 float4 一个属性。属性编号必须等于 HLSL 的语义号（olib/instance.hlsli
+// 的 TEXCOORD6 起），因为 SDL_GPU 的 D3D12 后端按 location 生成 TEXCOORD<location>：
+// 编号写 0.. 会和网格的 TEXCOORD0.. 撞车，管线创建直接 E_INVALIDARG。
 sprite_instance_format :: (slots: int) -> F.Vertex_Format {
     elements := mat.material_temp_array(F.Vertex_Format_Element, sh.INSTANCE_FIXED_ATTRIBUTES + slots);
     for i: 0..elements.count - 1 {
-        elements[i] = F.Vertex_Format_Element.{ Index = cast(s32) i, Type = .FLOAT4, Normalized = false };
+        elements[i] = F.Vertex_Format_Element.{ Index = cast(s32) (sh.INSTANCE_SEMANTIC_BASE + i),
+                                                 Type = .FLOAT4, Normalized = false };
     }
     return F.vertex_format_make(elements, cast(s32) sprite_stride(slots));
 }

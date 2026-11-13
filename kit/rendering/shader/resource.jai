@@ -97,12 +97,22 @@ resource_decode :: (schema: Schema, bytes: [] u8) -> ([] Value, string) {
         resource.fields = shader_alloc_array(Resource_Field, value.array_val.count);
         for element, i: value.array_val {
             if !shader_json_resource_field(<<element, *resource.fields[i]) {
+                shader_free_string(resource.group);
+                for *f: resource.fields {
+                    shader_free_string(f.id);
+                    shader_free_string(f.texture);
+                }
                 if resource.fields.data != null free(resource.fields.data);
                 return .[], "Invalid material JSON";
             }
         }
     }
     defer {
+        shader_free_string(resource.group);
+        for *f: resource.fields {
+            shader_free_string(f.id);
+            shader_free_string(f.texture);
+        }
         if resource.fields.data != null free(resource.fields.data);
     }
     if resource.version != 1 return .[], "Unsupported material resource version";
@@ -158,9 +168,14 @@ shader_json_member :: (object: JSON.Json_Value, key: string, out: *JSON.Json_Val
     return true;
 }
 
+// [JaiLib L-0xx] 复制出独立拥有的字符串，与 olib 的 json.unmarshal 一致：
+// olib 把 JSON 反序列化进结构体时由 strings.clone 分配，随后 schema_dispose /
+// instance_dispose 会 free 这些字符串。jacket 的 json_parse 只给出借用视图，
+// 直接赋值会让 dispose 释放解析文档里的指针（invalid pointer 断言），
+// 文档销毁后也会留下悬垂字符串。调用方必须用 shader_free_string 释放。
 shader_json_string :: (value: JSON.Json_Value, out: *string) -> bool {
     if value.kind != .String return false;
-    out.* = value.string_val;
+    out.* = copy_string(value.string_val);
     return true;
 }
 
@@ -234,7 +249,9 @@ shader_json_resource_field :: (value: JSON.Json_Value, out: *Resource_Field) -> 
     if shader_json_member(value, "kind", *member) {
         name: string;
         if !shader_json_string(member, *name) return false;
-        if !shader_kind_from_name(name, *field.kind) return false;
+        parsed := shader_kind_from_name(name, *field.kind);
+        shader_free_string(name);
+        if !parsed return false;
     }
     if shader_json_member(value, "number", *member) {
         if !shader_json_numbers4(member, *field.number) return false;

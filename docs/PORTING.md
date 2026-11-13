@@ -39,6 +39,9 @@ Tests/core/<module>/<module>_test.jai
 | `@(private)` / `@(test)` | 无等价物；内部过程加模块前缀，测试用独立的 `*_test.jai` |
 
 | `STRING.slice(s, start, end)` | jacket 的第三参是**长度**不是结束下标：`STRING.slice(s, start, count)`。传错不报错，静默截错 |
+| `json.unmarshal(bytes, &v)`（字符串由 strings.clone 分配） | jacket 的 `json_parse` 只给**借用**视图：结构体里的 string 必须 `copy_string` 后再存（见 `shader_json_string`），否则 dispose 会 free 解析文档里的指针，文档释放后还会留下悬垂字符串 |
+| 枚举在 odin json 里既可写成员名也可写序号 | `material_json_enum` 两种都收：本仓库 tools/shaders 写名字，olib 的 Shader Lab 产物写序号（`"kind": 4`），顺序相同 |
+| `#load_directory` 的字节码是静态数据，可借用 | jacket 0.35.1 没有 `#load_directory`，运行期读入的字节码必须由库自己复制（`material_register` 的 `material_owned_bytes`），否则调用方释放目录缓冲后惰性创建的 Shader 会读到已释放内存 |
 | `read_entire_file(path) -> ([]u8, bool)` | jacket 返回 `(string, bool)`，要字节得 `cast([] u8)` |
 | `FU.file_list(dir)` | jacket 是**单返回** `[] string` 且元素各自拥有（要逐个 free） |
 | `log_info(fmt, args)` | jfoster 的 `log_info/log_error` 收**已格式化好的 string**，不是变参：先 `tprint` |

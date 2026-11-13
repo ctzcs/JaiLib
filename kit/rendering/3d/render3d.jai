@@ -788,8 +788,8 @@ model_stride :: (slots: int) -> int {
 
 // 为 material 的 instanced Shader 预留 capacity 个实例的 GPU 空间（实际按 2 的幂向上取整）。
 // 设备与槽数取自材质；成功返回空串，失败返回原因。
-// 属性位置固定为 0..4+slots（世界矩阵 4 列、tint、字段）：HLSL 里 OlibInstanceInput 须是 Input
-// 的第一个成员，绘制时网格的属性整体后移，同一缓冲可用于不同网格。
+// 属性编号固定为 6..5+slots（世界矩阵 4 列、tint、字段），与 olib/instance.hlsli 的 TEXCOORD6 起一致；
+// SDL_GPU 的 D3D12 后端按 location 生成 TEXCOORD<location>，所以编号必须等于语义号，网格属性留在 0..5。
 model_buffer_init :: (buf: *Model_Buffer, material: *mat.Material, capacity: int, name := "") -> string {
     if material == null || material.owner == null || material.shader == null return "Missing material";
     if material.owner.device == null return "Missing graphics device";
@@ -806,21 +806,24 @@ model_buffer_init :: (buf: *Model_Buffer, material: *mat.Material, capacity: int
 model_buffer_create :: (buf: *Model_Buffer, device: *F.Graphics_Device, slots: int, capacity: int, name: string) {
     elements: [sh.INSTANCE_FIXED_ATTRIBUTES + sh.MAX_INSTANCE_FIELDS] F.Vertex_Format_Element;
     count := sh.INSTANCE_FIXED_ATTRIBUTES + slots;
-    for i: 0..count - 1 elements[i] = F.Vertex_Format_Element.{ cast(s32) i, .FLOAT4, false };
+    for i: 0..count - 1 {
+        elements[i] = F.Vertex_Format_Element.{ cast(s32) (sh.INSTANCE_SEMANTIC_BASE + i), .FLOAT4, false };
+    }
     format := F.vertex_format_make(array_view(elements, 0, count), cast(s32) model_stride(slots));
     buf.* = Model_Buffer.{ slots = slots, capacity = capacity };
     buf.buffer = F.vertex_buffer_create(device, format, name);
     F.buffer_upload(buf.buffer, null, cast(s32) capacity, 0); // olib: foster.VertexBufferReserve
 }
 
-// 把网格的绘制命令改成实例化：网格属性排在实例属性之后（Shader 里 OlibInstanceInput 是 Input 的第一个成员），
-// 再追加实例缓冲。shifted 是改了属性位置的顶点缓冲副本，须保持到绘制结束。
+// 把网格的绘制命令改成实例化：网格属性留在 TEXCOORD0..5，实例缓冲用 TEXCOORD6 起，
+// 两者编号不冲突，所以直接绑定网格自己的顶点缓冲（shifted 参数保留给调用方传临时副本，可为 null）。
 model_instanced_command :: (command: *F.Draw_Command, mesh: *F.Mesh, buf: *Model_Buffer, shifted: *F.Graphics_Buffer) {
-    shifted.* = mesh.VertexBuffer.*;
-    for k: 0..shifted.Format.ElementCount - 1 {
-        shifted.Format.Elements[k].Index += cast(s32) (sh.INSTANCE_FIXED_ATTRIBUTES + buf.slots);
+    vertex_buffer := mesh.VertexBuffer;
+    if shifted != null {
+        shifted.* = mesh.VertexBuffer.*;
+        vertex_buffer = shifted;
     }
-    command.VertexBuffers[0] = F.Vertex_Buffer_Binding.{ Buffer = shifted, InstanceInputRate = false };
+    command.VertexBuffers[0] = F.Vertex_Buffer_Binding.{ Buffer = vertex_buffer, InstanceInputRate = false };
     command.VertexBuffers[1] = F.Vertex_Buffer_Binding.{ Buffer = buf.buffer, InstanceInputRate = true };
     command.VertexBufferCount = 2;
 }

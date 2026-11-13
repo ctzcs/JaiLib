@@ -39,7 +39,7 @@
 HA :: #import "core/handle";
 ENC :: #import "core/encoding";
 KS :: #import "kit/storage";
-F :: #import "jfoster";
+F :: #import "foster";
 FILE :: #import "File";
 FU :: #import "File_Utilities";
 

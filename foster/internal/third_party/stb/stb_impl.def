@@ -1,0 +1,13 @@
+LIBRARY stb_impl
+EXPORTS
+    stbtt_InitFont
+    stbtt_GetNumberOfFonts
+    stbtt_FindGlyphIndex
+    stbtt_ScaleForPixelHeight
+    stbtt_ScaleForMappingEmToPixels
+    stbtt_GetFontVMetrics
+    stbtt_GetGlyphKernAdvance
+    stbtt_GetGlyphHMetrics
+    stbtt_GetGlyphBox
+    stbtt_IsGlyphEmpty
+    stbtt_MakeGlyphBitmapSubpixel

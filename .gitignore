@@ -10,3 +10,7 @@ stderr.txt
 .test_tmp/
 .zcode/
 .alma-snapshots
+build/
+library/
+__pycache__/
+*.pyc

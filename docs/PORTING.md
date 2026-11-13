@@ -68,4 +68,4 @@ bin\core_tests.exe
 主验收编译器是 jacket（`D:\Lib\jacket-windows-x64\jaic.exe`，0.35.1）；
 官方 jai 0.2.009 只保持既有构建不变，不作为新模块的验收门槛。
 
-Windows 一键回归：`run_core_tests.bat`（当前 14 个模块 / 11,492 条断言）。
+统一回归：`python tools/check/main.py --only core`；运行时模块已内置为 `foster`，不需要同级 jfoster。

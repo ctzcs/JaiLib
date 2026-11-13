@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>jfoster — wasm / W2 平台层</title>
+    <style>
+        :root {
+            color-scheme: dark;
+        }
+
+        body {
+            margin: 0;
+            padding: 16px;
+            background: #14161a;
+            color: #d7dae0;
+            font: 14px/1.5 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+        }
+
+        h1 {
+            font-size: 16px;
+            font-weight: 600;
+            margin: 0 0 4px;
+        }
+
+        p.hint {
+            margin: 0 0 12px;
+            color: #8b93a1;
+            font-size: 12px;
+        }
+
+        #status {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 999px;
+            background: #2a2f38;
+            font-size: 12px;
+            margin-bottom: 12px;
+        }
+
+        #status.ok {
+            background: #1f3d2b;
+            color: #7ddc9c;
+        }
+
+        #status.err {
+            background: #4a2028;
+            color: #ff9aa8;
+        }
+
+        canvas {
+            display: block;
+            width: 320px;
+            height: 180px;
+            image-rendering: pixelated;
+            background: #0b0d10;
+            border: 1px solid #2a2f38;
+            border-radius: 6px;
+            margin-bottom: 12px;
+        }
+
+        pre#log {
+            margin: 0;
+            padding: 12px;
+            height: 60vh;
+            overflow: auto;
+            background: #0b0d10;
+            border: 1px solid #2a2f38;
+            border-radius: 6px;
+            white-space: pre-wrap;
+            word-break: break-word;
+        }
+
+        pre#log .sys {
+            color: #6b7484;
+        }
+
+        pre#log .out {
+            color: #a8e6a3;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>jfoster — wasm / W2（App.update 真的在跑，图形是 W3）</h1>
+    <p class="hint">
+        fw_boot() 只调一次，之后由 requestAnimationFrame 每帧调 fw_step(dt)；
+        Jai 侧通过 fw_log(ptr, len) / print 把日志推到这里。900 帧后 fw_step 返回 0，
+        循环停止。
+    </p>
+
+    <div id="status">booting…</div>
+    <canvas id="stage" width="320" height="180"></canvas>
+    <pre id="log"></pre>
+
+    <!-- 经典脚本：file:// 下浏览器只允许这样加载 -->
+    <script src="host.js?v=6"></script>
+    <!-- build.bat 生成：把 fw.wasm 内联成 base64，双击打开也能跑 -->
+    <script src="./.build/fw_wasm_b64.js"></script>
+
+    <script>
+        (function () {
+            const logEl = document.getElementById("log");
+            const statusEl = document.getElementById("status");
+            const canvas = document.getElementById("stage");
+
+            function append(text, cls) {
+                const span = document.createElement("span");
+                if (cls) span.className = cls;
+                span.textContent = text;
+                logEl.appendChild(span);
+                logEl.scrollTop = logEl.scrollHeight;
+            }
+
+            function setStatus(text, cls) {
+                statusEl.textContent = text;
+                statusEl.className = cls || "";
+            }
+
+            if (!window.jfosterWeb) {
+                setStatus("host.js 没加载", "err");
+                return;
+            }
+
+            window.jfosterWeb
+                .start({
+                    url: "./.build/fw.wasm",
+                    canvas: canvas,
+                    onLog: function (text) {
+                        append(text, "out");
+                    },
+                    onFrame: function (frames) {
+                        if (frames % 30 === 0) setStatus("running — " + frames + " frames", "ok");
+                    },
+                })
+                .then(function (result) {
+                    setStatus(
+                        (result.stopped ? "stopped" : "done") + " — " + result.frames + " frames",
+                        result.error ? "err" : "ok"
+                    );
+                    append("\n[host] 结束：共 " + result.frames + " 帧\n", "sys");
+                })
+                .catch(function (error) {
+                    setStatus("failed", "err");
+                    append("[host] " + error.message + "\n", "err");
+                    console.error(error);
+                });
+        })();
+    </script>
+</body>
+
+</html>

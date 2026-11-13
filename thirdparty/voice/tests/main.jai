@@ -1,0 +1,33 @@
+#import "Basic";
+voicelib :: #import "thirdparty/voice";
+Math :: #import "Math";
+Thread :: #import "Thread";
+#load "../memory.jai";
+#load "support.jai";
+#load "neteq_test.jai";
+#load "voicelib_test.jai";
+main :: () {
+    t: Test;
+    print("neteq_validation\n"); neteq_validation(*t);
+    print("neteq_startup_and_exact_pcm\n"); neteq_startup_and_exact_pcm(*t);
+    print("neteq_reorder_duplicate_and_wrap\n"); neteq_reorder_duplicate_and_wrap(*t);
+    print("neteq_capacity_and_restart\n"); neteq_capacity_and_restart(*t);
+    print("neteq_fractional_frame_delay_cap\n"); neteq_fractional_frame_delay_cap(*t);
+    print("neteq_adaptive_delay\n"); neteq_adaptive_delay(*t);
+    print("neteq_waveform_time_stretch\n"); neteq_waveform_time_stretch(*t);
+    print("neteq_loss_concealment_and_recovery\n"); neteq_loss_concealment_and_recovery(*t);
+    print("neteq_network_trace\n"); neteq_network_trace(*t);
+    print("neteq_receiver_chunking_and_mute\n"); neteq_receiver_chunking_and_mute(*t);
+    print("neteq_reject_old_packet_outside_window\n"); neteq_reject_old_packet_outside_window(*t);
+    print("neteq_runtime_no_allocations\n"); neteq_runtime_no_allocations(*t);
+    print("opus_loopback\n"); opus_loopback(*t);
+    print("rnnoise_denoise\n"); rnnoise_denoise(*t);
+    print("config_derivation\n"); config_derivation(*t);
+    print("jitter_estimation\n"); jitter_estimation(*t);
+    print("voice_pipeline_loopback\n"); voice_pipeline_loopback(*t);
+    print("voice_sender_mute_semantics\n"); voice_sender_mute_semantics(*t);
+    print("voice_receiver_reject_before_decode\n"); voice_receiver_reject_before_decode(*t);
+    print("sender_denoised_copy_outlives_encode\n"); sender_denoised_copy_outlives_encode(*t);
+    assert(skipped == 0, "Native voice tests require Opus and RNNoise; set VOICE_LIB_DIR");
+    print("voice: % assertions, % unavailable native test groups\n", t.assertions, skipped);
+}

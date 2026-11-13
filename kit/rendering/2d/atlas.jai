@@ -28,12 +28,46 @@
 //   | `strings.clone(s)`                              | `copy_string(s)`（clone_owned）                          |
 //   | `make([]T, n)` / `delete(x)`                    | `atlas_alloc_array(T, n)` / `free(x.data)`               |
 //   | `make([dynamic]string, 0, n, allocator)`        | `atlas_temp_strings`（talloc，olib 默认也是 temp）        |
-//   | 内置图标图集 `builtin_icons_load / _decode`       | **未移植**：olib 用 `#load` 在编译期嵌入                    |
-//   |                                                 | `assets/icons/game-icons.{xml,png}`，jacket 0.35.1 不     |
-//   |                                                 | 支持按文件名 `#load` 取字节（同 material 包对              |
-//   |                                                 | `#load_directory` 的处理），且这两份资产不属于本仓库。      |
-//   |                                                 | 其余三条来源（Grid / Kenney XML / Aseprite）完整移植。      |
+//   | 内置图标图集 builtin_icons_load / _decode | 使用 #run 相对源码路径嵌入本仓库 assets/icons |
 #import "Basic";
+
+//@region 内置图标资产
+
+// Embed relative to this source file, independent of the host working directory.
+builtin_icons_embed :: (name: string) -> string {
+    bytes, ok := FILE.read_entire_file(tprint("%../../../assets/icons/%", #filepath, name));
+    assert(ok && bytes.count > 0, "Missing built-in icon asset: %", name);
+    return bytes;
+}
+BUILTIN_ICONS_XML :: #run builtin_icons_embed("game-icons.xml");
+BUILTIN_ICONS_PNG :: #run builtin_icons_embed("game-icons.png");
+
+// Caller owns both results. Pixels retain straight alpha for custom UI uploads.
+builtin_icons_decode :: () -> (F.Image, *HASH.Table(string, F.Rect_Int), bool) {
+    rects := kenney_build_rects(cast([] u8) BUILTIN_ICONS_XML);
+    if rects == null return .{}, null, false;
+    image := F.image_decode(cast([] u8) BUILTIN_ICONS_PNG);
+    if image.Width != 4096 || image.Height != 4096 {
+        F.image_destroy(*image);
+        kenney_rects_dispose(rects);
+        return .{}, null, false;
+    }
+    return image, rects, true;
+}
+
+// Only initialize an empty target; failure leaves it empty or unchanged.
+builtin_icons_load :: (atlas: *Sprite_Atlas, device: *F.Graphics_Device) -> bool {
+    if atlas == null || device == null return false;
+    if atlas.has_upload || atlas.pages.data != null || atlas.regions.count != 0 return false;
+    image, rects, ok := builtin_icons_decode();
+    if !ok return false;
+    defer kenney_rects_dispose(rects);
+    F.image_premultiply(*image);
+    atlas_from_rects(atlas, image, rects);
+    if !atlas_upload(atlas, device) { atlas_dispose(atlas); return false; }
+    return true;
+}
+//@endregion
 
 //@region 类型
 

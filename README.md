@@ -1,111 +1,78 @@
 # JaiLib
 
-[olib](https://github.com/ctzcs/olib)（Odin 游戏库集合）的 Jai 复刻。
-目录、模块边界、公开 API 与行为逐一对位；平台/图形层走相邻的
-[jfoster](../jfoster)（Foster 框架的 Jai 移植：SDL3 + SDL_GPU）。
+以 olib 为参照的 Jai 游戏库集合。运行时已内置在 `foster/`，库、测试和工具都从本仓库导入，
+不需要同级 jfoster。验收编译器：jacket `jaic` 0.35.1。
 
-验收编译器是 **jacket `jaic` 0.35.1**（`D:\Lib\jacket-windows-x64`）。
+## 目录
 
-## 结构
+| 路径 | 内容 |
+| --- | --- |
+| core/ | 句柄、数据容器、编码、几何、协程、补间、资源格式和开发辅助 |
+| foster/ | Foster 的 Jai 运行时：SDL3/SDL_GPU 桌面后端和 wasm64/WebGL2 后端，含原生依赖与默认资源 |
+| kit/ | 世界/相机、2D/3D 渲染、shader/material、UI、音频、资产、工具面板 |
+| thirdparty/clay/ | 纯 Jai Clay 移植与许可 |
+| thirdparty/imgui/ | Jai 绑定、Foster 后端、配套 ImGui.dll 与 imgui.lib |
+| thirdparty/onet/ | 网络复制、UDP/ENet、场景与预测回放 |
+| thirdparty/voice/ | Opus/RNNoise 绑定、PCM 缓冲与语音收发 |
+| assets/ | 正式字体、图标及来源/许可记录 |
+| tests/ | 第一方与集成测试；Foster 回归在 foster/tests |
+| tools/ | 统一检查、Jai 工具启动、shader、字体、图标、新项目和 wasm 构建 |
+| prompts/ | 面向 Jai 的新项目、数据/依赖、编辑工具约定 |
+| docs/ | 编码规范、移植差异和当前对位状态 |
 
-```
-core/            基础库（无引擎依赖）
-  handle/          句柄池 soa / array / fixed / growing / virtual
-  entities/        轻量实体容器（union 变体 + 按组件迭代）
-  encoding/        csv / json / ordered_json（xml 是 JaiLib 扩展）
-  curve/           三次曲线采样（Linear/Bezier/Hermite/Catmull-Rom/B-Spline）
-  coroutine/       单线程无栈协程（Flow / Cursor）
-  localization/    字符串表、fallback、复合格式
-  geometry/        最近点 / 距离与梯度 / 重叠 / 扫掠
-  meshutil/        网格统计、拓扑边、焊接、压缩、QEM 简化
-  dasset/          .dasset 模型格式（比特兼容 DragonLib v4）
-  tween/           damp / interpolated / managed tween / sequence
-  messaging/       CommandQueue / BroadcastChannel
-  profiler/        作用域计时
-  debug/           Tracking_Allocator
-  devbuild/        开发期编译互斥、集中测试工作区、token 路径重写
-  hotreload/       桌面 DLL 热重载：api / scan / session / watch / hot / simple
-  codegen/         编译前代码生成（按决定跳过：不纳入对位范围）
+`onet`、`voice` 已迁入 Jai 实现和行为测试，见 [onet](thirdparty/onet/README.md) 与
+[voice](thirdparty/voice/README.md)。voice 测试需通过 `VOICE_LIB_DIR` 提供 Opus/RNNoise 原生库。
+详见 [当前对位表](docs/OLIB_PARITY.md)。
 
-kit/             扩展层（依赖 jfoster + core）
-  world/           Matrix4 / Camera2D / Camera3D / Frustum3D / Ray3D / SceneRouter
-  rendering/
-    shader/        .oshader 解析、HLSL 生成、参数打包、编译/dev 热重载
-    material/      材质库、std140、实例值
-    2d/            Render2D、Sprite 图集（Grid / Kenney / Aseprite）、动画集
-    3d/            Mesh、渲染队列、LOD、DebugDraw3D、uniform 打包
-  ui/              clay 布局 + 位图/MSDF 字体 + 控件 + 变换感知命中测试
-  gizmo/           平移 / 旋转-缩放 / 2D 变换 / 线框
-  animation/       骨骼采样、palette、blend、蒙皮包围盒
-  asset/           .meta 管身份、blob 边界、manifest 打包
-  audio/           SDL3 设备流 + WAV 解码 + 目标 PCM 转换
-  storage/         资源根 / 用户存档路径策略
-  app/             CLI 参数 + 调试控制台
-  tools/           shader_lab / perf_overlay / scene_notes / tween_preview
+## 检查和构建
 
-thirdparty/      第三方绑定（对齐 olib 的 thirdparty/）
-  clay/            Clay v0.14 的纯 Jai 移植（不再链接 C 库）
-  imgui_foster.jai ImGui → jfoster 后端（含 kit/tools 用的 lab_imgui 包装层在 kit/tools/）
-
-Tests/
-  core/<module>/   与 olib tests/core 对位
-  kit/<module>/    与 olib tests/kit 对位
-  kit/hello_kit.jai 新树最小示例（窗口 + 相机 + 2D 绘制）
-  test_support.jai 共用的 expect / test_summary
-
-docs/
-  OLIB_PARITY.md   逐模块对位表（行数、状态、缺口）
-  PORTING.md       olib → Jai 移植手册（Jai/jacket 的坑）
+```powershell
+python tools/check/main.py
+python tools/check/main.py --only core
+python tools/check/main.py --only kit
+python tools/check/main.py --web
 ```
 
-## 构建与运行
+脚本从自身位置确定库路径，可从任意目录调用。`JAIC` 可指定编译器，默认查 PATH，
+本机安装还可识别 `D:/Lib/jacket-windows-x64/jaic.exe`。所有检查使用仓库内 Foster/ImGui。
+类型检查带 `-no_dce`，同时检查错误文本与退出码；测试和日志在 `build/check`。
+`--web` 需 wasm linker 与 Chrome/Edge，参数见 [wasm 构建入口](tools/wasm/build.py)。
 
-```bat
-run_tests.bat          :: core + kit 全量回归（core 14 模块 11,594 断言；kit 13 模块 682,581 断言）
-run_core_tests.bat     :: 只跑 core
-run_kit_tests.bat      :: 只跑 kit
-run_hello_kit.bat      :: 构建并运行新树最小示例（auto = 120 帧 + GPU 像素自检）
+检查也构建 `build/check/hello_kit.exe`；运行时加 `auto` 会做 GPU 像素检查并在 120 帧后退出。
+Windows 运行所需 DLL 自动复制到构建目录。根目录不再保留旧的四个 run_*.bat。
+
+应用导入：
+
+```jai
+F :: #import "foster";
+World :: #import "kit/world";
 ```
 
-三个脚本都会自己 `cd /d "%~dp0"`，可以从任意目录调用或直接双击。
-依赖两个路径，均有默认值、可用环境变量覆盖：
+编译添加 `-import_dir <JaiLib绝对路径>`；不再使用 JFOSTER_PARENT。
+`thirdparty/imgui` 的绑定与本目录二进制保持 ABI 配套，不从编译器全局 ImGui 模块取另一份声明。
 
-```
-JAI              默认 D:\MySpace\RefProject\jai\jai\bin\jai.exe   （仅 legacy 构建用）
-JAIC             默认 D:\Lib\jacket-windows-x64\jaic.exe          （验收编译器）
-JFOSTER_PARENT   默认 D:\MySpace\Github                           （jfoster 的父目录）
-```
+## 工具
 
-## 最小示例
+- [tools/check](tools/check/README.md)：模块检查、core/kit 行为回归与可选 Web 验证。
+- [tools/new-game](tools/new-game/README.md)：创建独立 Jai 游戏，含 core/core_editor/editor/game、状态测试和构建入口。
+- [tools/shaders](tools/shaders/README.md)：共享 Jai 解析器的 .oshader/HLSL 编译、清单读回和过期检查。
+- [tools/auto_gen](tools/auto_gen/README.md)：已有 Jai 声明扫描器的枚举生成 CLI。
+- [tools/fonts](tools/fonts/README.md)、[tools/icons](tools/icons/README.md)：带校验的离线资产工具。
+- [tools/zed-shader](tools/zed-shader/README.md)：.oshader 编辑器语法扩展，语法名沿用文件格式约定。
 
-`run_hello_kit.bat auto` 只用新树：
-
-```
-jfoster            窗口 / SDL_GPU 设备 / 生命周期（App.startup/update/render/shutdown）
-kit/world          Camera2D（世界 → 屏幕矩阵）
-kit/rendering/material  材质库 + 内置 Sprite 材质（借用 jfoster 的默认 Batcher 着色器）
-kit/rendering/2d        Render2D 合批绘制
+```powershell
+python tools/new-game/main.py ../MyGame MyGame
+python tools/wasm/build.py
+python foster/tests/wasm/verify_webgl.py --gpu
 ```
 
-`auto` 模式会画 120 帧，并在离屏 Target 上做一次 GPU 像素自检（画白色方块 → 读回中心/角落），
-实测 `center=(255,255,255,255) corner=(0,0,0,255)`。
+新项目默认是可运行的静态桌面开发/游戏入口。jacket CLI 尚无共享库输出选项，
+因此不生成假的 DLL 热替换命令；Web 游戏模板发布也不等同于已通过的 Foster Web 回归。
 
-## 工具链约定
+## 开发约定
 
-- **验收用 `jaic`，且必须带 `-no_dce`**：`jaic -check` 默认只检查 DCE 后可达的代码，
-  不加这个参数时未被引用的过程体根本不会被检查。
-- `jaic` 的 `-check` **退出码恒为 0**，有 error 也不会变成非零——脚本里必须 grep 输出里的 `error[`。
-- 官方 Jai `beta 0.2.009` 只用于历史遗留脚本，不作为新代码的验收门槛。
+[AGENTS](AGENTS.md) · [编码规范](docs/CODE_STYLE.md) · [Jai 移植说明](docs/PORTING.md) ·
+[新项目约定](prompts/new-project.md) · [数据约定](prompts/dod-guidelines.md) · [编辑工具约定](prompts/editor-guidelines.md)
 
-## 移植说明
-
-与 Odin 的差异（命名空间、无 `switch`、无数组算术、`a..b` 闭区间、运算符按词法作用域解析、
-`\`defer` 是调用方作用域、`table_find` 返回顺序、`STRING.slice` 第三参是长度等）见
-[docs/PORTING.md](docs/PORTING.md)；逐模块对位与缺口见 [docs/OLIB_PARITY.md](docs/OLIB_PARITY.md)。
-
-## 历史
-
-前身是 Ascension（Odin + raylib 2D 游戏）的完整 Jai 移植，2026-09 退役后转为
-“对标 DragonLib / olib 的库集合”。2026-11 起按 olib 一比一重建为 `core/` + `kit/`，
-旧的 `Libs/Engine`（raylib 风格 gfx、text、editor、game_app、container、threading）
-已在移植完成后删除，历史见 git。
+正式资产放 assets，构建产物放 build，诊断/截图放 library 下对应子目录；不复制依赖仓库和临时构建树。
+Foster 来源及本地调整记录在 [LOCAL_CHANGES](foster/docs/LOCAL_CHANGES.md)。

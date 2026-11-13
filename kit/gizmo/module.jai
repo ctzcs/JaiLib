@@ -43,7 +43,7 @@
 //   MSH    —— core/meshutil：Edge / Edge_Kind（线框的边来源）
 #import "Basic";
 JM :: #import "Math";
-F :: #import "jfoster";
+F :: #import "foster";
 W :: #import "kit/world";
 mat :: #import "kit/rendering/material";
 r2d :: #import "kit/rendering/2d";

@@ -27,7 +27,7 @@
 STRING :: #import "String";
 JM :: #import "Math";
 UNI :: #import "Unicode";     // utf8_next_character
-F :: #import "jfoster";       // Texture / Msdf_Font / Font / Image / Color / Vector2 / Matrix3x2
+F :: #import "foster";       // Texture / Msdf_Font / Font / Image / Color / Vector2 / Matrix3x2
 r2d :: #import "kit/rendering/2d";     // Render2D
 mat :: #import "kit/rendering/material"; // Material / Material_Library / BUILTIN_TEXT
 tw :: #import "core/tween";   // spring

@@ -70,7 +70,7 @@ FU :: #import "File_Utilities";
 HASH :: #import "Hash_Table";
 using HASH;
 
-F :: #import "jfoster";
+F :: #import "foster";
 sh :: #import "kit/rendering/shader";
 dev :: #import "kit/rendering/shader/dev";
 mat :: #import "kit/rendering/material";
@@ -79,8 +79,8 @@ r3d :: #import "kit/rendering/3d";
 W :: #import "kit/world";
 DA :: #import "core/dasset";
 
-ImGui :: #import "ImGui";
-IMGF :: #import "thirdparty/imgui_foster";
+ImGui :: #import "thirdparty/imgui";
+IMGF :: #import "thirdparty/imgui/imgui_foster";
 
 // kit/tools 共用的 ImGui 薄包装（标签吃 string）：本包内所有 ImGui 控件调用都走它。
 #load "../lab_imgui.jai";

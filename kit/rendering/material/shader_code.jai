@@ -6,7 +6,7 @@
 //   | ---------------------------------------------------- | ------------------------------------------------------- |
 //   | foster.GraphicsDriver                                | F.Graphics_Driver                                       |
 //   | `.Vulkan / .D3D12 / .Metal / .None / .Private`        | `.VULKAN / .D3D12 / .METAL / .NONE / .PRIVATE`           |
-//   | `when ODIN_OS == .JS { return false }`               | `#if OS == .WASM { … }`（jfoster 没有 Web 后端）          |
+//   | `when ODIN_OS == .JS { return false }`               | `#if OS == .WASM { … }`（本模块尚未接 GLSL 清单）          |
 //   | `runtime.Load_Directory_File`（#load_directory 元素）  | 本包自带的同名结构 + material_load_directory（jacket      |
 //   |                                                      | 0.35.1 不支持 #load_directory；见下面的说明）              |
 //   | `json.unmarshal(manifest, &Compiled_Manifest)`       | JSON.json_parse 树 + 逐键取的 material_json_*（本文件     |

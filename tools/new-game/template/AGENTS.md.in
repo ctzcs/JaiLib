@@ -1,0 +1,7 @@
+# @NAME@
+
+通用 Jai 约定见 [JaiLib AGENTS](@JAILIB@/AGENTS.md) 和 prompts。
+游戏业务在 src/core；开发会话在 src/core_editor，game/editor 是薄入口。
+当前 jacket 模板使用静态开发构建，不能宣称 DLL 热替换。发布不可达 core_editor/ImGui。
+检查：`python tools/build.py check`；构建：`python tools/build.py game` 或 `editor`。
+生成产物在 build；诊断在 library/tmp，必要截图在 library/screenshots，不在根目录增加批处理。

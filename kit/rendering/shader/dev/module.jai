@@ -24,7 +24,7 @@ HASH :: #import "Hash_Table";
 ATOMICS :: #import "Atomics";
 THREAD :: #import "Thread";
 
-F :: #import "jfoster";
+F :: #import "foster";
 sh :: #import "kit/rendering/shader";
 lang :: #import "kit/rendering/shader/lang";
 comp :: #import "kit/rendering/shader/compile";

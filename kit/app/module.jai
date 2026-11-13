@@ -10,7 +10,7 @@
 //   THREAD  —— Thread（olib 的 core:thread：Mutex / Thread）
 //   DEFAULT —— Default_Allocator.allocator_proc（olib 的 runtime.heap_allocator）
 #import "Basic";
-F :: #import "jfoster";
+F :: #import "foster";
 HASH :: #import "Hash_Table";
 THREAD :: #import "Thread";
 DEFAULT :: #import "Default_Allocator";

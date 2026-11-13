@@ -1,0 +1,30 @@
+<!doctype html><meta charset="utf-8">
+<canvas id="stage" width="320" height="180" style="width:320px;height:180px"></canvas>
+<pre id="report">pending</pre>
+<script src="host.js"></script><script src=".build/fw_wasm_b64.js"></script>
+<script>
+(async () => {
+  const report = document.getElementById('report');
+  const lines = [];
+  try {
+    const api = await jfosterWeb.instantiate(await jfosterWeb.loadBytes(), {
+      canvas: document.getElementById('stage'), onLog: s => lines.push(s)
+    });
+    if (!api.boot()) throw new Error('boot failed');
+    for (let i = 0; i < 3100; i++) api.step(1 / 60);
+    const log = lines.join('');
+    const checks = ['W3 PIXEL: PASS', 'W4 BATCHER: PASS', 'W4 FONT: PASS',
+      'W4 HOT-REPLACE: PASS', 'W5 TARGET: PASS', 'W5 BLIT: PASS',
+      'W5 MSAA: PASS', 'W5 ORIENTATION: PASS', 'W6 LIMIT: PASS',
+      'W6 SOAK: PASS', 'W6 WINDOW-MSAA: PASS'];
+    const failures = checks.filter(s => !log.includes(s));
+    const errors = api.stats(100 + 10);
+    const gl = document.getElementById('stage').getContext('webgl2');
+    const debug = gl.getExtension('WEBGL_debug_renderer_info');
+    const renderer = gl.getParameter(debug ? debug.UNMASKED_RENDERER_WEBGL : gl.RENDERER);
+    report.textContent = JSON.stringify({renderer, pass: failures.length === 0 && errors === 0, failures, errors, log});
+  } catch (e) {
+    report.textContent = JSON.stringify({pass:false,error:String(e),log:lines.join('')});
+  }
+})();
+</script>

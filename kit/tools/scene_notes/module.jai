@@ -22,6 +22,6 @@ using HASH;
 JM :: #import "Math";
 EN :: #import "core/encoding";
 W :: #import "kit/world";
-F :: #import "jfoster";
+F :: #import "foster";
 
 #load "scene_notes.jai";

@@ -25,9 +25,9 @@
 //   4. `#load_directory`（`runtime.Load_Directory_File`）在 jacket 0.35.1 里不可用，
 //      所以 material_register_directory 吃本包自带的 Load_Directory_File，并额外提供
 //      material_load_directory / material_load_directory_free 在运行时读目录（见 shader_code.jai）。
-//   5. Web（wasm）目标：jfoster 没有 Web 后端，本模块的 `#if OS == .WASM` 分支保留 olib 的
-//      material_web_check 调用形态，但整个包在 wasm 上不可用——olib 的“内置 Shader 在所有后端可用”
-//      这一条在 JaiLib 只覆盖 native。
+//   5. Foster 已有 WebGL2 后端，但本模块的预编译 material 目录登记仍只接受 native
+//      字节码；shader_driver_supported 在 wasm 返回 false。不能把 Foster 的 Web 回归
+//      推广成整个 kit/material 的 Web 能力已经验收。
 //
 // 导入说明（与 kit/world、kit/asset、kit/rendering/shader 同一写法：#load 进来的文件共享这一层
 // 的名字，各文件里不再重复 #import，避免「already declared in this scope」）：
@@ -47,7 +47,7 @@
 #import "Basic";
 STRING :: #import "String";
 JM :: #import "Math";
-F :: #import "jfoster";
+F :: #import "foster";
 sh :: #import "kit/rendering/shader";
 JSON :: #import "core/encoding";
 FILE :: #import "File";

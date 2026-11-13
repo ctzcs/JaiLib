@@ -20,7 +20,7 @@ STRING :: #import "String";
 HASH :: #import "Hash_Table";
 using HASH;
 JM :: #import "Math";
-F :: #import "jfoster";
+F :: #import "foster";
 profiler :: #import "core/profiler";
 mat :: #import "kit/rendering/material";
 r2d :: #import "kit/rendering/2d";

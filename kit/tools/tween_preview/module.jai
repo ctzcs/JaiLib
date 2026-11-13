@@ -15,8 +15,8 @@
 #import "Basic";
 STRING :: #import "String";
 JM :: #import "Math";
-ImGui :: #import "ImGui";
-F :: #import "jfoster";
+ImGui :: #import "thirdparty/imgui";
+F :: #import "foster";
 
 #load "../lab_imgui.jai";
 

@@ -21,7 +21,7 @@
 //
 // 使用前提（由 #load 它的模块提供，本文件不重复 #import，避免 "already declared in this scope"）：
 //   Basic —— temp_c_string
-//   ImGui —— jacket stdlib 的 ImGui 声明（模块里 `ImGui :: #import "ImGui"`）
+//   ImGui —— jacket stdlib 的 ImGui 声明（模块里 `ImGui :: #import "thirdparty/imgui"`）
 //
 // 未包装的部分：TextUnformatted / CalcTextSize / PushID / GetID / SeparatorText 之类，jacket 的
 // ImGui 模块自己带 `#optional` 的 string 重载，直接用 `ImGui.Xxx(some_string)` 即可；ColorButton

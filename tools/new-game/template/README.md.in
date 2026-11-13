@@ -1,0 +1,13 @@
+# @NAME@
+
+JaiLib: `@JAILIB@`（可用 JAILIB 环境变量覆盖）。编译器通过 JAIC 或 PATH 选择。
+
+```powershell
+python tools/build.py check
+python tools/build.py editor --run
+python tools/build.py game --run
+```
+
+core/world.jai 是无窗口状态与规则；core/services.jai 持有 GPU 资源；core_editor 包含暂停/重置开发面板。
+当前模板提供静态桌面开发与游戏入口；DLL 热重载和 Web 发布需单独接入并实际验收，未生成假实现。
+测试与构建产物在 build，不需要相邻 jfoster，也不复制 JaiLib 源码。

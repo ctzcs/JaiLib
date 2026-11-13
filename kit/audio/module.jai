@@ -11,6 +11,6 @@
 // 具名后 audio.jai 里一律写 F.SDL_xxx / M.isnan。
 #import "Basic";
 M :: #import "Math";
-F :: #import "jfoster";
+F :: #import "foster";
 
 #load "audio.jai";

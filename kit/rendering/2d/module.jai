@@ -17,10 +17,7 @@
 //      BlendModePremultiply→Blend_Mode_Premultiply、Subtexture.Texture→Subtexture.Tex、
 //      AsepriteLoopDir→Aseprite_Loop_Direction（.FORWARD/.REVERSE/…）、AsepriteFrame.Duration→DurationMS。
 //   3. Odin 的 map / [dynamic]T / pop → Table（Hash_Table，作为形参要传指针）/ [..]T + array_add / render2d_pop。
-//   4. 内置图标图集（atlas.odin 的 builtin_icons_load / builtin_icons_decode）**未移植**：
-//      olib 用 `#load` 在编译期嵌入 assets/icons/game-icons.{xml,png}，jacket 0.35.1 不支持按文件名
-//      `#load` 取字节（同 material 包处理 #load_directory 的方式），且这两份资产不属于本仓库。
-//      其余三条来源（Grid / Kenney XML / Aseprite 打包）完整移植。
+//   4. 内置图标通过 #run + File.read_entire_file 嵌入 assets/icons，不依赖进程工作目录。
 //
 // 导入说明（与 kit/rendering/material、kit/rendering/shader 同一写法：#load 进来的文件共享这一层的
 // 名字，各文件里不再重复 #import，避免「already declared in this scope」）：
@@ -40,7 +37,7 @@
 #import "Basic";
 STRING :: #import "String";
 JM :: #import "Math";
-F :: #import "jfoster";
+F :: #import "foster";
 mat :: #import "kit/rendering/material";
 sh :: #import "kit/rendering/shader";
 HASH :: #import "Hash_Table";

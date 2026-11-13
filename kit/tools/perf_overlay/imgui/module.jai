@@ -10,8 +10,8 @@
 //   lab    —— ../lab_imgui.jai 的 ImGui 薄包装（标签吃 string）
 #import "Basic";
 JM :: #import "Math";
-ImGui :: #import "ImGui";
-F :: #import "jfoster";
+ImGui :: #import "thirdparty/imgui";
+F :: #import "foster";
 perf :: #import "kit/tools/perf_overlay";
 
 #load "../../lab_imgui.jai";

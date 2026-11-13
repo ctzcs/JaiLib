@@ -1,0 +1,43 @@
+"""Build the game, development entry, or run its headless state regression."""
+from pathlib import Path
+import argparse
+import importlib.util
+import os
+import re
+import subprocess
+
+ROOT = Path(__file__).resolve().parents[1]
+LIB = Path(os.environ.get('JAILIB', '@JAILIB@')).resolve()
+
+
+def main():
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('target', choices=['game', 'editor', 'check'])
+    parser.add_argument('--run', action='store_true')
+    parser.add_argument('--smoke', action='store_true')
+    args = parser.parse_args()
+    spec = importlib.util.spec_from_file_location('libcheck', LIB / 'tools/check/main.py')
+    check = importlib.util.module_from_spec(spec); spec.loader.exec_module(check)
+    out = ROOT / 'build' / args.target
+    check.stage_runtime(out)
+    source = ROOT / ('tests/world_test.jai' if args.target == 'check' else f'src/{args.target}/main.jai')
+    command = [check.compiler(), '-import_dir', ROOT / 'src', '-import_dir', LIB,
+               '-exe', args.target, '-output_path', out, source]
+    result = subprocess.run(list(map(str, command)), cwd=ROOT, capture_output=True,
+                            encoding='utf-8', errors='replace')
+    log = result.stdout + result.stderr
+    (out / 'build.log').write_text(log, encoding='utf-8')
+    if result.returncode or re.search(r'\berror\[|\bError:', log):
+        print(log); return 1
+    if args.target == 'game':
+        # A release game must not link the development UI.
+        (out / 'ImGui.dll').unlink(missing_ok=True)
+    if args.run or args.smoke or args.target == 'check':
+        exe = out / (args.target + ('.exe' if os.name == 'nt' else ''))
+        return subprocess.run([str(exe)] + (['--smoke'] if args.smoke else []), cwd=out).returncode
+    print('Built:', out)
+    return 0
+
+
+if __name__ == '__main__':
+    raise SystemExit(main())

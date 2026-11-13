@@ -17,7 +17,7 @@
 #import "Basic";
 STRING :: #import "String";
 JM :: #import "Math";
-F :: #import "jfoster";
+F :: #import "foster";
 HASH :: #import "Hash_Table";
 JSON :: #import "core/encoding";
 

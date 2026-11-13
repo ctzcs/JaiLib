@@ -83,6 +83,8 @@ last_control_pressed := false;
 last_shift_pressed := false;
 last_alt_pressed := false;
 last_super_pressed := false;
+// 已投递的 Text 字节数：同一帧内多次 process_input 时只发新增部分。
+text_consumed: s64;
 last_render_elapsed := cast(float64) 0.0;
 
 // --- lifecycle ---
@@ -171,12 +173,16 @@ imgui_foster_process_input :: () {
     // Text input (UTF-8 accumulated this step) -> codepoints, in order.
     if builder_string_length(*kb.Text) > 0 {
         text := builder_to_string(*kb.Text);
-        i := 0;
+        if text.count < text_consumed text_consumed = 0;
+        i := text_consumed;
         while i < text.count {
             cp, length := utf8_decode(text, i);
             if cp > 0 IO_AddInputCharacter(io, cp);
             i += length;
         }
+        // 本文件允许多次 process_input 共用一个渲染帧（一次渲染可能跑多个 update step），
+        // 所以用游标记住已投递的字节数，只发新增的尾巴；缓冲变短说明是新的一帧，游标归零。
+        text_consumed = text.count;
     }
 
     if io.WantSetMousePos {
@@ -301,11 +307,9 @@ render_triangles :: (b: *IMGF.Batcher, count: u32, index_start: u32, index_buffe
 
 set_mouse_event :: (io: *IO, button: IMGF.Mouse_Buttons, imgui_button: s32) {
     mouse := IMGF.input_mouse(IMGF.App.input);
-    if IMGF.mouse_pressed(mouse, button) {
-        IO_AddMouseButtonEvent(io, imgui_button, true);
-    } else if IMGF.mouse_released(mouse, button) {
-        IO_AddMouseButtonEvent(io, imgui_button, false);
-    }
+    // 按下与松开要分别判断：同一 step 里既按下又松开时，`else if` 会把 up 事件吞掉。
+    if IMGF.mouse_pressed(mouse, button) IO_AddMouseButtonEvent(io, imgui_button, true);
+    if IMGF.mouse_released(mouse, button) IO_AddMouseButtonEvent(io, imgui_button, false);
 }
 
 update_mouse_cursor :: (io: *IO) {

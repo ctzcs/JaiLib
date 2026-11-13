@@ -16,6 +16,7 @@
 #import "kit/gizmo/gizmo_test";
 #import "kit/ui/ui_test";
 #import "kit/tools/tools_test";
+#import "thirdparty/imgui/input_test";
 
 main :: () {
     all_ok := true;
@@ -307,6 +308,57 @@ main :: () {
     stored_id_roundtrip_and_validation(*st);
     target_id_helpers_and_step_quantization(*st);
     all_ok &= test_summary("kit/tools", *st);
+
+    // thirdparty/imgui（ImGui -> jfoster 后端的输入层；移植自 olib
+    // tests/thirdparty/imgui/imgui_impl_ofoster/input_test.odin）。放在最后：这些用例会自己
+    // SDL_Init / SDL_Quit 一个隐藏窗口，不依赖也不干扰前面各组的纯逻辑测试。
+    // scancode -> ImGui Key 映射表
+    st = test_begin();
+    keymap_maps_letters_digits_and_punctuation(*st);
+    keymap_maps_control_navigation_and_editing_keys(*st);
+    keymap_maps_function_keys_and_keypad(*st);
+    keymap_maps_modifiers_to_both_sides(*st);
+    keymap_leaves_unmapped_scancodes_none(*st);
+    keymap_table_is_scancode_indexed_and_within_bounds(*st);
+    all_ok &= test_summary("thirdparty/imgui/keymap", *st);
+
+    // 后端接线 + 帧推进
+    st = test_begin();
+    backend_setup_wires_platform_name_flags_and_clipboard(*st);
+    new_frame_mirrors_window_pixel_size_and_delta_time(*st);
+    all_ok &= test_summary("thirdparty/imgui/frame", *st);
+
+    // 键盘事件（按下 / 保持 / 松开 / 一步内按下又松开）
+    st = test_begin();
+    key_events_report_down_pressed_and_released(*st);
+    press_and_release_in_one_step_does_not_stick(*st);
+    all_ok &= test_summary("thirdparty/imgui/keyboard", *st);
+
+    // 修饰键两侧 + Ctrl+S 快捷键构造
+    st = test_begin();
+    modifier_events_feed_left_right_and_aggregate_flags(*st);
+    ctrl_plus_key_builds_a_shortcut(*st);
+    all_ok &= test_summary("thirdparty/imgui/modifiers", *st);
+
+    // 文本输入（UTF-8 码点投递 + utf8_decode）
+    st = test_begin();
+    text_input_becomes_utf8_codepoints(*st);
+    invalid_utf8_queues_no_character(*st);
+    utf8_decode_ascii_and_two_byte(*st);
+    utf8_decode_three_and_four_byte(*st);
+    utf8_decode_rejects_invalid_and_truncated(*st);
+    all_ok &= test_summary("thirdparty/imgui/text", *st);
+
+    // 鼠标（按键索引换算 / 位置 / 滚轮）
+    st = test_begin();
+    mouse_buttons_position_and_wheel_reach_imgui(*st);
+    all_ok &= test_summary("thirdparty/imgui/mouse", *st);
+
+    // 生命周期与其它入口
+    st = test_begin();
+    shutdown_stops_input_forwarding(*st);
+    register_texture_wraps_pointer(*st);
+    all_ok &= test_summary("thirdparty/imgui/lifecycle", *st);
 
     if !all_ok {
         print("[kit] FAILED\n");

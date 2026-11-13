@@ -4,11 +4,14 @@
 //
 // **编译器命令行（重要）**：`hot_command` 拼的仍然是 odin 的命令行
 // （`odin build <source> -build-mode:dll -collection:名字=路径 ... -out:{output}`），
-// 这是 olib 的原样行为，本文件不改写它。**Jai 侧要用自己的编译器时，改这里**
-// （照 watch.jai 的默认扩展名 .jai 一起换成 jaic/jacket 的参数），或者不用 hot_*，
-// 直接用 Watch 自己传 command（Watch_Config.command 是 `[] string`，完全由调用方决定）。
-// Jai 侧验收环境（jacket 的 jaic）只能产出可执行文件、不产出共享库，所以这里没有
-// 顺手把它换成 jaic —— 换来的是一个跑不通的命令，而不是「一比一移植」。
+// 这是 olib 的原样行为，本文件不改写它。Jai 侧由调用方传自己的构建入口：
+// Watch_Config.command 是 `[] string`，完全由调用方决定。
+//
+// jaic 的命令行没有共享库开关，但**能**产出 DLL：用 Compiler 元编程 API 建一个工作区，
+// 设 `Build_Options.output_type = .DYNAMIC_LIBRARY`，编译那个脚本就会在编译期写出 .dll
+// （见示例 `JaiLibSample/src/hotreload/build.jai`）。所以 Jai 侧的 command 通常是
+// `jaic -import_dir <lib> -exe build/hot_build <project>/hot/build.jai`，再由 Session
+// 加载产物；正在运行的模块被映射着，重编要写新文件名，加载成功后再 FreeLibrary 旧的。
 //
 // Jai 侧差异（行为不变）：
 //   - odin 的 `@(private) hot_command` 在 Jai 里没有包内私有，靠 hot_ 前缀约定；

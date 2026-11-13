@@ -36,7 +36,7 @@
 | thirdparty/voice | Jai 实现与 20 组测试已迁移；真实 Opus/RNNoise 4,616 断言通过，原生库需自行提供 |
 | ImGui 的其他平台/后端 | 本仓库交付 Windows ABI 与 Foster 后端；未迁入 Odin 的全部后端和 wasm 对象 |
 | core/codegen 全面对位 | 维持原独立验收范围；新增工具仅覆盖现有 scanner 的枚举生成入口 |
-| DLL 热重载编译链 | core/hotreload 有监听/加载实现，现有 hot_command 仍有 Odin 模板；不能作为 Jai 自动构建使用 |
+| DLL 热重载编译链 | core/hotreload 的监听/加载已可用。jaic 命令行没有共享库开关，但 Compiler 元编程 API 的 `Build_Options.output_type = .DYNAMIC_LIBRARY` 能产出 DLL：示例 `src/hotreload/build.jai` 在编译期生成模块，宿主用 `session_library_*` 加载并在源码变动后换新（已在 Windows 上跑通 build → load → swap）。`hot_command` 仍拼 Odin 参数，Jai 侧由调用方传自己的构建命令 |
 | 新项目模板 DLL/Web 发布 | 当前模板为静态桌面开发和游戏入口；需另接支持共享库的 Jai 构建器及 Web 游戏宿主 |
 | kit/material Web 清单 | Foster 已支持 WebGL2，但 material 预编译目录登记仍拒绝 wasm，尚未接 GLSL 清单 |
 | 跨平台 native 验证 | 本次在 Windows 验收；不把预置二进制或条件编译当作 Linux/macOS 实测 |

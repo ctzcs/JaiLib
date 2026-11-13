@@ -24,7 +24,7 @@ core/            基础库（无引擎依赖）
   profiler/        作用域计时
   debug/           Tracking_Allocator
   devbuild/        开发期编译互斥、集中测试工作区、token 路径重写
-  hotreload/       桌面 DLL 热重载（api/scan 已落，session/watch 已落，hot/simple 未完成）
+  hotreload/       桌面 DLL 热重载：api / scan / session / watch / hot / simple
   codegen/         编译前代码生成（按决定跳过：不纳入对位范围）
 
 kit/             扩展层（依赖 jfoster + core）
@@ -61,7 +61,7 @@ docs/
 ## 构建与运行
 
 ```bat
-run_tests.bat          :: core + kit 全量回归（core 14 模块 11,492 断言；kit 13 模块 682,581 断言）
+run_tests.bat          :: core + kit 全量回归（core 14 模块 11,594 断言；kit 13 模块 682,581 断言）
 run_core_tests.bat     :: 只跑 core
 run_kit_tests.bat      :: 只跑 kit
 run_hello_kit.bat      :: 构建并运行新树最小示例（auto = 120 帧 + GPU 像素自检）

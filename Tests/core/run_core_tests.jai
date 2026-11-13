@@ -14,6 +14,7 @@
 #import "core/devbuild/devbuild_test";
 #import "core/geometry/geometry_test";
 #import "core/handle/handle_test";
+#import "core/hotreload/hotreload_test";
 #import "core/localization/localization_test";
 #import "core/meshutil/meshutil_test";
 
@@ -163,6 +164,19 @@ main :: () {
     virtual_callbacks_clear_and_delete_preserve_lifecycle(*st);
     virtual_allocation_failure_leaves_pool_usable(*st);
     all_ok &= test_summary("core/handle", *st);
+
+    // hotreload
+    st = test_begin();
+    source_changes_and_disposal(*st);
+    session_rejects_missing_module_without_becoming_live(*st);
+    hot_builds_command_and_validates_config(*st);
+    hot_mode_selects_scan_and_manual_trigger(*st);
+    pre_command_runs_before_build_and_converges(*st);
+    simple_api_hands_state_over_and_drops_only_at_exit(*st);
+    simple_api_keeps_ownership_when_candidate_is_rejected(*st);
+    simple_api_works_with_only_required_hooks(*st);
+    simple_store_keeps_one_table_per_combination(*st);
+    all_ok &= test_summary("core/hotreload", *st);
 
     // localization
     st = test_begin();

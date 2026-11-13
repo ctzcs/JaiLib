@@ -11,3 +11,5 @@
 #load "scan_other.jai";
 #load "session.jai";
 #load "watch.jai";
+#load "hot.jai";
+#load "simple.jai";

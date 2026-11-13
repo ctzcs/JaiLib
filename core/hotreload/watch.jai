@@ -26,6 +26,8 @@
 //   - odin 的 `fmt.aprintf`（分配在新内存）→ sprint（用当前 allocator）；需要长期持有就先 push。
 //   - `max(dt, 0)` 在 Jai 里要写 `max(dt, 0.0)`（字面量是无类型整数）。
 //   - odin 的 `w^ = {}` → `w.* = Watch.{}`；命名返回值（`watch_fingerprint`）照 odin 用多返回值。
+//   - odin 的 `make([]string, n)` → `alloc(n * size_of(string))`：jacket 的 `alloc` 收的是**字节数**，
+//     不是元素个数（漏乘 size_of 会写坏堆，见 Tests/core/hotreload 的用例）。
 #import "Basic";
 W_ATOMICS :: #import "Atomics";
 W_ENV :: #import "Extensions/Environment";
@@ -143,7 +145,7 @@ watch_init_body :: (w: *Watch, config: Watch_Config) -> bool {
     if config.extensions.count == 0 {
         // odin: []string{".odin"}；Jai 侧默认监听 .jai。
         w.extensions.count = 1;
-        w.extensions.data = cast(*string) alloc(1);
+        w.extensions.data = cast(*string) alloc(1 * size_of(string));
         w.extensions.data[0] = copy_string(".jai");
     } else {
         w.extensions = watch_clone_strings(config.extensions);
@@ -153,7 +155,7 @@ watch_init_body :: (w: *Watch, config: Watch_Config) -> bool {
     if !resolved return false;
     w.working_directory = working_directory;
     w.roots.count = config.roots.count;
-    if config.roots.count > 0 w.roots.data = cast(*string) alloc(config.roots.count);
+    if config.roots.count > 0 w.roots.data = cast(*string) alloc(config.roots.count * size_of(string));
     for root, i: config.roots {
         absolute, ok := watch_path(w.working_directory, root);
         if !ok return false;
@@ -370,7 +372,7 @@ watch_start :: (w: *Watch, fingerprint: u64) {
     };
     w.build_invalidated = false;
     w.job.command.count = w.command.count;
-    if w.command.count > 0 w.job.command.data = cast(*string) alloc(w.command.count);
+    if w.command.count > 0 w.job.command.data = cast(*string) alloc(w.command.count * size_of(string));
     for arg, i: w.command {
         // odin: strings.replace_all(arg, "{output}", output, context.allocator)；
         // jacket 的 replace 总是返回新分配的字符串，正好由 job_dispose 释放。
@@ -478,7 +480,7 @@ watch_clone_strings :: (values: [] string) -> [] string {
     result: [] string;
     if values.count == 0 return result;
     result.count = values.count;
-    result.data = cast(*string) alloc(values.count);
+    result.data = cast(*string) alloc(values.count * size_of(string));
     for value, i: values {
         result.data[i] = copy_string(value);
     }

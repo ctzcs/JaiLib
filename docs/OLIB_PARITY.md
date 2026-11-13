@@ -38,7 +38,7 @@
 | `core/devbuild` | 379 | `core/devbuild` | 已移植（32 断言） |
 | `core/dasset` | 696 | `core/dasset` | 已移植（108 断言，与 Odin 输出逐字节一致） |
 | `core/meshutil` | 777 | `core/meshutil` | 已移植（60 断言，索引/误差位模式一致） |
-| `core/hotreload` | 1,353 | `core/hotreload`（部分） | api/scan/scan_windows/scan_other/session/watch 已落且 jaic 编译通过；hot/simple/测试未写 |
+| `core/hotreload` | 1,180 | `core/hotreload` | 已移植并验证：api / scan（含 Windows 分支）/ session / watch / hot / simple + 102 断言。**真实 DLL 往返未跑**：jaic 只产可执行文件、不产共享库；`hot_command` 拼的仍是 `odin build -build-mode:dll`（换 Jai 编译器要改这一处或走 `Watch_Config.command`） |
 
 ## foster 对位（jfoster）
 

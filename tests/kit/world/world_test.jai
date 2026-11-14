@@ -317,3 +317,18 @@ expect ( state , ! zero , "零方向射线应被拒绝" ) ;
 //@endregion 
 
 // Loop scopes adapted.
+
+quaternion_rotation_preserves_basis :: (state:*Test_State) {
+    angles:=float32.[-.7,.4,1.5707963];
+    for angle:angles for axis:0..2 {
+        q:[4]float32; q[axis]=sin(angle*.5); q[3]=cos(angle*.5);
+        m:=W.matrix4_from_quaternion(q);
+        basis:=W.Vec3.[.{1,0,0},.{0,1,0},.{0,0,1}];
+        for v:basis { r:=W.matrix4_transform_vector(m,v); expect(state,abs(W.v3_dot(r,r)-1)<.00001,"Quaternion rotation must preserve unit length"); }
+        for i:0..2 for j:i+1..2 expect(state,abs(W.v3_dot(W.matrix4_transform_vector(m,basis[i]),W.matrix4_transform_vector(m,basis[j])))<.00001,"Rotated axes must stay orthogonal");
+    }
+    pitch:float32=-.7; yaw:float32=.4;
+    m:=W.matrix4_multiply(W.matrix4_from_quaternion(.[sin(-pitch*.5),0,0,cos(pitch*.5)]),W.matrix4_from_quaternion(.[0,sin(-yaw*.5),0,cos(yaw*.5)]));
+    d:=W.matrix4_transform_vector(m,.{0,0,-1});
+    expect(state,abs(d.x+sin(yaw)*cos(pitch))<.00001 && abs(d.y-sin(pitch))<.00001 && abs(d.z+cos(yaw)*cos(pitch))<.00001,"Combined FPS pitch/yaw must align the beam and aim ray");
+}

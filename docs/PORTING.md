@@ -72,3 +72,8 @@ bin\core_tests.exe
 官方 jai 0.2.009 只保持既有构建不变，不作为新模块的验收门槛。
 
 统一回归：`python tools/check/main.py --only core`；运行时模块已内置为 `foster`，不需要同级 jfoster。
+
+### 2026-11-14 sample follow-up
+
+- `kit/world/matrix4_from_quaternion` uses scalar names `q_xx` etc. Jacket 0.35.1 can interpret bare `xx`/`yy`/`zz` as swizzles in arithmetic: the scalar itself prints correctly while `xx + zz` loses the first term. This made X rotations non-orthonormal and deformed the FPS weapon/tracers. The world test group now checks all three rotation axes, preserved lengths/orthogonality, and combined yaw/pitch against the aim vector.
+- `kit/audio` accepts an optional explicit SDL device ID (zero means system default), and exposes owned device enumeration with a matching release function. The audio tests cover name ownership and invalid explicit IDs without opening a microphone.

@@ -1,4 +1,5 @@
-// Imported from jacket 0.35.1 stdlib/ImGui/declarations.jai, paired with local binaries.
+// Jacket 0.35.1 bindings, adapted to Dear ImGui 1.89.6 docking (823a1385).
+// ABI deltas: IO, Style colors, Viewport, ImDrawData. Validated by docking_layout_check.
 // Upstream generator: jacket tools/native_bindings/generate.py (not a JaiLib command).
 
 #scope_file
@@ -123,22 +124,24 @@ imgui :: #library "imgui";
         TabActive :: 35;
         TabUnfocused :: 36;
         TabUnfocusedActive :: 37;
-        PlotLines :: 38;
-        PlotLinesHovered :: 39;
-        PlotHistogram :: 40;
-        PlotHistogramHovered :: 41;
-        TableHeaderBg :: 42;
-        TableBorderStrong :: 43;
-        TableBorderLight :: 44;
-        TableRowBg :: 45;
-        TableRowBgAlt :: 46;
-        TextSelectedBg :: 47;
-        DragDropTarget :: 48;
-        NavHighlight :: 49;
-        NavWindowingHighlight :: 50;
-        NavWindowingDimBg :: 51;
-        ModalWindowDimBg :: 52;
-        COUNT :: 53;
+        DockingPreview :: 38;
+        DockingEmptyBg :: 39;
+        PlotLines :: 40;
+        PlotLinesHovered :: 41;
+        PlotHistogram :: 42;
+        PlotHistogramHovered :: 43;
+        TableHeaderBg :: 44;
+        TableBorderStrong :: 45;
+        TableBorderLight :: 46;
+        TableRowBg :: 47;
+        TableRowBgAlt :: 48;
+        TextSelectedBg :: 49;
+        DragDropTarget :: 50;
+        NavHighlight :: 51;
+        NavWindowingHighlight :: 52;
+        NavWindowingDimBg :: 53;
+        ModalWindowDimBg :: 54;
+        COUNT :: 55;
         ImGuiCol_Text :: Text;
         ImGuiCol_TextDisabled :: TextDisabled;
         ImGuiCol_WindowBg :: WindowBg;
@@ -237,22 +240,24 @@ imgui :: #library "imgui";
         TabActive :: 35;
         TabUnfocused :: 36;
         TabUnfocusedActive :: 37;
-        PlotLines :: 38;
-        PlotLinesHovered :: 39;
-        PlotHistogram :: 40;
-        PlotHistogramHovered :: 41;
-        TableHeaderBg :: 42;
-        TableBorderStrong :: 43;
-        TableBorderLight :: 44;
-        TableRowBg :: 45;
-        TableRowBgAlt :: 46;
-        TextSelectedBg :: 47;
-        DragDropTarget :: 48;
-        NavHighlight :: 49;
-        NavWindowingHighlight :: 50;
-        NavWindowingDimBg :: 51;
-        ModalWindowDimBg :: 52;
-        COUNT :: 53;
+        DockingPreview :: 38;
+        DockingEmptyBg :: 39;
+        PlotLines :: 40;
+        PlotLinesHovered :: 41;
+        PlotHistogram :: 42;
+        PlotHistogramHovered :: 43;
+        TableHeaderBg :: 44;
+        TableBorderStrong :: 45;
+        TableBorderLight :: 46;
+        TableRowBg :: 47;
+        TableRowBgAlt :: 48;
+        TextSelectedBg :: 49;
+        DragDropTarget :: 50;
+        NavHighlight :: 51;
+        NavWindowingHighlight :: 52;
+        NavWindowingDimBg :: 53;
+        ModalWindowDimBg :: 54;
+        COUNT :: 55;
         ImGuiCol_Text :: Text;
         ImGuiCol_TextDisabled :: TextDisabled;
         ImGuiCol_WindowBg :: WindowBg;
@@ -521,6 +526,8 @@ imgui :: #library "imgui";
 
 #if OS != .WINDOWS {
     ConfigFlags :: enum_flags u32 {
+        DockingEnable :: 0x40;
+        ViewportsEnable :: 0x400;
         None :: 0x0;
         NavEnableKeyboard :: 0x1;
         NavEnableGamepad :: 0x2;
@@ -545,6 +552,8 @@ imgui :: #library "imgui";
 
 #if OS == .WINDOWS {
     ConfigFlags :: enum_flags s32 {
+        DockingEnable :: 0x40;
+        ViewportsEnable :: 0x400;
         None :: 0x0;
         NavEnableKeyboard :: 0x1;
         NavEnableGamepad :: 0x2;
@@ -945,6 +954,7 @@ imgui :: #library "imgui";
         DisplayPos: ImVec2;
         DisplaySize: ImVec2;
         FramebufferScale: ImVec2;
+        OwnerViewport: *Viewport;
         DeIndexAllBuffers :: (this: *ImDrawData) -> void #cpp_method #foreign imgui "_ZN10ImDrawData17DeIndexAllBuffersEv";
         ScaleClipRects :: (this: *ImDrawData, fb_scale: *ImVec2) -> void #cpp_method #foreign imgui "_ZN10ImDrawData14ScaleClipRectsERK6ImVec2";
         ScaleClipRects :: (this: *ImDrawData, fb_scale: ImVec2) #no_context {
@@ -964,6 +974,7 @@ imgui :: #library "imgui";
         DisplayPos: ImVec2;
         DisplaySize: ImVec2;
         FramebufferScale: ImVec2;
+        OwnerViewport: *Viewport;
         DeIndexAllBuffers :: (this: *ImDrawData) -> void #cpp_method #foreign imgui "?DeIndexAllBuffers@ImDrawData@@QEAAXXZ";
         ScaleClipRects :: (this: *ImDrawData, fb_scale: *ImVec2) -> void #cpp_method #foreign imgui "?ScaleClipRects@ImDrawData@@QEAAXAEBUImVec2@@@Z";
         ScaleClipRects :: (this: *ImDrawData, fb_scale: ImVec2) #no_context {
@@ -2051,6 +2062,14 @@ ImVector :: struct(T: Type) {
         FontAllowUserScaling: bool;
         FontDefault: *ImFont;
         DisplayFramebufferScale: ImVec2;
+        ConfigDockingNoSplit: bool;
+        ConfigDockingWithShift: bool;
+        ConfigDockingAlwaysTabBar: bool;
+        ConfigDockingTransparentPayload: bool;
+        ConfigViewportsNoAutoMerge: bool;
+        ConfigViewportsNoTaskBarIcon: bool;
+        ConfigViewportsNoDecoration: bool;
+        ConfigViewportsNoDefaultParent: bool;
         MouseDrawCursor: bool;
         ConfigMacOSXBehaviors: bool;
         ConfigInputTrickleEventQueue: bool;
@@ -2110,6 +2129,7 @@ ImVector :: struct(T: Type) {
         MouseWheel: float;
         MouseWheelH: float;
         MouseSource_: MouseSource;
+        MouseHoveredViewport: ID;
         KeyCtrl: bool;
         KeyShift: bool;
         KeyAlt: bool;
@@ -2130,6 +2150,7 @@ ImVector :: struct(T: Type) {
         MouseWheelRequestAxisSwap: bool;
         MouseDownDuration: [5] float;
         MouseDownDurationPrev: [5] float;
+        MouseDragMaxDistanceAbs: [5] ImVec2;
         MouseDragMaxDistanceSqr: [5] float;
         PenPressure: float;
         AppFocusLost: bool;
@@ -2165,6 +2186,14 @@ ImVector :: struct(T: Type) {
         FontAllowUserScaling: bool;
         FontDefault: *ImFont;
         DisplayFramebufferScale: ImVec2;
+        ConfigDockingNoSplit: bool;
+        ConfigDockingWithShift: bool;
+        ConfigDockingAlwaysTabBar: bool;
+        ConfigDockingTransparentPayload: bool;
+        ConfigViewportsNoAutoMerge: bool;
+        ConfigViewportsNoTaskBarIcon: bool;
+        ConfigViewportsNoDecoration: bool;
+        ConfigViewportsNoDefaultParent: bool;
         MouseDrawCursor: bool;
         ConfigMacOSXBehaviors: bool;
         ConfigInputTrickleEventQueue: bool;
@@ -2224,6 +2253,7 @@ ImVector :: struct(T: Type) {
         MouseWheel: float;
         MouseWheelH: float;
         MouseSource_: MouseSource;
+        MouseHoveredViewport: ID;
         KeyCtrl: bool;
         KeyShift: bool;
         KeyAlt: bool;
@@ -2244,6 +2274,7 @@ ImVector :: struct(T: Type) {
         MouseWheelRequestAxisSwap: bool;
         MouseDownDuration: [5] float;
         MouseDownDurationPrev: [5] float;
+        MouseDragMaxDistanceAbs: [5] ImVec2;
         MouseDragMaxDistanceSqr: [5] float;
         PenPressure: float;
         AppFocusLost: bool;
@@ -3519,7 +3550,7 @@ ImVector :: struct(T: Type) {
         AntiAliasedFill: bool;
         CurveTessellationTol: float;
         CircleTessellationMaxError: float;
-        Colors: [53] ImVec4;
+        Colors: [55] ImVec4;
         Constructor :: (this: *Style) -> void #cpp_method #foreign imgui "_ZN10ImGuiStyleC1Ev";
         ScaleAllSizes :: (this: *Style, scale_factor: float) -> void #cpp_method #foreign imgui "_ZN10ImGuiStyle13ScaleAllSizesEf";
     }
@@ -3571,7 +3602,7 @@ ImVector :: struct(T: Type) {
         AntiAliasedFill: bool;
         CurveTessellationTol: float;
         CircleTessellationMaxError: float;
-        Colors: [53] ImVec4;
+        Colors: [55] ImVec4;
         Constructor :: (this: *Style) -> void #cpp_method #foreign imgui "??0ImGuiStyle@@QEAA@XZ";
         ScaleAllSizes :: (this: *Style, scale_factor: float) -> void #cpp_method #foreign imgui "?ScaleAllSizes@ImGuiStyle@@QEAAXM@Z";
     }
@@ -4292,24 +4323,46 @@ ImVector :: struct(T: Type) {
 
 #if OS != .WINDOWS {
     Viewport :: struct {
+        ID_: ID;
         Flags: ViewportFlags;
         Pos: ImVec2;
         Size: ImVec2;
         WorkPos: ImVec2;
         WorkSize: ImVec2;
+        DpiScale: float;
+        ParentViewportId: ID;
+        DrawData: *ImDrawData;
+        RendererUserData: *void;
+        PlatformUserData: *void;
+        PlatformHandle: *void;
         PlatformHandleRaw: *void;
+        PlatformWindowCreated: bool;
+        PlatformRequestMove: bool;
+        PlatformRequestResize: bool;
+        PlatformRequestClose: bool;
     }
 
 }
 
 #if OS == .WINDOWS {
     Viewport :: struct {
+        ID_: ID;
         Flags: ViewportFlags;
         Pos: ImVec2;
         Size: ImVec2;
         WorkPos: ImVec2;
         WorkSize: ImVec2;
+        DpiScale: float;
+        ParentViewportId: ID;
+        DrawData: *ImDrawData;
+        RendererUserData: *void;
+        PlatformUserData: *void;
+        PlatformHandle: *void;
         PlatformHandleRaw: *void;
+        PlatformWindowCreated: bool;
+        PlatformRequestMove: bool;
+        PlatformRequestResize: bool;
+        PlatformRequestClose: bool;
     }
 
 }
@@ -4344,6 +4397,8 @@ ImVector :: struct(T: Type) {
 
 #if OS != .WINDOWS {
     WindowFlags :: enum_flags u32 {
+        NoDocking :: 0x200000;
+        DockNodeHost :: 0x20000000;
         None :: 0x0;
         NoTitleBar :: 0x1;
         NoResize :: 0x2;
@@ -4410,6 +4465,8 @@ ImVector :: struct(T: Type) {
 
 #if OS == .WINDOWS {
     WindowFlags :: enum_flags s32 {
+        NoDocking :: 0x200000;
+        DockNodeHost :: 0x20000000;
         None :: 0x0;
         NoTitleBar :: 0x1;
         NoResize :: 0x2;

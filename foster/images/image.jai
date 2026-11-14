@@ -111,8 +111,8 @@ QOI_MASK_2   :: 0xc0;
 
 qoi_decode :: (bytes: [] u8) -> Image {
     if bytes.count < 14 + 8 return .{};
-    w := cast(s32) ((cast(u32) bytes[4] << 24) | (cast(u32) bytes[5] << 16) | (cast(u32) bytes[6] << 8) | cast(u32) bytes[7]);
-    h := cast(s32) ((cast(u32) bytes[8]  << 24) | (cast(u32) bytes[9]  << 16) | (cast(u32) bytes[10] << 8) | cast(u32) bytes[11]);
+    w := cast(s32) (((cast(u32) bytes[4]) << 24) | ((cast(u32) bytes[5]) << 16) | ((cast(u32) bytes[6]) << 8) | cast(u32) bytes[7]);
+    h := cast(s32) (((cast(u32) bytes[8]) << 24) | ((cast(u32) bytes[9]) << 16) | ((cast(u32) bytes[10]) << 8) | cast(u32) bytes[11]);
     channels := bytes[12];
     if w <= 0 || h <= 0 || channels < 3 || channels > 4 return .{};
 
@@ -137,15 +137,15 @@ qoi_decode :: (bytes: [] u8) -> Image {
             } else if (b1 & QOI_MASK_2) == QOI_OP_INDEX {
                 px = index[b1];
             } else if (b1 & QOI_MASK_2) == QOI_OP_DIFF {
-                px.r = px.r + cast(u8) (((b1 >> 4) & 0x03) - 2);
-                px.g = px.g + cast(u8) (((b1 >> 2) & 0x03) - 2);
-                px.b = px.b + cast(u8) (( b1       & 0x03) - 2);
+                px.r = cast(u8) (((cast(s32) px.r) + (cast(s32) ((b1 >> 4) & 0x03)) - 2) & 255);
+                px.g = cast(u8) (((cast(s32) px.g) + (cast(s32) ((b1 >> 2) & 0x03)) - 2) & 255);
+                px.b = cast(u8) (((cast(s32) px.b) + (cast(s32) ( b1       & 0x03)) - 2) & 255);
             } else if (b1 & QOI_MASK_2) == QOI_OP_LUMA {
                 b2 := cast(s32) bytes[p]; p += 1;
-                vg := cast(s32) (b1 & 0x3f) - 32;
-                px.r = px.r + cast(u8) (vg - 8 + ((b2 >> 4) & 0x0f));
-                px.g = px.g + cast(u8) vg;
-                px.b = px.b + cast(u8) (vg - 8 + ( b2       & 0x0f));
+                vg := (cast(s32) (b1 & 0x3f)) - 32;
+                px.r = cast(u8) (((cast(s32) px.r) + vg - 8 + ((b2 >> 4) & 0x0f)) & 255);
+                px.g = cast(u8) (((cast(s32) px.g) + vg) & 255);
+                px.b = cast(u8) (((cast(s32) px.b) + vg - 8 + ( b2       & 0x0f)) & 255);
             } else if (b1 & QOI_MASK_2) == QOI_OP_RUN {
                 run = cast(s32) (b1 & 0x3f);
             }
@@ -164,10 +164,10 @@ qoi_encode :: (pixels: [] Color, w: s32, h: s32) -> [] u8 {
     buf: String_Builder;
 
     write32 :: (b: *String_Builder, v: u32) {
-        append(b, cast(u8) (v >> 24));
-        append(b, cast(u8) (v >> 16));
-        append(b, cast(u8) (v >> 8));
-        append(b, cast(u8) v);
+        append(b, cast(u8) ((v >> 24) & 255));
+        append(b, cast(u8) ((v >> 16) & 255));
+        append(b, cast(u8) ((v >> 8) & 255));
+        append(b, cast(u8) (v & 255));
     }
 
     append(*buf, "qoif");
@@ -200,11 +200,17 @@ qoi_encode :: (pixels: [] Color, w: s32, h: s32) -> [] u8 {
             if index[idx] == px {
                 append(*buf, cast(u8) (QOI_OP_INDEX | idx));
             } else {
-                vr := cast(s32) px.r - cast(s32) prev.r;
-                vg := cast(s32) px.g - cast(s32) prev.g;
-                vb := cast(s32) px.b - cast(s32) prev.b;
+                vr := (cast(s32) px.r) - (cast(s32) prev.r);
+                vg := (cast(s32) px.g) - (cast(s32) prev.g);
+                vb := (cast(s32) px.b) - (cast(s32) prev.b);
 
-                if vr >= -2 && vr <= 1 && vg >= -2 && vg <= 1 && vb >= -2 && vb <= 1 {
+                if px.a != prev.a {
+                    append(*buf, QOI_OP_RGBA);
+                    append(*buf, px.r);
+                    append(*buf, px.g);
+                    append(*buf, px.b);
+                    append(*buf, px.a);
+                } else if vr >= -2 && vr <= 1 && vg >= -2 && vg <= 1 && vb >= -2 && vb <= 1 {
                     append(*buf, cast(u8) (QOI_OP_DIFF | ((vr + 2) << 4) | ((vg + 2) << 2) | (vb + 2)));
                 } else if vg >= -32 && vg <= 31 && (vr - vg) >= -8 && (vr - vg) <= 7 && (vb - vg) >= -8 && (vb - vg) <= 7 {
                     append(*buf, cast(u8) (QOI_OP_LUMA | (vg + 32)));

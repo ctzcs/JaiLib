@@ -715,27 +715,16 @@ fallback := TO_SL . display_name ( "" , "expose" ) ;
 expect ( state , fallback . data == "expose" . data , "退回 ID 时同样借用入参内存" ) ;
 }
 
- shader_target_format_downgrades_to_8bit_color :: ( state : * Test_State ) {
-formats : [ 3 ] TO_SH . Target_Format = .[ TO_SH . Target_Format . Color , TO_SH . Target_Format . Float16 ,
-TO_SH . Target_Format . Float32 ] ;
-for f : formats {
-got := TO_SL . shader_target_format ( f ) ;
-expect ( state , got == TO_F . Texture_Format . R8G8B8A8 ,
-"Target_Format(%) 应映射为 R8G8B8A8（jfoster 只有 8 位颜色/深度格式），得到 %" ,
-cast ( int ) f , cast ( int ) got ) ;
-// 颜色附件必须是 R8G8B8A8（4 字节/像素），不能落到深度格式上。
-expect ( state , TO_F . texture_format_size ( got ) == 4 ,
-"Target_Format(%) 的映射结果应是 4 字节/像素的颜色格式，得到 % 字节" ,
-cast ( int ) f , TO_F . texture_format_size ( got ) ) ;
+shader_target_format_preserves_precision :: ( state : * Test_State ) {
+formats := TO_SH . Target_Format.[. Color , . Float16 , . Float32 ] ;
+    expected := TO_F.Texture_Format.[.COLOR, .R16G16B16A16_FLOAT, .R32G32B32A32_FLOAT];
+    sizes := int.[4, 8, 16];
+    for format, i: formats {
+got := TO_SL . shader_target_format (format) ;
+expect ( state , got == expected[i], "Declared target precision must be preserved");
+        expect(state, TO_F .texture_format_size(got ) == sizes[i], "Target byte stride must match its channels");
+        expect ( state , TO_F .texture_format_is_color( got ) && !TO_F .texture_format_is_depth_stencil( got ), "HDR targets are color attachments") ;
 }
-
- // module.jai 第 3 条记录的已知差异：Float16 / Float32 目标降级为同一个颜色格式
-// （HDR 预览范围随之损失）。这里把"降级"本身钉成契约，将来 jfoster 支持真浮点格式时
-// 这条断言会失败，提醒同步更新模块注释。
-expect ( state , TO_SL . shader_target_format ( . Float16 ) == TO_SL . shader_target_format ( . Float32 ) ,
-"Float16 / Float32 目标当前都应降级为同一颜色格式" ) ;
-expect ( state , TO_SL . shader_target_format ( . Color ) == TO_F . Texture_Format . COLOR ,
-"Color 目标应是 Texture_Format.COLOR（= R8G8B8A8 别名）" ) ;
 }
 //@endregion
 

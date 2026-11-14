@@ -26,10 +26,10 @@ Color_PaleGreen :: Color.{ 152, 251, 152, 255 };
 
 color_lerp :: (a: Color, b: Color, t: float) -> Color {
     return .{
-        cast(u8) (a.r + (b.r - a.r) * t),
-        cast(u8) (a.g + (b.g - a.g) * t),
-        cast(u8) (a.b + (b.b - a.b) * t),
-        cast(u8) (a.a + (b.a - a.a) * t),
+        cast(u8) (a.r + ((cast(float) b.r) - (cast(float) a.r)) * t),
+        cast(u8) (a.g + ((cast(float) b.g) - (cast(float) a.g)) * t),
+        cast(u8) (a.b + ((cast(float) b.b) - (cast(float) a.b)) * t),
+        cast(u8) (a.a + ((cast(float) b.a) - (cast(float) a.a)) * t),
     };
 }
 
@@ -46,12 +46,12 @@ color_premultiply :: (c: Color) -> Color {
 
 // Packs to (R<<24)|(G<<16)|(B<<8)|A (Foster: RGBA).
 color_rgba :: (c: Color) -> u32 {
-    return (cast(u32) c.r << 24) | (cast(u32) c.g << 16) | (cast(u32) c.b << 8) | cast(u32) c.a;
+    return ((cast(u32) c.r) << 24) | ((cast(u32) c.g) << 16) | ((cast(u32) c.b) << 8) | cast(u32) c.a;
 }
 
 // Packs to (A<<24)|(B<<16)|(G<<8)|R (Foster: ABGR).
 color_abgr :: (c: Color) -> u32 {
-    return (cast(u32) c.a << 24) | (cast(u32) c.b << 16) | (cast(u32) c.g << 8) | cast(u32) c.r;
+    return ((cast(u32) c.a) << 24) | ((cast(u32) c.b) << 16) | ((cast(u32) c.g) << 8) | cast(u32) c.r;
 }
 
 color_from_rgba :: (packed: u32) -> Color {
@@ -69,7 +69,7 @@ color_rgba_f :: (r: u8, g: u8, b: u8, alpha: float) -> Color {
 }
 
 color_from_hex :: (hex: u32, alpha := 1.0) -> Color {
-    return color_rgba_f(cast(u8) (hex >> 16), cast(u8) (hex >> 8), cast(u8) hex, alpha);
+    return color_rgba_f(cast(u8) ((hex >> 16) & 255), cast(u8) ((hex >> 8) & 255), cast(u8) (hex & 255), alpha);
 }
 
 color_to_vector4 :: (c: Color) -> Vector4 {

@@ -327,9 +327,7 @@ texture_retire_flush :: (s: *Session) {
     array_reset(*s.retired_textures);
 }
 
-// ImGui 按需光栅化字形，但 olib 字体只含 ASCII、Latin-1 与 GB2312；热改标签后报告缺字。
-// 在 ImGui 帧内调用。Jai 的 ImGui 绑定没有 Font_IsGlyphInFont：缺字检查退化为「非 ASCII 全算」，
-// 只在控制台报告（不误报 ASCII，也不假装知道字体覆盖范围）。
+// 在 ImGui 帧内解码 UTF-8 并查询当前字体的实际字形覆盖，热改标签后报告缺字。
 validate_parameter_fonts :: (s: *Session) {
     s.fonts_dirty = false;
     s.missing_glyphs = 0;
@@ -348,10 +346,13 @@ validate_parameter_fonts :: (s: *Session) {
 }
 
 validate_label_font :: (s: *Session, label: string) {
-    for cp: label {
-        if cp <= 0x7F continue;
+    iterator := F.rune_iterator(label);
+    font := ImGui.GetFont();
+    while iterator.pos < label.count {
+        cp, _ := F.rune_next(*iterator);
+        if cp <= 0xFFFF && ImGui.ImFont.FindGlyphNoFallback(font, cast(ImGui.ImWchar) cp) != null continue;
         s.missing_glyphs += 1;
-        print("ImGui font may lack U+%04X in %; the olib UI font covers ASCII, Latin-1 and GB2312\n", cp, label);
+        print("ImGui font lacks U+% in %\n", formatInt(cp, base = 16, minimum_digits = 4), label);
     }
 }
 //@endregion

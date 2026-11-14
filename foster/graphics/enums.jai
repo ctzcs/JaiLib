@@ -16,12 +16,16 @@ Texture_Format :: enum {
     DEPTH16;
     DEPTH24;
     DEPTH32;
+    R16G16B16A16_FLOAT;
+    R32G32B32A32_FLOAT;
     COLOR :: R8G8B8A8;   // shorthand (Foster: Color = R8G8B8A8)
 }
 
 texture_format_size :: (format: Texture_Format) -> s32 {
     if format == {
         case .R8G8B8A8;        return 4;
+        case .R16G16B16A16_FLOAT; return 8;
+        case .R32G32B32A32_FLOAT; return 16;
         case .R8;              return 1;
         case .R8G8;            return 2;
         case .DEPTH24STENCIL8; return 4;
@@ -34,7 +38,7 @@ texture_format_size :: (format: Texture_Format) -> s32 {
 }
 
 texture_format_is_color :: (format: Texture_Format) -> bool {
-    if format == .R8G8B8A8 || format == .R8 || format == .R8G8 return true;
+    if format == .R8G8B8A8 || format == .R8 || format == .R8G8 || format == .R16G16B16A16_FLOAT || format == .R32G32B32A32_FLOAT return true;
     return false;
 }
 

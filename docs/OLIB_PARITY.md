@@ -10,7 +10,7 @@
 | Foster 运行时 | foster/ | 从 jfoster 工作树迁入，模块名统一为 foster，原生依赖/默认资源随库 |
 | ImGui | thirdparty/imgui/ | DLL、导入库、Jai 声明与 Foster 后端同目录；输入/生命周期回归通过 |
 | Clay | thirdparty/clay/ | 保留已有纯 Jai 实现，补齐来源许可 |
-| 字体、图标 | assets/ | 按参照仓库逐字节复制正式资产与许可/来源记录 |
+| 字体、图标 | assets/ | 根目录 OTF/图标及模板 MSDF 图集逐字节复制；含许可/来源记录，MSDF 已验证 Jai 解码和新项目复制 |
 | prompts、AGENTS | prompts/、AGENTS.md | 按 Jai 模块、内存、编译器能力重写；非 Odin 命令替换壳 |
 | 检查入口 | tools/check/main.py | 取代根目录四个批处理，自动发现模块并检查完整过程体 |
 | 字体/图标/Zed 工具 | tools/fonts、icons、zed-shader | 复用与语言无关的工具及测试，保留 .oshader 格式命名 |

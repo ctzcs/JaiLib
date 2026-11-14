@@ -24,7 +24,7 @@ preview_size_label :: (s: *Session) -> string {
                 if t == null || t.Attachments.count == 0 break;
                 x := 4;
                 if t.Attachments[0].SampleCount == .ONE x = 1;
-                return tprint("RT % x % / MSAA %dx", t.Width, t.Height, x);
+                return tprint("RT % x % / MSAA %x", t.Width, t.Height, x);
             }
         }
     }

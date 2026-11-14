@@ -1,15 +1,35 @@
-# Dear ImGui（Jai）
+# Dear ImGui (Jai)
 
-`module.jai` / `declarations.jai` 是 jacket 0.35.1 的 Jai 绑定；Windows 绑定使用 C++ 符号，
-必须与本目录的 `ImGui.dll`、`imgui.lib` 配套。后者是导入库，不是第二个 DLL。
-绑定来源：jacket stdlib/ImGui/declarations.jai；Dear ImGui 许可见 LICENSE。
+The Jai bindings and Windows binaries are paired with **Dear ImGui 1.89.6 docking**,
+upstream commit [`823a1385a269d923d35b82b2f470f3ae1fa8b5a3`](https://github.com/ocornut/imgui/tree/823a1385a269d923d35b82b2f470f3ae1fa8b5a3).
+The base declarations originated in jacket 0.35.1. Docking changes the IO, Style,
+Viewport and ImDrawData layouts; these declarations include those changes.
+The backend checks sizes and key field offsets against the DLL before setup.
+Do not substitute another ImGui DLL or the original jacket mainline DLL.
 
 ```jai
-ImGui :: #import "thirdparty/imgui";
-Backend :: #import "thirdparty/imgui/imgui_foster";
+IG :: #import "thirdparty/imgui";
+GUI :: #import "thirdparty/imgui/imgui_foster";
+Dock :: #import "thirdparty/imgui/docking";
 ```
 
-Foster 后端与输入测试从 JaiLib 原有实现迁入，运行时只依赖仓库内 `foster`。
-链接使用相对本目录的导入库；发布时将 DLL 复制到可执行文件旁。
-`python tools/check/main.py --only kit` 会构建并运行 ImGui 输入/生命周期回归。
-当前随仓库交付的是 Windows ABI；不能拿它给 Web 或另一版本的 ImGui 链接。
+After setup, set `IG.GetIO().ConfigFlags_ |= .DockingEnable`. Call
+`Dock.DockSpaceOverViewport()` before submitting the dockable windows. Use the
+builder once to arrange the initial split; do not force window positions each
+frame. See JaiLibSample's Shader Lab for split, undock, tab merge and redock checks.
+Multi-viewport OS windows are not implemented by this Foster backend; leave
+`ViewportsEnable` off. In-window docking is supported.
+
+`native/` contains the unmodified pinned upstream sources and MIT license, plus
+`jailib_docking.cpp`, a small C ABI bridge for the docking builder and ABI checks.
+Rebuild with Visual Studio C++ build tools:
+
+```sh
+python tools/imgui/build.py
+python tools/check/main.py --only kit
+```
+
+The build writes scratch files under `build/imgui-docking` and installs the paired
+`ImGui.dll` and `imgui.lib` here. Stage the DLL beside every rebuilt executable.
+`imgui.lib` is an import library, not an additional runtime DLL. The rest of the
+API uses the existing C++ symbol bindings. This distribution targets Windows ABI.

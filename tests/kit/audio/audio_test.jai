@@ -743,3 +743,19 @@ audio_test_expect_i64 ( state , from_copy . channels , target . channels , "å­—è
 //@endregion 
 
 // Loop scopes adapted.
+
+// Enumeration is read-only. A bogus explicit device must fail without opening
+// the system default or damaging an existing caller-owned device.
+audio_device_selection_contract :: (state:*Test_State) {
+    expect(state,AU.audio_init(),"Initialize SDL audio for enumeration"); defer AU.audio_shutdown();
+    inputs:=AU.audio_device_list(true); outputs:=AU.audio_device_list(false);
+    for device:inputs expect(state,device.id!=0 && device.name.count>0,"Named recording device");
+    for device:outputs expect(state,device.id!=0 && device.name.count>0,"Named playback device");
+    AU.audio_device_list_free(*inputs); AU.audio_device_list_free(*outputs);
+    expect(state,inputs.count==0 && outputs.count==0,"Lists release their owned names");
+    device:AU.Audio_Device;
+    expect(state,!AU.audio_device_open(*device,device_id=0x12345678),"Invalid explicit playback device must not fall back to default");
+    expect(state,device.stream==null,"Failed selection must leave device empty");
+    expect(state,!AU.audio_device_open_recording(*device,device_id=0x12345678),"Invalid explicit recording device must not open default microphone");
+    expect(state,device.stream==null,"Failed recording selection preserves state");
+}

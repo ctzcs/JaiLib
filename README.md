@@ -18,7 +18,7 @@ Validated with jacket `jaic` 0.35.1 on Windows.
 | thirdparty/voice/ | Opus/RNNoise bindings, PCM buffering, and voice send/receive pipelines |
 | [thirdparty/box2d/](thirdparty/box2d/README.md) | Box2D 3.1.1 C ABI bindings, Windows/Linux/macOS static libraries, and physics tests |
 | [thirdparty/box3d/](thirdparty/box3d/README.md) | Box3D 0.1.0 snapshot bindings, single-precision Windows/Linux/macOS static libraries, and physics tests |
-| assets/ | Fonts, icons, provenance, and licenses |
+| [assets/](assets/README.md) | Fonts (OTF and offline MSDF), icons, provenance, and licenses |
 | tests/ | First-party and integration tests; Foster regressions live in foster/tests |
 | tools/ | Unified checks, Jai tool runner, shader/font/icon tools, project scaffolding, and wasm builds |
 | prompts/ | Jai guidelines for new projects, data and dependencies, and editor tools |

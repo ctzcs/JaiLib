@@ -4,12 +4,11 @@
 //   | olib (Odin)                                          | JaiLib (Jai)                                        |
 //   | ---------------------------------------------------- | --------------------------------------------------- |
 //   | `foster.StorageContainer{Root = …}` + ReadAllBytes    | FILE.read_entire_file(完整路径)                      |
-//   | `foster.WriteAllBytesAtomic`                         | FILE.write_entire_file（jfoster 没有原子替换封装）      |
+//   | `foster.WriteAllBytesAtomic`                         | F.storage_write_all_bytes_atomic      |
 //   | `filepath.dir / base / abs / rel`                    | sl_path_dir / STRING.path_filename / FILE.get_absolute_path / sl_relative_path |
 //   | `strings.clone(value.texture)`                       | copy_string                                          |
 //   | `delete(bytes)`                                      | free(bytes.data)                                     |
-// 说明：没有原子替换是本文件唯一的行为差异（保存失败时旧文件内容可能已被截断），
-// 报告里把它列为风险点。
+// Save flushes a sibling temporary file and atomically replaces the destination.
 // 导入由 module.jai 提供。
 
 //@region 路径小工具（material 包内的同名助手只在那个包里可见）
@@ -99,7 +98,8 @@ preset_file_save :: (schema: sh.Schema, values: [] sh.Value, path: string, textu
 
 material_file_write :: (path: string, bytes: [] u8) -> string {
     // jacket: write_entire_file(name, data: string)；bytes 是 kit 侧的 [] u8 视图。
-    if !FILE.write_entire_file(path, sl_string_view(bytes)) return "Cannot save material; previous file retained";
+    storage := F.Storage_Container.{ Writable = true };
+    if !F.storage_write_all_bytes_atomic(*storage, path, bytes) return "Cannot save material; previous file retained";
     return "";
 }
 //@endregion

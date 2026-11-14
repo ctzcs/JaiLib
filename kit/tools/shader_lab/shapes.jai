@@ -1,5 +1,5 @@
 // shader_lab:shapes —— 程序化几何：示例没有模型资源，直接在代码里生成 dasset primitive，
-// 再走与真实模型相同的 r3d.mesh_upload 路径。三角形从外侧看为 CCW（与 dasset 约定一致）。
+// 再走与真实模型相同的 r3d.mesh_upload 路径。三角形从外侧看为 CCW（与 dasset 约定一致）；预览上传时适配 Foster 的 clockwise front-face。
 // 一比一移植自 olib kit/tools/shader_lab/shapes.odin。
 //
 // Jai 侧差异：

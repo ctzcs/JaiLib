@@ -34,10 +34,8 @@
 //      bank 的 Material 仍在 bank_make 时空建、在 bank_apply 安装成功后 F.material_stage_set_shader
 //      借用那两个地址（olib 的 MaterialInitWithShaders 等价物）。切到另一套目标/网格时走
 //      `dev.revalidate`（已安装的字节码重新校验管线，不重编 HLSL）。
-//   5. **图标图集未移植**：r2d.builtin_icons_decode / imgui_foster.Icons 依赖 olib 的
-//      assets/icons/game-icons.{xml,png}，不属于本仓库（见 kit/rendering/2d/module.jai 第 4 条）。
-//      这里保留 Icon_Set 类型与 ICON_NAMES 表，但表为空，lab_button 退化为纯文字按钮；
-//      id / label / track 语义不变，因此宿主注入点击的稳定 ID 不受影响。
+//   5. 图标使用 JaiLib 内置 assets/icons，经 r2d.Sprite_Atlas 上传，以 UV 子区域绘制；
+//      按钮的稳定 ID、文字与布局语义不变。
 //   6. ImGui：olib 的 `imgui.X` → Jai stdlib 的 ImGui 模块（`ImGui.X`）。olib 用 imgui_impl_ofoster
 //      的 Texture()/IconButton()，本包用 imgui_texture_id()（把 *F.Texture 转成 ImTextureID）与
 //      lab_button（文字按钮）替代；DrawList_AddXxx 走 thirdparty/imgui_foster 的 foreign 声明。

@@ -5,8 +5,8 @@
 // 一比一移植自 olib kit/tools/shader_lab/windows.odin。Jai 差异：
 //   | olib (Odin)                                        | JaiLib (Jai)                                          |
 //   | -------------------------------------------------- | ----------------------------------------------------- |
-//   | `imgui_foster.IconButton(&s.icons, …)`（图标）       | lab_button = 纯文字 ImGui.Button（图标图集未移植）        |
-//   | `imgui_foster.Icons` / `IconsInit`                 | Icon_Set（空表；icons_init 恒成功，见 module.jai 第 5 条）|
+//   | `imgui_foster.IconButton(&s.icons, …)`（图标）       | lab_button = ImGui.Button + 内置图集图标        |
+//   | `imgui_foster.Icons` / `IconsInit`                 | Icon_Set（借用 Sprite_Atlas 子纹理）|
 //   | `hash.fnv64a(transmute([]u8)id)`                   | sl_hash_string（同参数 FNV-1a 64）                      |
 //   | `s.widgets[id] = rect`                             | table_set(*s.widgets, key, rect)                      |
 //   | `imgui.TextUnformatted(cstr(t))`                   | ImGui.TextUnformatted(t)                              |
@@ -18,40 +18,33 @@
 //   | `quad(r, tex, foster.Rect{…})`                     | 同（类型换成 F.Rect，字段 x/y/w/h）                      |
 // 导入由 module.jai 提供。
 
-//@region 图标表（移植为空表，见 module.jai 第 5 条）
+//@region 内置图标表
 
 // 界面用到的内置图标名。olib 在 init 时从内置图集挑出来缩成 ICON_CELL 像素的小图标表；
-// 该图集（assets/icons/game-icons.*）不属于本仓库，r2d.builtin_icons_decode 也就没有移植。
-// 这里保留名字表与类型，图标按钮退化为文字按钮，稳定 ID 不变。
-ICON_NAMES :: [18] string;
-ICON_CELL :: 40;
+// Uses JaiLib bundled assets/icons through the public Render2D atlas API.
+ICON_NAMES :: string.["media/play", "media/pause", "media/next-frame", "ui/refresh", "media/image", "media/pc-host",
+    "ui/slider", "ui/settings", "media/display", "ui/visible", "media/camera", "media/code",
+    "media/folder", "ui/save", "media/import", "editing/undo", "media/clapper", "symbols/plus"];
 
 Icon_Set :: struct {
-    icons: [..] *F.Texture;
-    rects: HASH.Table(string, F.Rect_Int);
+    atlas: r2d.Sprite_Atlas;
 }
 
-icons_init :: (set: Icon_Set) -> bool {
-    // 空表也是「初始化成功」：lab_button 只用文字，不依赖图集。
+icons_init :: (set: *Icon_Set, device: *F.Graphics_Device) -> bool {
+    if !r2d.builtin_icons_load(*set.atlas, device) return false;
+    for name: ICON_NAMES assert(r2d.atlas_has(*set.atlas, name), "Missing tool icon: %", name);
     return true;
 }
 
-icons_dispose :: (set: Icon_Set) {
-    for texture: set.icons {
-        if texture != null {
-            F.texture_dispose(texture);
-            free(texture);
-        }
-    }
-    if set.icons.data != null array_free(set.icons);
-    deinit(*set.rects);
+icons_dispose :: (set: *Icon_Set) {
+    r2d.atlas_dispose(*set.atlas);
 }
 
 // olib 的 imgui_foster.Texture(t)：把 *F.Texture 转成 ImGui 的纹理 ID（jfoster 用资源句柄）。
 // jacket 的 ImTextureID 是 *void（不是 olib 的 u64/ImTextureID 整数别名），空值写 null。
 imgui_texture_id :: (texture: *F.Texture) -> ImGui.ImTextureID {
     if texture == null return null;
-    return cast(ImGui.ImTextureID) texture.handle;
+    return cast(ImGui.ImTextureID) texture; // Foster ImGui IDs are Texture pointers.
 }
 //@endregion
 
@@ -93,12 +86,33 @@ widget_rect :: (s: *Session, id: string) -> (Widget_Rect, bool) {
 }
 
 lab_button :: (s: *Session, id: string, label: string, selected := false, grow := false, icon := "") -> bool {
-    // 图标表为空：selected 用 ImGui 的按钮配色表达，grow 撑满宽度。
-    if selected ImGui.PushStyleColor(ImGui.Col.Button, ImGui.GetColorU32(ImGui.Col.ButtonHovered, 1.0));
-    defer if selected ImGui.PopStyleColor();
-    clicked := false;
-    if grow clicked = imgui_button(tprint("%##%", label, id), .{ -1, 0 });
-    else       clicked = imgui_button(tprint("%##%", label, id));
+    style := ImGui.GetStyle();
+    text_size := ImGui.CalcTextSize(temp_c_string(label));
+    image, has_icon := r2d.atlas_subtexture(*s.icons.atlas, icon);
+    height := ImGui.GetFrameHeight();
+    icon_size := JM.floor(ImGui.GetFontSize() * 1.25 + 0.5);
+    content := text_size.x;
+    if has_icon content += icon_size + (ifx label != "" then style.ItemInnerSpacing.x else 0);
+    size := ImGui.ImVec2.{ content + style.FramePadding.x * 2, height };
+    if grow size.x = max(size.x, ImGui.GetContentRegionAvail().x);
+    if selected {
+        ImGui.PushStyleColor(.Button, ImGui.GetColorU32(ImGui.Col.Header));
+        ImGui.PushStyleColor(.ButtonHovered, ImGui.GetColorU32(ImGui.Col.HeaderHovered));
+        ImGui.PushStyleColor(.ButtonActive, ImGui.GetColorU32(ImGui.Col.HeaderActive));
+    }
+    clicked := imgui_button(tprint("##%", id), size);
+    if selected ImGui.PopStyleColor(3);
+    origin := ImGui.GetItemRectMin();
+    x := origin.x + style.FramePadding.x;
+    tint := ImGui.GetColorU32(ifx selected then ImGui.Col.CheckMark else ImGui.Col.Text);
+    if has_icon {
+        y := origin.y + JM.floor((height - icon_size) * 0.5 + 0.5);
+        uv0 := ImGui.ImVec2.{ image.TexCoords[0].x, image.TexCoords[0].y };
+        uv1 := ImGui.ImVec2.{ image.TexCoords[2].x, image.TexCoords[2].y };
+        ImGui.ImDrawList.AddImage(ImGui.GetWindowDrawList(), imgui_texture_id(image.Tex), .{ x, y }, .{ x + icon_size, y + icon_size }, uv0, uv1, tint);
+        x += icon_size + style.ItemInnerSpacing.x;
+    }
+    if label != "" ImGui.ImDrawList.AddText(ImGui.GetWindowDrawList(), .{ x, origin.y + style.FramePadding.y }, tint, label);
     track(s, id);
     return clicked;
 }
@@ -157,7 +171,7 @@ control_window :: (s: *Session) {
     if !visible return;
     paused_label := "暂停";
     if s.paused paused_label = "播放";
-    if lab_button(s, "pause", paused_label, false, false, "") s.paused = !s.paused;
+    if lab_button(s, "pause", paused_label, false, false, ifx s.paused then "media/play" else "media/pause") s.paused = !s.paused;
     if s.selected_shader >= 0 {
         lab_same_line("单步", true);
         if lab_button(s, "shader-step", "单步", false, false, "media/next-frame") step(s);
@@ -377,7 +391,7 @@ preview_window :: (s: *Session, image: *F.Texture) {
     if s.selected_shader >= 0 && s.bank != null && s.selected_shader < s.bank.shaders.count {
         time = s.bank.shaders[s.selected_shader].time;
     }
-    lab_dim(tprint("%.2fs   %", time, preview_size_label(s)));
+    lab_dim(tprint("%s   %", formatFloat(time, trailing_width = 2, zero_removal = .NO), preview_size_label(s)));
 }
 
 quad :: (r: *r2d.Render2D, texture: *F.Texture, rect: F.Rect) {

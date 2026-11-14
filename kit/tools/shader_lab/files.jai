@@ -232,7 +232,7 @@ new_shader :: (s: *Session, template: Shader_Template) -> (path: string, reason:
     for n: 1..99 {
         suffix := "";
         if n != 1 suffix = tprint("%", n);
-        name := tprint("%%%", base, suffix);
+        name := tprint("%%", base, suffix);
         path = tprint("%/%.oshader", s.source_root, name);
         if FU.file_exists(path) || template_shader_named(s, name) continue;
         content := sl_replace_first(text, "Shader \"Template\"", tprint("Shader \"%\"", name));

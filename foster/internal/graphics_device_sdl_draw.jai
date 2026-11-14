@@ -865,6 +865,8 @@ sdl_get_vertex_format :: (type: Vertex_Type, normalized: bool) -> SDL_GPUVertexE
 sdl_get_texture_format :: (format: Texture_Format) -> SDL_GPUTextureFormat {
     if format == {
         case .R8G8B8A8; return .SDL_GPU_TEXTUREFORMAT_R8G8B8A8_UNORM;
+        case .R16G16B16A16_FLOAT; return .SDL_GPU_TEXTUREFORMAT_R16G16B16A16_FLOAT;
+        case .R32G32B32A32_FLOAT; return .SDL_GPU_TEXTUREFORMAT_R32G32B32A32_FLOAT;
         case .R8;              return .SDL_GPU_TEXTUREFORMAT_R8_UNORM;
         case .R8G8;            return .SDL_GPU_TEXTUREFORMAT_R8G8_UNORM;
         case .DEPTH24STENCIL8; return .SDL_GPU_TEXTUREFORMAT_D24_UNORM_S8_UINT;

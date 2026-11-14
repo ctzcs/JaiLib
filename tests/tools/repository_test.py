@@ -49,6 +49,9 @@ class RepositoryTools(unittest.TestCase):
         generator = load('new_game', 'tools/new-game/main.py')
         target = self.root / 'project with spaces'
         generator.create(target, 'ToolProbe', allow_inside=True)
+        for name in ['ui.png', 'ui.json', 'charset.txt', 'OFL.txt']:
+            relative = Path('assets/fonts/msdf') / name
+            self.assertEqual((target / relative).read_bytes(), (ROOT / relative).read_bytes())
         before = (target / 'README.md').read_bytes()
         with self.assertRaises(ValueError):
             generator.create(target, 'Again', allow_inside=True)
@@ -60,6 +63,18 @@ class RepositoryTools(unittest.TestCase):
             self.command(sys.executable, target / 'tools/build.py', mode, cwd=self.root)
         self.assertFalse((target / 'build/game/ImGui.dll').exists())
         self.assertTrue((target / 'build/editor/ImGui.dll').exists())
+
+    def test_builtin_msdf_loads_without_resource_working_directory(self):
+        checker = load('asset_checker', 'tools/check/main.py')
+        out = self.root / 'font-check'
+        checker.stage_runtime(out)
+        output = self.command(checker.compiler(), '-no_dce', '-import_dir', ROOT,
+                              '-output_path', out, '-exe', 'assets',
+                              ROOT / 'tests/tools/assets/main.jai')
+        self.assertNotRegex(output, r'\berror\[|\b[Ee]rror:')
+        executable = out / ('assets.exe' if sys.platform == 'win32' else 'assets')
+        output = self.command(executable, cwd=out)
+        self.assertIn('PASS builtin MSDF: 509 glyphs', output)
 
     def test_codegen_writes_and_detects_stale_output(self):
         runner = load('tool_runner', 'tools/run.py')

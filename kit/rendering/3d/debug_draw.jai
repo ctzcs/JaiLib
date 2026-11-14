@@ -50,6 +50,7 @@ Debug_Draw_3D :: struct {
     thickness: float32;       // 线宽（世界单位）
 
     vertices: [..] Debug_Line_Vertex; // 每线段 2 个端点
+    indices: [..] u32;
     expanded: [..] Debug_Line_Vertex; // 跨视图复用展开工作区
 
     mesh: *F.Mesh;
@@ -88,6 +89,7 @@ debug_draw_dispose :: (d: *Debug_Draw_3D) {
     }
     if d.vertices.data != null array_free(d.vertices);
     if d.expanded.data != null array_free(d.expanded);
+    if d.indices.data != null array_free(d.indices);
     d.* = Debug_Draw_3D.{};
 }
 
@@ -313,6 +315,9 @@ debug_draw_submit :: (d: *Debug_Draw_3D, view: View) {
 
     F.mesh_set_vertex_count(d.mesh, cast(s32) d.expanded.count);
     F.mesh_set_vertices(d.mesh, d.expanded);
+    array_resize(*d.indices, d.expanded.count);
+    for *index, i: d.indices index.* = cast(u32) i;
+    F.mesh_set_indices(d.mesh, d.indices);
 
     vp_buf: [64] u8;
     mat.std140_write_matrix(vp_buf, 0, view.view_projection);

@@ -59,7 +59,8 @@ imgui_input_harness : Imgui_Input_Harness ;
  // 建隐藏窗口 + headless 上下文，并把后端需要的全局（App.window / App.input / App.time）接好。
 // 返回 false 只可能是 SDL 建不出窗口（无视频驱动）——调用方打印跳过原因，不假装通过。
 imgui_input_open :: ( label : string ) -> bool {
-if imgui_input_harness . open return true ;
+    assert(DOCK_ABI.docking_layout_check(), "ImGui docking ABI mismatch");
+    if imgui_input_harness . open return true ;
 
  if ! IMGF . SDL_Init ( . SDL_INIT_VIDEO ) return false ;
 
@@ -992,3 +993,6 @@ expect ( state , length == 1 , tprint ( "truncated 2-byte sequence advances 1, g
 //   shutdown / utf8_decode）全部有断言覆盖。 
 
 // Loop scopes adapted.
+
+#scope_file
+DOCK_ABI :: #import "thirdparty/imgui/docking";

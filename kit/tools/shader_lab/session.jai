@@ -5,7 +5,7 @@
 // 本文件内的局部差异：
 //   | olib (Odin)                                   | JaiLib (Jai)                                        |
 //   | --------------------------------------------- | --------------------------------------------------- |
-//   | `icons: imgui_foster.Icons`                    | Icon_Set（无图集，见 module.jai 第 5 条）              |
+//   | `icons: imgui_foster.Icons`                    | Icon_Set（内置 Sprite_Atlas）              |
 //   | `foster.Mesh` / `foster.Texture`（值）          | *F.Mesh / *F.Texture（堆对象，.handle != 0 为就绪）    |
 //   | `meshes: [3]foster.Mesh`                       | [3] *F.Mesh（mesh_create 出来的）                     |
 //   | `retired_textures: [dynamic]^foster.Texture`   | [..] *F.Texture + array_add / array_free             |
@@ -23,8 +23,8 @@
 // olib: `log.info(fmt, …)` / `log.error(fmt, …)`。jfoster 的 log_info / log_error 只接受**已格式化**的
 // string，并且自己补一个换行（log_append 追加 "\n"，print 用 "%\n"），所以这里用 tprint 做格式化
 // （temp 分配器，调用作用域结束自动回收），格式串里不再写尾部 "\n"。
-sl_log_info  :: (format: string, args: ..Any) { F.log_info(tprint(format, args)); }
-sl_log_error :: (format: string, args: ..Any) { F.log_error(tprint(format, args)); }
+sl_log_info  :: (format: string, args: ..Any) { F.log_info(tprint(format, ..args)); }
+sl_log_error :: (format: string, args: ..Any) { F.log_error(tprint(format, ..args)); }
 
 // jacket 的 File.read_entire_file / write_entire_file 走 `string`（count/data），而 kit 的
 // shader.resource_decode / resource_encode 走 `[] u8`。这里做零拷贝互转，所有权仍归调用方。
@@ -49,7 +49,7 @@ Session :: struct {
     sprite_mesh: *F.Mesh;
     // instanced 模型的管线探测按 [Instance] 字段数各用一个实例缓冲（只用格式），首次需要时创建。
     probe_instances: [sh.MAX_INSTANCE_FIELDS + 1] r3d.Model_Buffer;
-    icons: Icon_Set; // 从内置图集挑出 ICON_NAMES 缩成的小图标表（本移植为空，见 module.jai）
+    icons: Icon_Set; // JaiLib 内置图标图集
     delta_time: float32;
     source_root: string;
     // olib 的 `using bank`：这里显式写成字段访问（Jai 没有 using 字段），
@@ -116,7 +116,7 @@ sl_bank_program_count :: (s: *Session) -> int { if s.bank == null return 0; retu
 // 可在 init 之前或之后初始化，draw 时必须已就绪。
 init :: (s: *Session, device: *F.Graphics_Device, config: Config) -> bool {
     if s.initialized || device == null || config.source_root == "" return false;
-    if !icons_init(*s.icons) return false;
+    if !icons_init(*s.icons, device) return false;
     s.device = device;
     s.bank = New(Parameter_Bank);
     s.selected_shader = -1;
@@ -175,10 +175,24 @@ init :: (s: *Session, device: *F.Graphics_Device, config: Config) -> bool {
     F.mesh_set_indices(s.meshes[0], indices);
     sphere := make_sphere(1.15, 48, 64, DA.DASSET_MATERIAL_DEFAULT);
     defer primitive_dispose(*sphere);
+    // Keep source primitive CCW; only the preview upload uses Foster clockwise winding.
+    for triangle: 0..sphere.indices.count / 3 - 1 {
+        at := triangle * 3;
+        saved := sphere.indices[at + 1];
+        sphere.indices[at + 1] = sphere.indices[at + 2];
+        sphere.indices[at + 2] = saved;
+    }
     s.meshes[1] = New(F.Mesh);
     assert(r3d.mesh_upload(s.meshes[1], device, *sphere, "preview sphere"));
     cube := make_cube(1.8, DA.DASSET_MATERIAL_DEFAULT);
     defer primitive_dispose(*cube);
+    // Keep source primitive CCW; only the preview upload uses Foster clockwise winding.
+    for triangle: 0..cube.indices.count / 3 - 1 {
+        at := triangle * 3;
+        saved := cube.indices[at + 1];
+        cube.indices[at + 1] = cube.indices[at + 2];
+        cube.indices[at + 2] = saved;
+    }
     s.meshes[2] = New(F.Mesh);
     assert(r3d.mesh_upload(s.meshes[2], device, *cube, "preview cube"));
     image := F.image_create(512, 512);

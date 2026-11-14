@@ -150,6 +150,7 @@ audio_device_open :: (
     device: *Audio_Device,
     channels: s64 = 2,
     sample_rate: s64 = AUDIO_DEVICE_SAMPLE_RATE,
+    device_id: u32 = 0, // 0 selects the system default
 ) -> bool {
     if !device || device.stream != null || !audio_pcm_format_valid(channels, sample_rate) {
         return false;
@@ -159,7 +160,7 @@ audio_device_open :: (
         channels = cast(s32) channels,
         freq     = cast(s32) sample_rate,
     };
-    stream := F.SDL_OpenAudioDeviceStream(F.SDL_AUDIO_DEVICE_DEFAULT_PLAYBACK, *desired, null, null);
+    stream := F.SDL_OpenAudioDeviceStream(ifx device_id==0 then F.SDL_AUDIO_DEVICE_DEFAULT_PLAYBACK else device_id, *desired, null, null);
     if !stream return false;
 
     input_spec: F.SDL_AudioSpec;
@@ -192,6 +193,7 @@ audio_device_open_recording :: (
     device: *Audio_Device,
     channels: s64 = 1,
     sample_rate: s64 = AUDIO_DEVICE_SAMPLE_RATE,
+    device_id: u32 = 0, // 0 selects the system default
 ) -> bool {
     if !device || device.stream != null || !audio_pcm_format_valid(channels, sample_rate) {
         return false;
@@ -201,7 +203,7 @@ audio_device_open_recording :: (
         channels = cast(s32) channels,
         freq     = cast(s32) sample_rate,
     };
-    stream := F.SDL_OpenAudioDeviceStream(F.SDL_AUDIO_DEVICE_DEFAULT_RECORDING, *desired, null, null);
+    stream := F.SDL_OpenAudioDeviceStream(ifx device_id==0 then F.SDL_AUDIO_DEVICE_DEFAULT_RECORDING else device_id, *desired, null, null);
     if !stream return false;
 
     // 录音方向：设备写入 src、应用读取 dst，应用侧格式取 dst。
@@ -569,3 +571,14 @@ operator == :: (a: Audio_Sound, b: Audio_Sound) -> bool {
            a.allocator.proc == b.allocator.proc && a.allocator.data == b.allocator.data;
 }
 //@endregion
+
+// Enumerated names are owned by the returned list, freed with audio_device_list_free.
+Audio_Device_Info :: struct { id:u32; name:string; }
+audio_sdl_get_audio_playback_devices :: (count:*s32)->*u32 #foreign SDL3 "SDL_GetAudioPlaybackDevices";
+audio_device_list :: (recording:bool)->[..]Audio_Device_Info {
+    count:s32; ids:=ifx recording then audio_sdl_get_audio_recording_devices(*count) else audio_sdl_get_audio_playback_devices(*count);
+    result:[..]Audio_Device_Info; if ids==null return result; defer F.SDL_free(ids);
+    for i:0..cast(int)count-1 { name:=F.SDL_GetAudioDeviceName(ids[i]); if name!=null array_add(*result,Audio_Device_Info.{ids[i],copy_string(to_string(name))}); }
+    return result;
+}
+audio_device_list_free :: (list:*[..]Audio_Device_Info) { for it:list.* free(it.name.data); array_free(list.*); list.*=.{}; }

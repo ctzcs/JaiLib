@@ -84,6 +84,12 @@ def main():
     for source in sorted((ROOT / 'tools').glob('*/main.jai')):
         checks.append(('check tools/' + source.parent.name, [jaic, '-check', '-no_dce', *imports, source]))
     suffix = '.exe' if os.name == 'nt' else ''
+    checks += [('build hdr_targets', [jaic, '-no_dce', *imports, '-exe', 'hdr_targets', '-output_path', OUT,
+                                     ROOT / 'foster/tests/hdr_targets/main.jai']),
+               ('test hdr_targets', [OUT / ('hdr_targets' + suffix)])]
+    checks += [('build image_bytes', [jaic, '-no_dce', *imports, '-exe', 'image_bytes', '-output_path', OUT,
+                                     ROOT / 'foster/tests/image_bytes/main.jai']),
+               ('test image_bytes', [OUT / ('image_bytes' + suffix)])]
     for group in ['core', 'kit']:
         name = group + '_tests'
         checks += [('build tests/' + group, [jaic, *imports, '-exe', name, '-output_path', OUT,

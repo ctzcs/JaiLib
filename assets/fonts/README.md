@@ -1,5 +1,8 @@
 # ImGui 内置字体
 
+游戏文本和 UI 使用的离线 MSDF 图集见 [msdf/](msdf/README.md)，含 509 字形、
+PNG/JSON、字符集及 OFL 许可。这里的 OTF 用于 ImGui，二者不能相互替代。
+
 `NotoSansCJKsc-Regular-subset.otf` 是 Noto Sans CJK SC Regular 的子集，
 供 `thirdparty/imgui/imgui_foster` 的 `imgui_foster_setup(font_path)` 加载为 ImGui 字体。按同目录 `OFL.txt` 分发。
 

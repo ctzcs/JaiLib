@@ -191,7 +191,7 @@ update :: (s: *Session, dt: float64) {
     if s.job.compiler_options.shadercross.data != null free(s.job.compiler_options.shadercross.data);
     if s.job.compiler_options.dxc.data != null free(s.job.compiler_options.dxc.data);
     s.job = Job.{ source = copy_string(s.source), format = s.format, source_text = copy_string(s.source_text),
-                  fingerprint = fingerprint, compiler_options = s.compiler_options };
+                  fingerprint = fingerprint, compiler_options = comp.Options.{ dxil = s.compiler_options.dxil, shadercross = copy_string(s.compiler_options.shadercross), dxc = copy_string(s.compiler_options.dxc) } };
     thread := New(THREAD.Thread);
     if thread == null || !THREAD.thread_init(thread, compile_worker,
                                              name = "kit.rendering.shader.dev.compile") {

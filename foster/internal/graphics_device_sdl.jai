@@ -721,6 +721,10 @@ sdl_create_buffer :: (d: *Graphics_Device, name: string, type: Buffer_Kind, form
 }
 
 sdl_upload_buffer_data :: (d: *Graphics_Device, handle: Graphics_Resource_Handle, data: *void, data_size: s32, data_dest_offset: s32) {
+    // Uploads use a separate command buffer submitted before rendering. Once a
+    // draw is recorded, submit it before overwriting buffers it still borrows.
+    // Otherwise later instance/UI uploads replace data used by earlier draws.
+    if data != null && d.render_pass != null sdl_flush_commands(d, stall = false);
     res := sdl_require_resource(d, handle);
     assert(res.kind == .BUFFER);
     res.dirty = true;

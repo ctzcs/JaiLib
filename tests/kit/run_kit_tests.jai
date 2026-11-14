@@ -16,13 +16,19 @@
 #import "kit/gizmo/gizmo_test" ;
 #import "kit/ui/ui_test" ;
 #import "kit/tools/tools_test" ;
+#import "kit/tools/scene_notes_save";
 #import "thirdparty/imgui/input_test" ;
 
  main :: ( ) {
 all_ok := true ;
 
- // world
-st := test_begin ( ) ;
+    st_notes := test_begin();
+    notes_save_roundtrip_test(*st_notes);
+    all_ok &= test_summary("kit/tools/scene_notes_save", *st_notes);
+
+    // world
+st := test_begin ();
+    quaternion_rotation_preserves_basis(*st) ;
 camera2d_identity_centering ( * st ) ;
 camera2d_roundtrip ( * st ) ;
 camera2d_dirty_tracking ( * st ) ;
@@ -41,7 +47,8 @@ all_ok &= test_summary ( "kit/world" , * st ) ;
 
  // audio（olib tests/kit/audio 第一批：WAV 解码与所有权）
 st = test_begin ( ) ;
-sound_load_wav_preserves_format_and_releases ( * st ) ;
+    audio_device_selection_contract(*st);
+    sound_load_wav_preserves_format_and_releases ( * st ) ;
 wav_bytes_integer_depths_and_f32_clipping ( * st ) ;
 wav_chunk_bounds_padding_duplicates_and_trailing_bytes ( * st ) ;
 wav_bytes_targets_preserve_duration_pitch_and_channels ( * st ) ;
@@ -301,7 +308,7 @@ make_cube_counts_normals_uv_and_bounds ( * st ) ;
 make_cube_faces_are_ccw_and_indices_match_vertices ( * st ) ;
 make_sphere_mesh_counts_and_attributes ( * st ) ;
 display_name_prefers_label_falls_back_to_id ( * st ) ;
-shader_target_format_downgrades_to_8bit_color ( * st ) ;
+    shader_target_format_preserves_precision( * st ) ;
 summarize_frame_times ( * st ) ;
 scopes_report_deltas ( * st ) ;
 scopes_keep_slowest ( * st ) ;

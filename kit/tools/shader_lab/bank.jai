@@ -44,8 +44,7 @@ bank_dispose :: (b: *Parameter_Bank) {
     if b == null return;
     for material: b.materials {
         if material != null {
-            F.material_destroy(material);
-            free(material);
+            F.material_destroy(material); // Also frees the Material allocation.
         }
     }
     for *p: b.parameters parameter_dispose(p);
@@ -178,9 +177,9 @@ bank_apply :: (s: *Session, b: *Parameter_Bank, selected: int, apply_updates := 
                 for p, j: e.desc.passes {
                     if p.params != b.parameters[i].name continue;
                     if j >= e.targets.count continue;
-                    if e.targets[j].buffers[0] == null continue;
                     index := 0;
                     if !sh.shader_is_material(e.desc) index = j;
+                    if e.targets[index].buffers[0] == null continue;
                     target := F.drawable_target_target(e.targets[index].buffers[0]);
                     command := pass_command(s, b, i, p.draw, target, e.desc.instanced);
                     mat.pass_state_apply(*command, p.state);

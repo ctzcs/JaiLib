@@ -135,14 +135,15 @@ matrix4_look_at :: (eye: Vec3, target: Vec3, up: Vec3) -> Matrix4 {
 
 // 从四元数（xyzw）构造旋转矩阵（System.Numerics CreateFromQuaternion 语义）。
 matrix4_from_quaternion :: (q: [4] float32) -> Matrix4 {
-    xx, yy, zz := q[0] * q[0], q[1] * q[1], q[2] * q[2];
-    xy, xz, yz := q[0] * q[1], q[0] * q[2], q[1] * q[2];
-    wx, wy, wz := q[3] * q[0], q[3] * q[1], q[3] * q[2];
+    // Jacket treats bare xx/yy/zz as swizzles in some expressions; use unambiguous scalar names.
+    q_xx, q_yy, q_zz := q[0] * q[0], q[1] * q[1], q[2] * q[2];
+    q_xy, q_xz, q_yz := q[0] * q[1], q[0] * q[2], q[1] * q[2];
+    q_wx, q_wy, q_wz := q[3] * q[0], q[3] * q[1], q[3] * q[2];
 
     return Matrix4.{
-        .[1 - 2 * (yy + zz), 2 * (xy + wz), 2 * (xz - wy), 0],
-        .[2 * (xy - wz), 1 - 2 * (xx + zz), 2 * (yz + wx), 0],
-        .[2 * (xz + wy), 2 * (yz - wx), 1 - 2 * (xx + yy), 0],
+        .[1 - 2 * (q_yy + q_zz), 2 * (q_xy + q_wz), 2 * (q_xz - q_wy), 0],
+        .[2 * (q_xy - q_wz), 1 - 2 * (q_xx +q_zz), 2 * (q_yz + q_wx), 0],
+        .[2 * (q_xz + q_wy), 2 * (q_yz - q_wx), 1 - 2 * (q_xx +q_yy), 0],
         .[0, 0, 0, 1],
     };
 }

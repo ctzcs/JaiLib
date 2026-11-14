@@ -7,7 +7,7 @@
 //   | `foster.GraphicsDeviceClear(dev, t, colors, 1, 0, mask)` | F.graphics_device_clear(dev, F.drawable_target_target(t), colors, 0, 0, mask) |
 //   | `foster.GraphicsDeviceDraw(dev, &cmd)` + `DrawCommandDispose` | F.graphics_device_draw(dev, cmd)（按值；无释放） |
 //   | `foster.MaterialStageSetUniformBuffer(&st, buf[, slot])` | F.material_stage_set_uniform(&st, slot, buf)     |
-//   | formats = {.Color, .R16G16B16A16_FLOAT, .R32G32B32A32_FLOAT} | jfoster 只有 8 位颜色/深度格式：Float16 / Float32 目标降级为 .COLOR（见 shader_target_format） |
+//   | formats = {.Color, .R16G16B16A16_FLOAT, .R32G32B32A32_FLOAT} | F.R16G16B16A16_FLOAT / F.R32G32B32A32_FLOAT，保留 HDR |
 //   | MSAA 的 ResolveResource 检查                         | jfoster 的 Target 不含 Resolve 资源，只检查附件句柄非空       |
 //   | `make([]Pass_Target, n)` / `delete`                 | 「先全建成 next，成功再换掉 e.targets」用两块 [..] 完成    |
 //   | `command.CullMode = .Back / .None`                   | .BACK / .NONE                                         |
@@ -121,13 +121,15 @@ target_clear :: (s: *Session, target: *F.Target, color: [4] float32) {
     colors: [1] F.Color;
     colors[0] = F.Color.{ cast(u8) (color[0] * 255), cast(u8) (color[1] * 255),
                            cast(u8) (color[2] * 255), cast(u8) (color[3] * 255) };
-    F.graphics_device_clear(s.device, F.drawable_target_target(target), colors, 0, 0,
+    F.graphics_device_clear(s.device, F.drawable_target_target(target), colors, 1, 0,
                             F.Clear_Mask.COLOR | F.Clear_Mask.DEPTH);
 }
 
-// olib 用真浮点目标（Float16 / Float32）；jfoster 的 Texture_Format 只有 8 位颜色与深度格式，
-// 所以非 Color 目标降级为 .COLOR，HDR 预览范围随之损失（已知差异，见 module.jai）。
+// Preserve declared floating-point targets through the Foster format mapping.
+// No silent downgrade: HDR feedback retains its values between passes.
 shader_target_format :: (format: sh.Target_Format) -> F.Texture_Format {
+    if format == .Float16 return .R16G16B16A16_FLOAT;
+    if format == .Float32 return .R32G32B32A32_FLOAT;
     return .COLOR;
 }
 

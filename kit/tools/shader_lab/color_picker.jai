@@ -194,7 +194,7 @@ color_picker_popup :: (s: *Session) {
     _ = imgui_color_button("##color-current", p.color, ImGui.ColorEditFlags.AlphaPreviewHalf, size);
     color8 := color_rgba(p.color);
     ImGui.SameLine();
-    lab_text(tprint("#%02X%02X%02X%02X", color8.r, color8.g, color8.b, color8.a));
+    lab_text(tprint("#%%%%", formatInt(color8.r, base = 16, minimum_digits = 2), formatInt(color8.g, base = 16, minimum_digits = 2), formatInt(color8.b, base = 16, minimum_digits = 2), formatInt(color8.a, base = 16, minimum_digits = 2)));
     accept := lab_button(s, "color-apply", "应用", false, false, "");
     ImGui.SameLine();
     cancel_button := lab_button(s, "color-cancel", "取消", false, false, "") || accept;

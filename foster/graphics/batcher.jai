@@ -389,6 +389,7 @@ batcher_try_to_merge :: (b: *Batcher) {
                prev.Stencil.WriteMask == curr.Stencil.WriteMask)) &&
            prev.Mat == curr.Mat {
             b.current_batch.Offset = prev.Offset;
+            b.current_batch.Elements = prev.Elements;
             array_ordered_remove_by_index(*b.batches, index);
             b.current_batch_insert -= 1;
         }

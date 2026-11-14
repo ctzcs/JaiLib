@@ -91,14 +91,17 @@ last_render_elapsed := cast(float64) 0.0;
 
 imgui_initialized := false;
 
-imgui_foster_setup :: (font_path: string = "") -> bool {
+imgui_foster_setup :: (font_path: string = "", glyph_ranges: *ImWchar = null, font_size: float32 = 16) -> bool {
     // 宿主忘了建 context 是常见坑（直接 assert "No current context"）：
     // 这里自建（已存在则不动）。
+    assert(DOCK.docking_layout_check(), "ImGui DLL does not match the docking binding ABI");
     if GetCurrentContext() == null {
         _ = CreateContext();
     }
     imgui_initialized = true;
     setup_font_path = font_path;
+    setup_font_size = font_size;
+    setup_glyph_ranges = glyph_ranges;
     setup_keymap();
     setup_cursors();
     setup_backend();
@@ -372,9 +375,9 @@ setup_font_texture :: () {
         font := FontAtlas_AddFontFromFileTTF(
             io.Fonts,
             setup_font_path.data,
-            EDITOR_FONT_SIZE,
+            setup_font_size,
             null,
-            FontAtlas_GetGlyphRangesChineseSimplifiedCommon(io.Fonts),
+            ifx setup_glyph_ranges != null then setup_glyph_ranges else FontAtlas_GetGlyphRangesChineseSimplifiedCommon(io.Fonts),
         );
         if font != null {
             io.FontDefault = font;
@@ -399,7 +402,9 @@ setup_font_texture :: () {
 
 // 宿主在 imgui_foster_setup 之前设置（默认空 = 内置字体）。
 // 字符集用 ChineseSimplifiedCommon（含 ASCII），任何 TTF 都能烘。
+setup_font_size: float32 = 16;
 setup_font_path: string = "";
+setup_glyph_ranges: *ImWchar;
 
 // #c_call 内只能调 #foreign：剪贴板直连 SDL（官方 SDL 后端同款；Get 返回
 // 的指针由 SDL 持有、下次调用前有效，与 ImGui 语义一致）。
@@ -550,3 +555,26 @@ setup_keymap :: () {
     key_map[cast(s64) IMGF.Keys.KP_PLUS]        = .KeypadAdd;
     key_map[cast(s64) IMGF.Keys.KP_ENTER]       = .KeypadEnter;
 }
+
+#load "imgui_foster_theme.jai";
+
+// Open source only after a user clicks an editor action; no shell command parsing.
+SDL_OpenURL :: (url: *u8) -> bool #foreign IMGUI_SDL3;
+
+imgui_foster_open_file :: (path: string) -> bool {
+    url: String_Builder;
+    append(*url, "file:///");
+    for c: path {
+        if c == 92 append(*url, cast(u8) 47);
+        else if c == 32 || c == 35 || c == 37 || c == 63 {
+            append(*url, cast(u8) 37);
+            append(*url, tprint("%", formatInt(c, base = 16, minimum_digits = 2)));
+        } else append(*url, c);
+    }
+    text := builder_to_string(*url);
+    defer free(text.data);
+    return SDL_OpenURL(temp_c_string(text));
+}
+
+#scope_file
+DOCK :: #import "thirdparty/imgui/docking";

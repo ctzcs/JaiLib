@@ -141,7 +141,8 @@ summarize :: (samples: [] float32) -> Frame_Summary {
     s.avg_ms = total / cast(float32) samples.count;
     if s.avg_ms > 0 s.fps = 1000 / s.avg_ms;
     // olib 是 slice.clone(samples, context.temp_allocator) + slice.sort：这里同样只用 temp 存储。
-    sorted := NewArray(samples.count, float32); // NewArray 分配在临时分配器上
+    sorted := NewArray(samples.count, float32);
+    defer free(sorted.data);
     memcpy(sorted.data, samples.data, samples.count * size_of(float32));
     sort_floats_ascending(sorted);
     worst := max(1, sorted.count / 100);
@@ -173,6 +174,7 @@ scopes_collect :: (o: *Overlay, current: Table(string, profiler.Profile_Stat), f
     // NewArray 返回的是定长切片 `[] T`（不是可增长的 `[..] T`），`array_add` 选不中重载；
     // 这里按 olib slice.clone 的等价做法预分配上限，再用 row_count 当写入游标。
     rows := NewArray(current.count, Scope_Row);
+    defer free(rows.data);
     row_count := 0;
     for stat, name: current {
         found, entry := table_find(*o.previous, name);
@@ -246,6 +248,7 @@ panel_layout :: (o: *Overlay) {
         case .Bottom_Left;  attach = .LEFT_BOTTOM;  offset = .[ 12, -12 ];
     }
     panel := ui.ui_column_decl(6);
+    panel.id = clay.ID("perf-panel");
     pad := cast(u16) PANEL_PADDING;
     panel.layout.padding = clay.Padding.{ left = pad, right = pad, top = pad, bottom = pad };
     panel.layout.sizing.width = clay.SizingFixed(cast(float) PANEL_WIDTH);
@@ -266,12 +269,12 @@ panel_layout :: (o: *Overlay) {
 panel_contents :: (o: *Overlay) {
     s := o.summary;
     ui.clay.UI(ui.ui_row_decl(), #code {
-        ui.ui_label_ex(*o.ctx, *o.theme, tprint("% FPS", s.fps), rating_color(s.avg_ms), 20);
+        ui.ui_label_ex(*o.ctx, *o.theme, tprint("% FPS", formatFloat(s.fps, trailing_width=0)), rating_color(s.avg_ms), 20);
         ui.ui_spacer();
-        ui.ui_label_ex(*o.ctx, *o.theme, tprint("% ms", s.avg_ms), o.theme.text, 16);
+        ui.ui_label_ex(*o.ctx, *o.theme, tprint("% ms", formatFloat(s.avg_ms, trailing_width=2, zero_removal=.NO)), o.theme.text, 16);
     });
     ui.ui_label_dim(*o.ctx, *o.theme,
-                    tprint("min %  max % ms  1\% low % FPS", s.min_ms, s.max_ms, s.low1_fps));
+                    tprint("min %  max % ms  1\% low % FPS", formatFloat(s.min_ms, trailing_width=1, zero_removal=.NO), formatFloat(s.max_ms, trailing_width=1, zero_removal=.NO), formatFloat(s.low1_fps, trailing_width=0)));
     graph(o);
     if o.scope_count == 0 return;
     ui.clay.UI(ui.ui_row_decl(4), #code {
@@ -282,8 +285,8 @@ panel_contents :: (o: *Overlay) {
     for row: array_view(o.scopes, 0, o.scope_count) {
         ui.clay.UI(ui.ui_row_decl(4), #code {
             cell(o, row.name, 0, o.theme.text);
-            cell(o, tprint("%", row.ms_per_frame), 64, o.theme.text);
-            cell(o, tprint("%", row.calls_per_frame), 44, o.theme.text_dim);
+            cell(o, tprint("%", formatFloat(row.ms_per_frame, trailing_width=2, zero_removal=.NO)), 64, o.theme.text);
+            cell(o, tprint("%", formatFloat(row.calls_per_frame, trailing_width=1, zero_removal=.NO)), 44, o.theme.text_dim);
         });
     }
 }
@@ -294,6 +297,7 @@ graph :: (o: *Overlay) {
     top: float32 = 2 * TARGET_MS;
     for i: 0..bars - 1 top = max(top, history_at(o, i));
     ui.clay.UI(ui.clay.ElementDeclaration.{
+        id = clay.ID("perf-graph"),
         layout = .{
             sizing = .{ width = clay.SizingFixed(cast(float) (GRAPH_BARS * GRAPH_BAR_WIDTH)),
                         height = clay.SizingFixed(cast(float) GRAPH_HEIGHT) },
@@ -323,6 +327,7 @@ graph_bars :: (o: *Overlay, bars: int, top: float32) {
         } },
         backgroundColor = ui.ui_clay_color(F.Color.{ 255, 255, 255, 110 }),
         floating = .{
+            attachTo = .PARENT,
             attachment = .{ element = .LEFT_BOTTOM, parent = .LEFT_BOTTOM },
             offset = .[ 0, -TARGET_MS / top * cast(float32) GRAPH_HEIGHT ],
             zIndex = PANEL_Z + 1,

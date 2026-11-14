@@ -9,7 +9,7 @@
 //   | `[]byte` 快照（current/saved/disk）               | `string` 快照（同一份字节，free 用 `free(s.data)`）              |
 //   | `[dynamic][]byte` 撤销/重做栈                     | `[..] string` 栈（array_add / pop / deinit）                    |
 //   | `foster.StorageContainer` + ReadAllBytes         | FILE.read_entire_file(完整路径)                                 |
-//   | `foster.WriteAllBytesAtomic`                     | 写 `<path>.tmp` 后 file_delete + file_move 替换（本仓库没有原子替换封装） |
+//   | `foster.WriteAllBytesAtomic`                     | foster.storage_write_all_text_atomic（保留旧文件的原子替换） |
 //   | `strings.clone`                                  | copy_string                                                   |
 //   | `strings.trim_space(x) == ""`                    | STRING.trim(x) == ""                                          |
 //   | `strings.contains(x, "\x00")`                    | sn_contains_nul（逐字节）                                      |
@@ -317,18 +317,10 @@ write_file :: (s: *Session, data: string) -> Error {
         sn_free_string(bytes);
         if !same return .External_Change;
     }
-    // olib 的 WriteAllBytesAtomic：这里先写临时文件，再替换目标。
-    // 与 olib 的差异：file_move 覆盖不是原子的（Windows 上先 delete 再 move），已经保存好的旧文件在
-    // 极短的窗口里可能既不在原位也不在新位。
-    directory := sn_path_dir(s.path);
-    if directory != "." FILE.make_directory_if_it_does_not_exist(directory);
-    temporary := tprint("%.tmp", s.path);
-    if !FILE.write_entire_file(temporary, data) return .Write_Failed;
-    if exists FILE.file_delete(s.path);
-    if !FILE.file_move(temporary, s.path) {
-        FILE.file_delete(temporary);
-        return .Write_Failed;
-    }
+    // Flush a sibling temporary file and atomically replace the destination.
+    // A failed write/rename leaves the previous file and edit history intact.
+    storage := F.Storage_Container.{ Writable = true };
+    if !F.storage_write_all_text_atomic(*storage, s.path, data) return .Write_Failed;
     return .None;
 }
 

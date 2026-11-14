@@ -24,12 +24,12 @@ Frustum3D :: struct {
 // 深度范围 [0,1]（D3D/Vulkan/Metal，SDL GPU 全系），近平面即 c2。
 frustum_from_view_projection :: (m: Matrix4) -> Frustum3D {
     return Frustum3D.{
-        left   = frustum_normalize_plane(frustum_vec4_add(m.c3, m.c0)),
-        right  = frustum_normalize_plane(frustum_vec4_sub(m.c3, m.c0)),
+        left = frustum_normalize_plane(frustum_vec4_add(m.c3, m.c0)),
+        right = frustum_normalize_plane(frustum_vec4_sub(m.c3, m.c0)),
         bottom = frustum_normalize_plane(frustum_vec4_add(m.c3, m.c1)),
-        top    = frustum_normalize_plane(frustum_vec4_sub(m.c3, m.c1)),
-        near   = frustum_normalize_plane(m.c2),
-        far    = frustum_normalize_plane(frustum_vec4_sub(m.c3, m.c2)),
+        top = frustum_normalize_plane(frustum_vec4_sub(m.c3, m.c1)),
+        near = frustum_normalize_plane(m.c2),
+        far = frustum_normalize_plane(frustum_vec4_sub(m.c3, m.c2)),
     };
 }
 //@endregion

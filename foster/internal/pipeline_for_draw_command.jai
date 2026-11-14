@@ -43,7 +43,7 @@ pipeline_for_draw_command :: (device: *Graphics_Device, command: Draw_Command) -
     if vertex_res.kind != .SHADER || fragment_res.kind != .SHADER return null;
 
     vertex_attribute_count := 0;
-    for i: 0..command.VertexBufferCount-1 {
+    for i: 0..command.VertexBufferCount - 1 {
         buffer := command.VertexBuffers[i].Buffer;
         if buffer == null || buffer.is_disposed return null;
         if buffer.Format.ElementCount < 0 || buffer.Format.ElementCount > 32 return null;
@@ -68,7 +68,7 @@ pipeline_for_draw_command :: (device: *Graphics_Device, command: Draw_Command) -
     }
 
     sample_count: SDL_GPUSampleCount = .SDL_GPU_SAMPLECOUNT_1;
-    for i: 0..format_count-1 {
+    for i: 0..format_count - 1 {
         if sdl_is_depth_texture_format(formats[i].format) {
             depth_stencil_attachment = formats[i].format;
         } else {
@@ -86,7 +86,7 @@ pipeline_for_draw_command :: (device: *Graphics_Device, command: Draw_Command) -
     }
 
     attrb_index := 0;
-    for slot: 0..command.VertexBufferCount-1 {
+    for slot: 0..command.VertexBufferCount - 1 {
         it := command.VertexBuffers[slot].Buffer;
         instance_rate := command.VertexBuffers[slot].InstanceInputRate;
         vertex_offset := 0;
@@ -97,7 +97,7 @@ pipeline_for_draw_command :: (device: *Graphics_Device, command: Draw_Command) -
             then .SDL_GPU_VERTEXINPUTRATE_INSTANCE else .SDL_GPU_VERTEXINPUTRATE_VERTEX;
         vertex_bindings[slot].instance_step_rate = 0;
 
-        for j: 0..it.Format.ElementCount-1 {
+        for j: 0..it.Format.ElementCount - 1 {
             el := it.Format.Elements[j];
             vertex_attributes[attrb_index].location = cast(u32) el.Index;
             vertex_attributes[attrb_index].buffer_slot = cast(u32) slot;
@@ -119,29 +119,29 @@ pipeline_for_draw_command :: (device: *Graphics_Device, command: Draw_Command) -
     info.primitive_type = .SDL_GPU_PRIMITIVETYPE_TRIANGLELIST;
 
     info.rasterizer_state.fill_mode = ifx command.FillMode == .FILL then .SDL_GPU_FILLMODE_FILL else .SDL_GPU_FILLMODE_LINE;
-    if command.CullMode == .NONE  info.rasterizer_state.cull_mode = .SDL_GPU_CULLMODE_NONE;
+    if command.CullMode == .NONE info.rasterizer_state.cull_mode = .SDL_GPU_CULLMODE_NONE;
     if command.CullMode == .FRONT info.rasterizer_state.cull_mode = .SDL_GPU_CULLMODE_FRONT;
-    if command.CullMode == .BACK  info.rasterizer_state.cull_mode = .SDL_GPU_CULLMODE_BACK;
+    if command.CullMode == .BACK info.rasterizer_state.cull_mode = .SDL_GPU_CULLMODE_BACK;
     info.rasterizer_state.front_face = .SDL_GPU_FRONTFACE_CLOCKWISE;
     info.rasterizer_state.enable_depth_bias = false;
 
     info.multisample_state.sample_count = sample_count;
-    info.multisample_state.sample_mask = 0;         // not used per SDL docs
-    info.multisample_state.enable_mask = false;     // not used per SDL docs
+    info.multisample_state.sample_mask = 0; // not used per SDL docs
+    info.multisample_state.enable_mask = false; // not used per SDL docs
     info.multisample_state.enable_alpha_to_coverage = false;
 
     info.depth_stencil_state.compare_op = sdl_get_compare_op(command.DepthCompare);
-    info.depth_stencil_state.back_stencil_state.fail_op       = sdl_get_stencil_op(command.BackStencilState.FailOp);
-    info.depth_stencil_state.back_stencil_state.pass_op       = sdl_get_stencil_op(command.BackStencilState.PassOp);
+    info.depth_stencil_state.back_stencil_state.fail_op = sdl_get_stencil_op(command.BackStencilState.FailOp);
+    info.depth_stencil_state.back_stencil_state.pass_op = sdl_get_stencil_op(command.BackStencilState.PassOp);
     info.depth_stencil_state.back_stencil_state.depth_fail_op = sdl_get_stencil_op(command.BackStencilState.DepthFailOp);
-    info.depth_stencil_state.back_stencil_state.compare_op    = sdl_get_compare_op(command.BackStencilState.CompareOp);
-    info.depth_stencil_state.front_stencil_state.fail_op       = sdl_get_stencil_op(command.FrontStencilState.FailOp);
-    info.depth_stencil_state.front_stencil_state.pass_op       = sdl_get_stencil_op(command.FrontStencilState.PassOp);
+    info.depth_stencil_state.back_stencil_state.compare_op = sdl_get_compare_op(command.BackStencilState.CompareOp);
+    info.depth_stencil_state.front_stencil_state.fail_op = sdl_get_stencil_op(command.FrontStencilState.FailOp);
+    info.depth_stencil_state.front_stencil_state.pass_op = sdl_get_stencil_op(command.FrontStencilState.PassOp);
     info.depth_stencil_state.front_stencil_state.depth_fail_op = sdl_get_stencil_op(command.FrontStencilState.DepthFailOp);
-    info.depth_stencil_state.front_stencil_state.compare_op    = sdl_get_compare_op(command.FrontStencilState.CompareOp);
+    info.depth_stencil_state.front_stencil_state.compare_op = sdl_get_compare_op(command.FrontStencilState.CompareOp);
     info.depth_stencil_state.compare_mask = command.StencilCompareMask;
-    info.depth_stencil_state.write_mask  = command.StencilWriteMask;
-    info.depth_stencil_state.enable_depth_test  = command.DepthTestEnabled;
+    info.depth_stencil_state.write_mask = command.StencilWriteMask;
+    info.depth_stencil_state.enable_depth_test = command.DepthTestEnabled;
     info.depth_stencil_state.enable_depth_write = command.DepthWriteEnabled;
     info.depth_stencil_state.enable_stencil_test = command.StencilTestEnabled;
 

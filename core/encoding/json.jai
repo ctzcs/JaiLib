@@ -57,17 +57,17 @@ Specification :: enum u32 {
 
 // 默认序列化选项：标准 JSON、pretty、4 空格缩进（编辑器人工可读 / diff 友好）。
 Marshal_Options :: struct {
-    spec:       Specification;
-    pretty:     bool;
+    spec: Specification;
+    pretty: bool;
     use_spaces: bool;
-    spaces:     int;
+    spaces: int;
 }
 
 DEFAULT_MARSHAL_OPT :: Marshal_Options.{
-    spec       = .JSON,
-    pretty     = true,
+    spec = .JSON,
+    pretty = true,
     use_spaces = true,
-    spaces     = 4,
+    spaces = 4,
 }
 //@endregion
 
@@ -84,12 +84,12 @@ Json_Kind :: enum u32 {
 }
 
 Json_Value :: struct {
-    kind:       Json_Kind;
-    bool_val:   bool;
-    int_val:    s64;
+    kind: Json_Kind;
+    bool_val: bool;
+    int_val: s64;
     number_val: float64;
     string_val: string;
-    array_val:  [..] *Json_Value;
+    array_val: [..] *Json_Value;
     object_val: Table(string, *Json_Value);
 }
 

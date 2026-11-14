@@ -4,7 +4,7 @@
 // [JaiLib L-001] Embedded module: #import "foster", build with -import_dir <JaiLib>.
 
 Basic :: #import "Basic";
-Math  :: #import "Math";
+Math :: #import "Math";
 Hash_Table :: #import "Hash_Table";
 String_Mod :: #import "String";
 
@@ -13,8 +13,8 @@ String_Mod :: #import "String";
 // themselves when they need Vector2 etc. (standard Jai library practice).
 using Basic;
 using Math;
-using Hash_Table;   // Map (used by the graphics device registries)
-using String_Mod;   // begins_with etc.
+using Hash_Table; // Map (used by the graphics device registries)
+using String_Mod; // begins_with etc.
 #scope_export
 
 // Hash_Table 返回顺序兼容层（见文件头）
@@ -99,27 +99,33 @@ using String_Mod;   // begins_with etc.
 // input
 #load "input/enums.jai";
 #load "input/states.jai";
+
 #if OS != .WASM {
     #load "input/input.jai";
 } else {
     #load "internal/web/input_web.jai";
 }
+
 #load "input/bindings.jai";
+
 #if OS != .WASM {
     #load "input/cursor.jai";
 } else {
     #load "internal/web/cursor_web.jai";
 }
+
 #load "input/sets.jai";
 #load "input/virtual.jai";
 
 // storage
 #load "storage/storage.jai";
+
 #if OS != .WASM {
     #load "storage/miniz_zip.jai";
 } else {
     #load "internal/web/miniz_zip_web.jai";
 }
+
 #load "storage/content_storage.jai";
 
 // SDL3 bindings (the native library link declarations stay in this root file:
@@ -151,7 +157,7 @@ using String_Mod;   // begins_with etc.
 // two `#library` directives are desktop-only. images/image.jai (stb_truetype for
 // raster fonts) and storage/miniz_zip.jai get wasm-side replacements instead.
 #if OS != .WASM {
-    stb_impl   :: #library "internal/third_party/stb/stb_impl";
+    stb_impl :: #library "internal/third_party/stb/stb_impl";
     miniz_impl :: #library "internal/third_party/miniz/miniz_impl";
 
     #if OS == .WINDOWS {
@@ -164,6 +170,7 @@ using String_Mod;   // begins_with etc.
         } else {
             SDL3 :: #library "internal/native/linux_x64/libSDL3";
         }
+
         #library,system,link_always "libdl";
         #library,system,link_always "libm";
         #library,system,link_always "libpthread";
@@ -184,9 +191,9 @@ using String_Mod;   // begins_with etc.
 // olib extensions that have no upstream Foster counterpart. Each file's header
 // names the olib registration numbers it implements (docs/LOCAL_CHANGES.md in
 // the olib repo); nothing above this block is modified by them.
-#load "app_ext.jai";           // L-004 user data, L-020 LOGICAL_SIZE, L-023 logical window size
-#load "storage_ext.jai";       // L-024 read results, L-015 atomic write
-#load "graphics/texture_ext.jai";   // L-018 texture sampleability
+#load "app_ext.jai"; // L-004 user data, L-020 LOGICAL_SIZE, L-023 logical window size
+#load "storage_ext.jai"; // L-024 read results, L-015 atomic write
+#load "graphics/texture_ext.jai"; // L-018 texture sampleability
 
 // Web (wasm64) 的 JS 桥。文件自身也用 #if OS == .WASM 包着，桌面构建看不到任何
 // 声明——这里再用 #if 隔一次，#load 本身也不会被桌面构建读到。

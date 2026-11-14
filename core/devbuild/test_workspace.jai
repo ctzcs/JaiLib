@@ -75,8 +75,12 @@ test_source_info :: (source: string, path: string) -> (string, bool, bool) {
         j := i + 1;
         while j < tokens.count {
             next := tokens[j];
-            if next.kind == .Open_Paren { depth += 1; }
-            if next.kind == .Close_Paren { depth -= 1; }
+            if next.kind == .Open_Paren {
+                depth += 1;
+            }
+            if next.kind == .Close_Paren {
+                depth -= 1;
+            }
             if depth == 0 break;
             if depth == 1 && next.kind == .Ident && next.text == "test" {
                 has_tests = true;
@@ -316,8 +320,12 @@ test_source_paths :: (
     constants: HASH.Table(string, int);
     constant_depth := 0;
     for token, i: tokens {
-        if token.kind == .Open_Brace { constant_depth += 1; }
-        if token.kind == .Close_Brace { constant_depth -= 1; }
+        if token.kind == .Open_Brace {
+            constant_depth += 1;
+        }
+        if token.kind == .Close_Brace {
+            constant_depth -= 1;
+        }
         if constant_depth != 0 continue;
         if token.kind == .Ident && i + 2 < tokens.count &&
            tokens[i + 1].kind == .Colon && tokens[i + 2].kind == .Colon {
@@ -340,13 +348,21 @@ test_source_paths :: (
     i := 0;
     while i < tokens.count && error_message == "" {
         token := tokens[i];
-        if token.kind == .Open_Brace { brace_depth += 1; }
-        if token.kind == .Close_Brace { brace_depth -= 1; }
+        if token.kind == .Open_Brace {
+            brace_depth += 1;
+        }
+        if token.kind == .Close_Brace {
+            brace_depth -= 1;
+        }
         start := token.offset;
         end := start + token.text.count;
         replacement := "";
-        if token.kind == .Import { import_path = true; }
-        if token.kind == .Semicolon { import_path = false; }
+        if token.kind == .Import {
+            import_path = true;
+        }
+        if token.kind == .Semicolon {
+            import_path = false;
+        }
         if import_path && token.kind == .String_Literal {
             value, unquoted := test_unquote_string(token.text);
             if !unquoted {
@@ -619,18 +635,29 @@ test_tokens :: (source: string, path: string) -> ([..] Token, bool) {
 
         kind := Token_Kind.Other;
         width := 1;
-        if c == #char "(" { kind = .Open_Paren; }
-        else if c == #char ")" { kind = .Close_Paren; }
-        else if c == #char "{" { kind = .Open_Brace; }
-        else if c == #char "}" { kind = .Close_Brace; }
-        else if c == #char "[" { kind = .Open_Bracket; }
-        else if c == #char "]" { kind = .Close_Bracket; }
-        else if c == #char "," { kind = .Comma; }
-        else if c == #char ";" { kind = .Semicolon; }
-        else if c == #char ":" { kind = .Colon; }
-        else if c == #char "+" { kind = .Add; }
-        else if c == #char "@" { kind = .At; }
-        else if c == #char "#" {
+        if c == #char "(" {
+            kind = .Open_Paren;
+        } else if c == #char ")" {
+            kind = .Close_Paren;
+        } else if c == #char "{" {
+            kind = .Open_Brace;
+        } else if c == #char "}" {
+            kind = .Close_Brace;
+        } else if c == #char "[" {
+            kind = .Open_Bracket;
+        } else if c == #char "]" {
+            kind = .Close_Bracket;
+        } else if c == #char "," {
+            kind = .Comma;
+        } else if c == #char ";" {
+            kind = .Semicolon;
+        } else if c == #char ":" {
+            kind = .Colon;
+        } else if c == #char "+" {
+            kind = .Add;
+        } else if c == #char "@" {
+            kind = .At;
+        } else if c == #char "#" {
             // Jai 的 #import 与 odin 的 import 在重写里是同一件事：合并成一个 Import token。
             if test_word_at(source, i + 1, "import") {
                 kind = .Import;
@@ -666,15 +693,15 @@ test_join :: (parts: ..string) -> string {
 
 // 词法 token：只保留重写与发现用得到的分类。
 Token_Kind :: enum u8 {
-    Invalid;   // 未终止的字符串/字符/块注释
+    Invalid; // 未终止的字符串/字符/块注释
     Ident;
     Number;
     String_Literal;
     Char_Literal;
     Hash;
     At;
-    Import;    // odin 的 import 关键字；Jai 的 #import 合并成同一个 token
-    Package;   // odin 的 package 关键字
+    Import; // odin 的 import 关键字；Jai 的 #import 合并成同一个 token
+    Package; // odin 的 package 关键字
     Open_Paren;
     Close_Paren;
     Open_Brace;
@@ -685,7 +712,7 @@ Token_Kind :: enum u8 {
     Semicolon;
     Colon;
     Add;
-    Other;     // 其余运算符/分隔符：只占位，不参与重写
+    Other; // 其余运算符/分隔符：只占位，不参与重写
 }
 
 Token :: struct {
@@ -802,23 +829,54 @@ test_unquote_string :: (text: string) -> (string, bool) {
         if i + 1 >= body.count return "", false;
         escaped := body[i + 1];
         i += 2;
-        if escaped == #char "n" { array_add(*out, #char "\n"); continue; }
-        if escaped == #char "r" { array_add(*out, #char "\r"); continue; }
-        if escaped == #char "t" { array_add(*out, #char "\t"); continue; }
-        if escaped == #char "a" { array_add(*out, #char "\a"); continue; }
-        if escaped == #char "b" { array_add(*out, #char "\b"); continue; }
-        if escaped == #char "e" { array_add(*out, cast(u8) 0x1B); continue; }
-        if escaped == #char "f" { array_add(*out, #char "\f"); continue; }
-        if escaped == #char "v" { array_add(*out, #char "\v"); continue; }
-        if escaped == #char "0" { array_add(*out, cast(u8) 0); continue; }
+        if escaped == #char "n" {
+            array_add(*out, #char "\n");
+            continue;
+        }
+        if escaped == #char "r" {
+            array_add(*out, #char "\r");
+            continue;
+        }
+        if escaped == #char "t" {
+            array_add(*out, #char "\t");
+            continue;
+        }
+        if escaped == #char "a" {
+            array_add(*out, #char "\a");
+            continue;
+        }
+        if escaped == #char "b" {
+            array_add(*out, #char "\b");
+            continue;
+        }
+        if escaped == #char "e" {
+            array_add(*out, cast(u8) 0x1B);
+            continue;
+        }
+        if escaped == #char "f" {
+            array_add(*out, #char "\f");
+            continue;
+        }
+        if escaped == #char "v" {
+            array_add(*out, #char "\v");
+            continue;
+        }
+        if escaped == #char "0" {
+            array_add(*out, cast(u8) 0);
+            continue;
+        }
         if escaped == #char "\\" || escaped == #char "\"" || escaped == #char "'" {
             array_add(*out, escaped);
             continue;
         }
         digits := 0;
-        if escaped == #char "x" { digits = 2; }
-        else if escaped == #char "u" { digits = 4; }
-        else if escaped == #char "U" { digits = 8; }
+        if escaped == #char "x" {
+            digits = 2;
+        } else if escaped == #char "u" {
+            digits = 4;
+        } else if escaped == #char "U" {
+            digits = 8;
+        }
         if digits == 0 return "", false;
         if i + digits > body.count return "", false;
         codepoint := 0;
@@ -1024,8 +1082,12 @@ test_entry_file :: (directory: string) -> string {
 test_declares_main :: (tokens: [] Token) -> bool {
     depth := 0;
     for token, i: tokens {
-        if token.kind == .Open_Brace { depth += 1; }
-        if token.kind == .Close_Brace { depth -= 1; }
+        if token.kind == .Open_Brace {
+            depth += 1;
+        }
+        if token.kind == .Close_Brace {
+            depth -= 1;
+        }
         if depth != 0 continue;
         if token.kind != .Ident || token.text != "main" continue;
         if i + 1 < tokens.count && tokens[i + 1].kind == .Colon return true;

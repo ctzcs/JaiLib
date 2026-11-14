@@ -27,7 +27,7 @@
 
 WINDOW :: "Perf##jalib_perf_overlay";
 WINDOW_SIZE :: ImGui.ImVec2.{ 380, 340 };
-MARGIN :: 12;           // 与视口工作区边缘的距离（逻辑像素，随 ImGui 缩放）
+MARGIN :: 12; // 与视口工作区边缘的距离（逻辑像素，随 ImGui 缩放）
 GRAPH_BAR_WIDTH :: 2;
 GRAPH_HEIGHT :: 48;
 BG_ALPHA :: 0.88;

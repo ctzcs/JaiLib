@@ -1,5 +1,5 @@
 #scope_module
-using Basic;   // module-private
+using Basic; // module-private
 using Math;
 #scope_export
 
@@ -9,16 +9,16 @@ using Math;
 
 Log_Fn :: #type (text: string);
 
-log_on_info:  Log_Fn = null;
-log_on_warn:  Log_Fn = null;
+log_on_info: Log_Fn = null;
+log_on_warn: Log_Fn = null;
 log_on_error: Log_Fn = null;
 
 log_builder: String_Builder;
 
 // Sets optional custom logging callbacks. They are not guaranteed to run on the main thread.
 log_set_callbacks :: (on_info: Log_Fn, on_warn: Log_Fn, on_error: Log_Fn) {
-    log_on_info  = on_info;
-    log_on_warn  = on_warn;
+    log_on_info = on_info;
+    log_on_warn = on_warn;
     log_on_error = on_error;
 }
 
@@ -41,9 +41,17 @@ log_error :: (message: string) {
 }
 
 // Log a null-terminated UTF-8 C string (e.g. from SDL callbacks).
-log_info_cstr :: (cstr: *u8)    { log_info(cstr_to_string(cstr)); }
-log_warning_cstr :: (cstr: *u8) { log_warning(cstr_to_string(cstr)); }
-log_error_cstr :: (cstr: *u8)   { log_error(cstr_to_string(cstr)); }
+log_info_cstr :: (cstr: *u8) {
+    log_info(cstr_to_string(cstr));
+}
+
+log_warning_cstr :: (cstr: *u8) {
+    log_warning(cstr_to_string(cstr));
+}
+
+log_error_cstr :: (cstr: *u8) {
+    log_error(cstr_to_string(cstr));
+}
 
 // Returns an owned copy without clearing the history (Foster: Log.GetHistory).
 log_get_history :: () -> string {

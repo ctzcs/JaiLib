@@ -1,5 +1,5 @@
 #scope_module
-using Basic;   // module-private
+using Basic; // module-private
 using Math;
 #scope_export
 
@@ -45,20 +45,20 @@ Window :: struct {
     // `SDL_Window :: void` in the bindings, so this is the same `*void` on both
     // targets and `w.handle != null` keeps the meaning it has on desktop
     // ("this window has not been destroyed yet").
-    handle:       *SDL_Window;   // null once destroyed
-    id:           u32;
-    title:        string;
+    handle: *SDL_Window; // null once destroyed
+    id: u32;
+    title: string;
     is_destroyed: bool;
 
     // callbacks (Foster: OnFocusGain etc.)
-    on_focus_gain:      () = null;
-    on_focus_lost:      () = null;
-    on_mouse_enter:     () = null;
-    on_mouse_leave:     () = null;
-    on_resize:          () = null;
-    on_restore:         () = null;
-    on_maximize:        () = null;
-    on_minimize:        () = null;
+    on_focus_gain: () = null;
+    on_focus_lost: () = null;
+    on_mouse_enter: () = null;
+    on_mouse_leave: () = null;
+    on_resize: () = null;
+    on_restore: () = null;
+    on_maximize: () = null;
+    on_minimize: () = null;
     on_fullscreen_enter: () = null;
     on_fullscreen_exit: () = null;
 
@@ -68,14 +68,14 @@ Window :: struct {
 
     // ---- web-only state (not present on desktop; additive, so kit code that
     // only reads the fields above is unaffected) ----
-    web_size:          Point2;   // CSS 像素：window_size() 报的就是它
-    web_pixel_size:    Point2;   // canvas backing store（设备像素）
-    web_position:      Point2;   // 恒为 0,0：canvas 就是视口
-    web_fullscreen:    bool;
-    web_resizable:     bool = true;
-    web_text_input:    bool;
+    web_size: Point2; // CSS 像素：window_size() 报的就是它
+    web_pixel_size: Point2; // canvas backing store（设备像素）
+    web_position: Point2; // 恒为 0,0：canvas 就是视口
+    web_fullscreen: bool;
+    web_resizable: bool = true;
+    web_text_input: bool;
     web_mouse_relative: bool;
-    web_text_area:     Rect;     // [L-022] 最近一次请求的 IME 锚点（CSS 像素）
+    web_text_area: Rect; // [L-022] 最近一次请求的 IME 锚点（CSS 像素）
     web_has_text_area: bool;
 }
 
@@ -87,14 +87,14 @@ Window :: struct {
 //
 web_pixel_ratio: float = 1.0;
 web_page_focused: bool = true;
-web_mouse_px: Vector2;              // 最后一次已知鼠标位置（CSS 像素）
-web_mouse_inside: bool = true;      // pointerleave/enter 用于 mouse enter/leave 事件
+web_mouse_px: Vector2; // 最后一次已知鼠标位置（CSS 像素）
+web_mouse_inside: bool = true; // pointerleave/enter 用于 mouse enter/leave 事件
 web_window_serial: u32 = 1;
 
 window_create :: (title: string, width: s32, height: s32, fullscreen := false, resizable := true) -> *Window {
     w := New(Window);
-    w.title         = title;
-    w.web_size      = .{ width, height };
+    w.title = title;
+    w.web_size = .{ width, height };
     w.web_resizable = resizable;
     w.web_fullscreen = fullscreen;
     w.id = web_window_serial;
@@ -139,9 +139,9 @@ web_window_on_resize :: (css_w: s32, css_h: s32, device_w: s32, device_h: s32) {
     w := App.window;
     if w == null return;
 
-    if css_w > 0 && css_h > 0         w.web_size = .{ css_w, css_h };
-    if device_w > 0 && device_h > 0   w.web_pixel_size = .{ device_w, device_h };
-    else                              w.web_pixel_size = .{ css_w, css_h };
+    if css_w > 0 && css_h > 0 w.web_size = .{ css_w, css_h };
+    if device_w > 0 && device_h > 0 w.web_pixel_size = .{ device_w, device_h };
+    else w.web_pixel_size = .{ css_w, css_h };
 }
 
 // 启动时做一次：像素比 + 尺寸。fw_boot 里调（canvas 已经存在）。
@@ -192,7 +192,7 @@ window_apply_title_action :: (data: *void) {
 }
 
 window_position :: (w: *Window) -> Point2 {
-    if w.handle == null return Point2_Zero;   // closed: desktop asserts, web degrades
+    if w.handle == null return Point2_Zero; // closed: desktop asserts, web degrades
     return w.web_position;
 }
 
@@ -215,11 +215,23 @@ window_set_size :: (w: *Window, size: Point2) {
     w.web_size = size;
 }
 
-window_width  :: (w: *Window) -> s32 { return window_size(w).x; }
-window_height :: (w: *Window) -> s32 { return window_size(w).y; }
+window_width :: (w: *Window) -> s32 {
+    return window_size(w).x;
+}
 
-window_set_width  :: (w: *Window, width: s32)  { s := window_size(w); window_set_size(w, .{ width, s.y }); }
-window_set_height :: (w: *Window, height: s32) { s := window_size(w); window_set_size(w, .{ s.x, height }); }
+window_height :: (w: *Window) -> s32 {
+    return window_size(w).y;
+}
+
+window_set_width :: (w: *Window, width: s32) {
+    s := window_size(w);
+    window_set_size(w, .{ width, s.y });
+}
+
+window_set_height :: (w: *Window, height: s32) {
+    s := window_size(w);
+    window_set_size(w, .{ s.x, height });
+}
 
 // Render-target pixels: the canvas backing-store size, straight from the bridge
 // (host.js writes the real width/height). Returns 0,0 when there is no canvas,
@@ -233,8 +245,13 @@ window_size_in_pixels :: (w: *Window) -> Point2 {
     return .{ width, height };
 }
 
-window_width_in_pixels  :: (w: *Window) -> s32 { return window_size_in_pixels(w).x; }
-window_height_in_pixels :: (w: *Window) -> s32 { return window_size_in_pixels(w).y; }
+window_width_in_pixels :: (w: *Window) -> s32 {
+    return window_size_in_pixels(w).x;
+}
+
+window_height_in_pixels :: (w: *Window) -> s32 {
+    return window_size_in_pixels(w).y;
+}
 
 // Size of the display the window is currently in: the browser viewport, which
 // the DOM reports through the resize handler (canvas 通常就铺满视口)。
@@ -245,7 +262,7 @@ window_display_size :: (w: *Window) -> Point2 {
 
 window_content_scale :: (w: *Window) -> Vector2 {
     ratio := web_pixel_ratio;
-    if ratio <= 0 ratio = 1.0;   // never hand the renderer a 0 scale
+    if ratio <= 0 ratio = 1.0; // never hand the renderer a 0 scale
     return .{ ratio, ratio };
 }
 
@@ -318,7 +335,7 @@ window_set_mouse_position :: (w: *Window, position: Vector2) {
 // Enables/disables text input for this window (populates KeyboardState.text).
 window_set_text_input :: (w: *Window, enabled: bool) {
     if enabled window_start_text_input(w);
-    else       window_stop_text_input(w);
+    else window_stop_text_input(w);
 }
 
 // 文本输入要一个真正可聚焦的 DOM 元素：键盘事件在 canvas 上，但 IME（中文、
@@ -336,8 +353,13 @@ window_stop_text_input :: (w: *Window) {
     web_set_text_input_area(0, 0, 0, 0, false);
 }
 
-window_start_text_input_mt :: (data: *void) { window_start_text_input(cast(*Window) data); }
-window_stop_text_input_mt  :: (data: *void) { window_stop_text_input(cast(*Window) data); }
+window_start_text_input_mt :: (data: *void) {
+    window_start_text_input(cast(*Window) data);
+}
+
+window_stop_text_input_mt :: (data: *void) {
+    window_stop_text_input(cast(*Window) data);
+}
 
 // [olib L-022] IME 锚点：把隐藏 input 摆到 rect 处，浏览器据此决定候选窗口的
 // 位置（以及移动端软键盘不遮挡输入区）。rect 用 CSS 像素，和 window_size 同一
@@ -357,7 +379,7 @@ window_set_text_input_area :: (w: *Window, rect: Rect) -> bool {
 
     x := cast(s32) rect.x;
     y := cast(s32) rect.y;
-    width  := cast(s32) rect.w;
+    width := cast(s32) rect.w;
     height := cast(s32) rect.h;
     if width < 1 width = 1;
     if height < 1 height = 1;

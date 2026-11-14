@@ -9,19 +9,19 @@ using Math;
 Buffer_Kind :: enum {
     VERTEX;
     INDEX;
-    STORAGE;            // graphics storage read
-    COMPUTE_STORAGE;    // compute read-write
+    STORAGE; // graphics storage read
+    COMPUTE_STORAGE; // compute read-write
 }
 
 Graphics_Buffer :: struct {
     device: *Graphics_Device;
     handle: Graphics_Resource_Handle;
 
-    Kind:              Buffer_Kind;
-    Name:              string;
+    Kind: Buffer_Kind;
+    Name: string;
     ElementSizeInBytes: s32;
-    Format:            Vertex_Format;   // VERTEX only
-    IndexFormat:       Index_Format;    // INDEX only
+    Format: Vertex_Format; // VERTEX only
+    IndexFormat: Index_Format; // INDEX only
 
     Count: s32;
     is_disposed: bool;

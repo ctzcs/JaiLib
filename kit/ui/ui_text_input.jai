@@ -18,11 +18,11 @@ UI_Text_Edit :: struct {
 
 // 同一时间只有一个文本框在编辑。
 UI_Text_State :: struct {
-    id:     u32;
-    caret:  int;    // 字节位置，总在字符边界
+    id: u32;
+    caret: int; // 字节位置，总在字符边界
     scroll: float32; // 水平滚动（逻辑像素）
-    blink:  float32; // 光标闪烁计时，有编辑或移动时归零
-    area:   F.Rect;  // 光标的渲染目标像素矩形，给输入法候选框
+    blink: float32; // 光标闪烁计时，有编辑或移动时归零
+    area: F.Rect; // 光标的渲染目标像素矩形，给输入法候选框
     editing, seen: bool;
 }
 
@@ -114,7 +114,7 @@ ui_text_input :: (ctx: *UI_Context, theme: *UI_Theme, id: string, buffer: *[..] 
             padding = clay.PaddingAll(theme.padding),
             childAlignment = .{ y = .CENTER },
         },
-        clip = .{ horizontal = true, childOffset = .[ -scroll, 0 ] },
+        clip = .{ horizontal = true, childOffset = .[-scroll, 0] },
         backgroundColor = ui_clay_color(bg),
         cornerRadius = clay.CornerRadiusAll(theme.corner_radius),
         border = border,
@@ -135,7 +135,7 @@ ui_text_input :: (ctx: *UI_Context, theme: *UI_Theme, id: string, buffer: *[..] 
             clay.UI(clay.ElementDeclaration.{
                 layout = .{ sizing = .{ width = clay.SizingFixed(2), height = clay.SizingFixed(line) } },
                 floating = .{
-                    attachTo = .PARENT, offset = .[ pad + caret_x - scroll - 1, pad ],
+                    attachTo = .PARENT, offset = .[pad + caret_x - scroll - 1, pad],
                     clipTo = .ATTACHED_PARENT,
                 },
                 backgroundColor = ui_clay_color(theme.text),
@@ -200,7 +200,7 @@ ui_text_apply :: (ctx: *UI_Context, element: clay.ElementId, id: string, font: *
         t.caret = buffer.count;
         moved = true;
     }
-    inserts: [2] string = .[ edit.text, edit.paste ];
+    inserts: [2] string = .[edit.text, edit.paste];
     for insert: inserts {
         rest := insert;
         while true {

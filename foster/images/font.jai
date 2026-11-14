@@ -1,7 +1,6 @@
 using Basic;
 using Math;
 
-
 // Port of Foster Framework/Images/Font.cs over stb_truetype (compiled via
 // BuildCpp from internal/third_party/stb). Covers the API surface Foster's
 // trimmed StbTrueType.cs exposes: font init, v-metrics, glyph lookup, kerning
@@ -42,19 +41,19 @@ STBTT_Vertex :: struct {
 // font_load returns null on wasm because stbtt_InitFont reports failure, which is
 // exactly how the desktop code reports an unparsable font file.
 #if OS != .WASM {
-stbtt_InitFont           :: (info: *STBTT_Font_Info, data: *u8, offset: s32) -> s32 #foreign stb_impl;
-stbtt_GetNumberOfFonts   :: (data: *u8) -> s32 #foreign stb_impl;
-stbtt_FindGlyphIndex     :: (info: *STBTT_Font_Info, unicode_codepoint: s32) -> s32 #foreign stb_impl;
-stbtt_ScaleForPixelHeight :: (info: *STBTT_Font_Info, pixels: float) -> float #foreign stb_impl;
-stbtt_ScaleForMappingEmToPixels :: (info: *STBTT_Font_Info, pixels: float) -> float #foreign stb_impl;
-stbtt_GetFontVMetrics    :: (info: *STBTT_Font_Info, ascent: *s32, descent: *s32, lineGap: *s32) #foreign stb_impl;
-stbtt_GetGlyphKernAdvance :: (info: *STBTT_Font_Info, glyph1: s32, glyph2: s32) -> s32 #foreign stb_impl;
-stbtt_GetGlyphHMetrics   :: (info: *STBTT_Font_Info, glyph_index: s32, advance_width: *s32, left_side_bearing: *s32) #foreign stb_impl;
-stbtt_GetGlyphBox        :: (info: *STBTT_Font_Info, glyph_index: s32, x0: *s32, y0: *s32, x1: *s32, y1: *s32) -> s32 #foreign stb_impl;
-stbtt_IsGlyphEmpty       :: (info: *STBTT_Font_Info, glyph_index: s32) -> s32 #foreign stb_impl;
-stbtt_MakeGlyphBitmapSubpixel :: (info: *STBTT_Font_Info, output: *u8, out_w: s32, out_h: s32, out_stride: s32, scale_x: float, scale_y: float, shift_x: float, shift_y: float, glyph_index: s32) #foreign stb_impl;
+    stbtt_InitFont :: (info: *STBTT_Font_Info, data: *u8, offset: s32) -> s32 #foreign stb_impl;
+    stbtt_GetNumberOfFonts :: (data: *u8) -> s32 #foreign stb_impl;
+    stbtt_FindGlyphIndex :: (info: *STBTT_Font_Info, unicode_codepoint: s32) -> s32 #foreign stb_impl;
+    stbtt_ScaleForPixelHeight :: (info: *STBTT_Font_Info, pixels: float) -> float #foreign stb_impl;
+    stbtt_ScaleForMappingEmToPixels :: (info: *STBTT_Font_Info, pixels: float) -> float #foreign stb_impl;
+    stbtt_GetFontVMetrics :: (info: *STBTT_Font_Info, ascent: *s32, descent: *s32, lineGap: *s32) #foreign stb_impl;
+    stbtt_GetGlyphKernAdvance :: (info: *STBTT_Font_Info, glyph1: s32, glyph2: s32) -> s32 #foreign stb_impl;
+    stbtt_GetGlyphHMetrics :: (info: *STBTT_Font_Info, glyph_index: s32, advance_width: *s32, left_side_bearing: *s32) #foreign stb_impl;
+    stbtt_GetGlyphBox :: (info: *STBTT_Font_Info, glyph_index: s32, x0: *s32, y0: *s32, x1: *s32, y1: *s32) -> s32 #foreign stb_impl;
+    stbtt_IsGlyphEmpty :: (info: *STBTT_Font_Info, glyph_index: s32) -> s32 #foreign stb_impl;
+    stbtt_MakeGlyphBitmapSubpixel :: (info: *STBTT_Font_Info, output: *u8, out_w: s32, out_h: s32, out_stride: s32, scale_x: float, scale_y: float, shift_x: float, shift_y: float, glyph_index: s32) #foreign stb_impl;
 } else {
-#load "../internal/web/stbtt_web.jai";  // #load 路径相对本文件
+    #load "../internal/web/stbtt_web.jai"; // #load 路径相对本文件
 }
 
 //
@@ -63,23 +62,23 @@ stbtt_MakeGlyphBitmapSubpixel :: (info: *STBTT_Font_Info, output: *u8, out_w: s3
 
 Font_Character :: struct {
     GlyphIndex: s32;
-    Width:      s32;
-    Height:     s32;
-    Advance:    float;
-    Offset:     Vector2;
-    Scale:      float;
-    Visible:    bool;
+    Width: s32;
+    Height: s32;
+    Advance: float;
+    Offset: Vector2;
+    Scale: float;
+    Visible: bool;
 }
 
 Font :: struct {
-    data:  [] u8;           // owns the font file bytes
-    info:  STBTT_Font_Info;
-    Ascent:   float;
-    Descent:  float;
-    LineGap:  float;
+    data: [] u8; // owns the font file bytes
+    info: STBTT_Font_Info;
+    Ascent: float;
+    Descent: float;
+    LineGap: float;
 
     glyph_index_memo: Table(s32, s32);
-    scale_memo:       Table(float, float);
+    scale_memo: Table(float, float);
 }
 
 font_load :: (path: string) -> *Font {
@@ -96,23 +95,35 @@ font_load_bytes :: (data: [] u8) -> *Font {
     f.data = data;
 
     count := stbtt_GetNumberOfFonts(f.data.data);
-    if count <= 0 { free(f); return null; }
+    if count <= 0 {
+        free(f);
+        return null;
+    }
     // The bundled DLL does not export GetFontOffsetForIndex. TTC stores the
     // first face's big-endian offset immediately after its 12-byte header.
     offset: s32 = 0;
     if data[0] == 116 && data[1] == 116 && data[2] == 99 && data[3] == 102 {
-        if data.count < 16 { free(f); return null; }
+        if data.count < 16 {
+            free(f);
+            return null;
+        }
         raw := (cast(u32) data[12] << 24) | (cast(u32) data[13] << 16) | (cast(u32) data[14] << 8) | cast(u32) data[15];
-        if raw > 0x7fffffff || cast(s64) raw + 12 > data.count { free(f); return null; }
+        if raw > 0x7fffffff || cast(s64) raw + 12 > data.count {
+            free(f);
+            return null;
+        }
         offset = cast(s32) raw;
     }
-    if offset < 0 || stbtt_InitFont(*f.info, f.data.data, offset) == 0 { free(f); return null; }
+    if offset < 0 || stbtt_InitFont(*f.info, f.data.data, offset) == 0 {
+        free(f);
+        return null;
+    }
 
     ascent, descent, line_gap: s32;
     stbtt_GetFontVMetrics(*f.info, *ascent, *descent, *line_gap);
     scale := stbtt_ScaleForMappingEmToPixels(*f.info, 1.0);
 
-    f.Ascent  = cast(float) ascent  * scale;
+    f.Ascent = cast(float) ascent * scale;
     f.Descent = cast(float) descent * scale;
     f.LineGap = cast(float) line_gap * scale;
 
@@ -174,7 +185,7 @@ font_get_character_of_glyph :: (f: *Font, glyph: s32, size: float) -> Font_Chara
     c.Visible = empty == 0 && glyph != 0;
 
     if c.Visible {
-        c.Width  = cast(s32) ceil(cast(float) (x1 - x0) * scale);
+        c.Width = cast(s32) ceil(cast(float) (x1 - x0) * scale);
         c.Height = cast(s32) ceil(cast(float) (y1 - y0) * scale);
         c.Offset = .{ cast(float) x0 * scale, -cast(float) y1 * scale };
     } else {

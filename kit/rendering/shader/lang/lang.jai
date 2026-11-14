@@ -30,7 +30,6 @@
 //   | 过程内嵌套 proc（lang_test 里的 read）        | 提到模块级 lang_* 过程                                |
 #import "Basic";
 
-
 // 标准 include 的根目录：作者写 #include "olib/<Draw>.hlsli"（model / sprite / fullscreen），引擎 b0 块都声明在那里。
 // shadercross 只接受一个 -I，tools/shaders 与 Shader Lab 编译前把 <INCLUDE_DIRECTORY>/olib 复制到各自的临时目录。
 // odin 是编译期常量 `#directory + "/include"`；Jai 的 string 没有 `+`、也没有编译期字符串拼接，
@@ -90,7 +89,7 @@ Shader_Source :: struct {
     passes: [..] sh.Pass_Desc;
     codes: [..] Hlsl_Code;
     previews: [..] string; // 每个 Pass 显式声明的预览维度，空值由 shader_programs 推断。
-    shared: Hlsl_Code;          // HLSLINCLUDE 共享代码。
+    shared: Hlsl_Code; // HLSLINCLUDE 共享代码。
 }
 
 // source_path 同时写入诊断和 HLSL #line；返回文档独立拥有全部数据。
@@ -237,7 +236,7 @@ shader_program :: (source: *Shader_Source, index: int, schema: sh.Schema, mode: 
                    source_path: string) -> string {
     b: String_Builder;
     print_to_builder(*b, "%", sh.hlsl(schema, mode));
-    blocks: [2] Hlsl_Code = .[ source.shared, source.codes[index] ];
+    blocks: [2] Hlsl_Code = .[source.shared, source.codes[index]];
     for block: blocks {
         if block.text == "" continue;
         path, _ := STRING.replace(source_path, "\\", "/");
@@ -828,15 +827,42 @@ lang_unquote :: (text: string) -> (string, bool) {
         if i + 1 >= body.count return "", false;
         escaped := body[i + 1];
         i += 2;
-        if escaped == #char "n" { array_add(*out, #char "\n"); continue; }
-        if escaped == #char "r" { array_add(*out, #char "\r"); continue; }
-        if escaped == #char "t" { array_add(*out, #char "\t"); continue; }
-        if escaped == #char "a" { array_add(*out, #char "\a"); continue; }
-        if escaped == #char "b" { array_add(*out, #char "\b"); continue; }
-        if escaped == #char "e" { array_add(*out, cast(u8) 0x1B); continue; }
-        if escaped == #char "f" { array_add(*out, #char "\f"); continue; }
-        if escaped == #char "v" { array_add(*out, #char "\v"); continue; }
-        if escaped == #char "0" { array_add(*out, cast(u8) 0); continue; }
+        if escaped == #char "n" {
+            array_add(*out, #char "\n");
+            continue;
+        }
+        if escaped == #char "r" {
+            array_add(*out, #char "\r");
+            continue;
+        }
+        if escaped == #char "t" {
+            array_add(*out, #char "\t");
+            continue;
+        }
+        if escaped == #char "a" {
+            array_add(*out, #char "\a");
+            continue;
+        }
+        if escaped == #char "b" {
+            array_add(*out, #char "\b");
+            continue;
+        }
+        if escaped == #char "e" {
+            array_add(*out, cast(u8) 0x1B);
+            continue;
+        }
+        if escaped == #char "f" {
+            array_add(*out, #char "\f");
+            continue;
+        }
+        if escaped == #char "v" {
+            array_add(*out, #char "\v");
+            continue;
+        }
+        if escaped == #char "0" {
+            array_add(*out, cast(u8) 0);
+            continue;
+        }
         if escaped == #char "\\" || escaped == #char "\"" || escaped == #char "\'" {
             array_add(*out, escaped);
             continue;

@@ -1,17 +1,25 @@
-#load "driver.jai" ;
-#load "enet_transport.jai" ;
+#load "driver.jai";
+#load "enet_transport.jai";
 #scope_module
-#import "Basic" ;
-Math :: #import "Math" ;
-Thread :: #import "Thread" ;
-#load "../../support.jai" ;
+#import "Basic";
+Math :: #import "Math";
+Thread :: #import "Thread";
+#load "../../support.jai";
 
- #import "Atomics" ;
-lock_initialization :: ( ) { while ! compare_and_swap ( * init_mutex , ( cast , trunc ( s32 ) 0 ) , ( cast , trunc ( s32 ) 1 ) ) { sleep_milliseconds ( 1 ) ; } }
-unlock_initialization :: ( ) { atomic_write ( * init_mutex , ( cast , trunc ( s32 ) 0 ) ) ; }
+#import "Atomics";
 
- // Loop scopes adapted.
+lock_initialization :: () {
+    while !compare_and_swap(*init_mutex, (cast, trunc(s32) 0), (cast, trunc(s32) 1)) {
+        sleep_milliseconds(1);
+    }
+}
 
- enet :: #import "thirdparty/onet/transport/enet/native" ;
+unlock_initialization :: () {
+    atomic_write(*init_mutex, (cast, trunc(s32) 0));
+}
 
- // Cast semantics adapted. 
+// Loop scopes adapted.
+
+enet :: #import "thirdparty/onet/transport/enet/native";
+
+// Cast semantics adapted.

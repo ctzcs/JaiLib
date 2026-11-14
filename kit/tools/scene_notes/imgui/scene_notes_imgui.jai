@@ -347,7 +347,7 @@ draw_details :: (p: *Panel, s: *notes.Session) -> (actions: Actions) {
 draw_draft :: (p: *Panel, s: *notes.Session) {
     d := *p.draft;
     if d.id == 0 ImGui.TextUnformatted("新批注草稿");
-    else          ImGui.TextUnformatted("编辑批注草稿");
+    else ImGui.TextUnformatted("编辑批注草稿");
     scn_input("标题（可选）", d.title);
     scn_input("场景", d.scene);
     scn_input("对象 ID（可选）", d.object_id);
@@ -524,9 +524,9 @@ draw_editor :: (p: *Panel, s: *notes.Session, anchor: JM.Vector2, viewport: F.Re
     imgui_set_next_window_size_constraints(ImGui.ImVec2.{ min(160.0, width), 0 },
                                            ImGui.ImVec2.{ bounds.w, bounds.h });
     if p.focus_editor imgui_set_next_window_focus();
-    imgui_push_style_color(ImGui.Col.Border, .[ 0.9, 0.63, 0.23, 1.0 ]);
-    imgui_push_style_color(ImGui.Col.WindowBg, .[ 0.075, 0.065, 0.09, 0.98 ]);
-    imgui_push_style_color(ImGui.Col.TitleBgActive, .[ 0.16, 0.12, 0.12, 1.0 ]);
+    imgui_push_style_color(ImGui.Col.Border, .[0.9, 0.63, 0.23, 1.0]);
+    imgui_push_style_color(ImGui.Col.WindowBg, .[0.075, 0.065, 0.09, 0.98]);
+    imgui_push_style_color(ImGui.Col.TitleBgActive, .[0.16, 0.12, 0.12, 1.0]);
     open := true;
     want_save := false;
     want_cancel := false;
@@ -685,10 +685,10 @@ draw_pin_title :: (list: *ImGui.ImDrawList, title: string, anchor: JM.Vector2, v
     rect := pin_title_rect(head, bounds, JM.Vector2.{ size.x + padding * 2, size.y + padding * 2 }, r + 6);
     low := ImGui.ImVec2.{ rect.x, rect.y };
     high := ImGui.ImVec2.{ rect.x + rect.w, rect.y + rect.h };
-    imgui_draw_rect_filled(list, low, high, imgui_color_u32(.[ 0.075, 0.065, 0.09, 0.94 ]), 4);
+    imgui_draw_rect_filled(list, low, high, imgui_color_u32(.[0.075, 0.065, 0.09, 0.94]), 4);
     imgui_draw_push_clip_rect(list, low, high, true);
     imgui_draw_text(list, ImGui.ImVec2.{ low.x + padding, low.y + padding },
-                    imgui_color_u32(.[ 1.0, 0.94, 0.82, 1.0 ]), text);
+                    imgui_color_u32(.[1.0, 0.94, 0.82, 1.0]), text);
     imgui_draw_pop_clip_rect(list);
 }
 
@@ -724,11 +724,11 @@ draw_pin :: (list: *ImGui.ImDrawList, anchor: ImGui.ImVec2, font_size: float32,
     if list == null return;
     r := max(1.0, font_size * 0.65);
     head := ImGui.ImVec2.{ anchor.x, anchor.y - r * 1.6 };
-    color := .[ 0.95, 0.63, 0.18, 1.0 ];
-    if resolved color = .[ 0.30, 0.73, 0.42, 1.0 ];
+    color := .[0.95, 0.63, 0.18, 1.0];
+    if resolved color = .[0.30, 0.73, 0.42, 1.0];
     if draft color[3] = 0.72;
     fill := imgui_color_u32(color);
-    ink := imgui_color_u32(.[ 0.1, 0.08, 0.09, 1.0 ]);
+    ink := imgui_color_u32(.[0.1, 0.08, 0.09, 1.0]);
     imgui_draw_triangle_filled(list,
                                ImGui.ImVec2.{ head.x - r * 0.8, head.y + r * 0.25 },
                                ImGui.ImVec2.{ head.x + r * 0.8, head.y + r * 0.25 },
@@ -736,7 +736,7 @@ draw_pin :: (list: *ImGui.ImDrawList, anchor: ImGui.ImVec2, font_size: float32,
     imgui_draw_circle_filled(list, head, r + 1.5, ink);
     imgui_draw_circle_filled(list, head, r, fill);
     if selected {
-        imgui_draw_circle(list, head, r + 3, imgui_color_u32(.[ 1.0, 0.87, 0.58, 1.0 ]), 2);
+        imgui_draw_circle(list, head, r + 3, imgui_color_u32(.[1.0, 0.87, 0.58, 1.0]), 2);
     }
     thickness := max(1.5, r * 0.13);
     if draft {

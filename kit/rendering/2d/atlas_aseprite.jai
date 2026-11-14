@@ -43,18 +43,18 @@
 // 一条自动生成的动画：controller 来自 .aseprite 文件名，name 来自 frame tag。
 Built_Clip :: struct {
     controller: string;
-    name:       string;
-    frames:     [] string; // 区域名列表（克隆，随 clip 释放）
-    durations:  [] float32; // 与 frames 一一对应（秒）
-    loop:       bool;
+    name: string;
+    frames: [] string; // 区域名列表（克隆，随 clip 释放）
+    durations: [] float32; // 与 frames 一一对应（秒）
+    loop: bool;
 }
 
 // 打包产物：每页的图集像素 + 区域表（页号、页内矩形、裁边帧）+ 自动生成的动画剪辑。
 // 所有字符串均为克隆（context.allocator），built_atlas_dispose 统一释放；atlas_from_built 接管页与区域。
 Built_Atlas :: struct {
-    pages:        [] F.Image;
-    regions:      HASH.Table(string, Atlas_Region);
-    clips:        [..] Built_Clip;
+    pages: [] F.Image;
+    regions: HASH.Table(string, Atlas_Region);
+    clips: [..] Built_Clip;
     source_count: int; // 参与打包的 .aseprite 文件数
 }
 //@endregion
@@ -62,15 +62,15 @@ Built_Atlas :: struct {
 //@region 构建配置
 
 Aseprite_Build_Config :: struct {
-    padding:     int;      // 区域间距（>=2 时启用边缘出血）
-    max_size:    int;      // 每页最大边长；放不下时开新页
+    padding: int; // 区域间距（>=2 时启用边缘出血）
+    max_size: int; // 每页最大边长；放不下时开新页
     skip_layers: [] string; // 拍平时跳过的图层名（大小写不敏感）
 }
 
 ASEPRITE_BUILD_DEFAULT :: Aseprite_Build_Config.{
-    padding     = 2,
-    max_size    = 8192,
-    skip_layers = .[ "bg", "shadow" ],
+    padding = 2,
+    max_size = 8192,
+    skip_layers = .["bg", "shadow"],
 }
 //@endregion
 
@@ -91,10 +91,10 @@ aseprite_build :: (root: string, config := ASEPRITE_BUILD_DEFAULT) -> (Built_Atl
     aseprite_sort_files(*files); // 稳定打包顺序
 
     packer := F.packer_create(F.Packer_Options.{
-        Trim              = true,
-        Padding           = cast(s32) config.padding,
-        MaxSize           = cast(s32) config.max_size,
-        DuplicateEdges    = config.padding >= 2,
+        Trim = true,
+        Padding = cast(s32) config.padding,
+        MaxSize = cast(s32) config.max_size,
+        DuplicateEdges = config.padding >= 2,
         CombineDuplicates = true,
     });
     defer F.packer_destroy(*packer);
@@ -122,9 +122,9 @@ aseprite_build :: (root: string, config := ASEPRITE_BUILD_DEFAULT) -> (Built_Atl
 
     clips_moved = true; // clips 从这里起归产物所有
     result := Built_Atlas.{
-        pages        = atlas_alloc_array(F.Image, packer.Pages.count), // 接管每页像素
-        regions      = HASH.Table(string, Atlas_Region).{},
-        clips        = clips,
+        pages = atlas_alloc_array(F.Image, packer.Pages.count), // 接管每页像素
+        regions = HASH.Table(string, Atlas_Region).{},
+        clips = clips,
         source_count = source_count,
     };
     for page, i: packer.Pages result.pages[i] = page;
@@ -155,7 +155,7 @@ built_atlas_dispose :: (built: *Built_Atlas) {
 // 之后照常 atlas_upload；built 仍须 built_atlas_dispose 释放剪辑。
 atlas_from_built :: (atlas: *Sprite_Atlas, built: *Built_Atlas) {
     atlas.* = Sprite_Atlas.{
-        pages   = atlas_alloc_array(Atlas_Page, built.pages.count),
+        pages = atlas_alloc_array(Atlas_Page, built.pages.count),
         regions = built.regions,
     };
     for image, i: built.pages atlas.pages[i].image = image;
@@ -270,10 +270,10 @@ aseprite_make_clip :: (controller: string, name: string, frames: [] string, dura
     }
     return Built_Clip.{
         controller = clone_owned(controller),
-        name       = clone_owned(name),
-        frames     = owned_frames,
-        durations  = owned_durs,
-        loop       = loop,
+        name = clone_owned(name),
+        frames = owned_frames,
+        durations = owned_durs,
+        loop = loop,
     };
 }
 

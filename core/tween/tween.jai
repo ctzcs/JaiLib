@@ -22,23 +22,23 @@ Repeat_Mode :: enum u8 {
 
 // 值语义的一次插值：start -> finish，可带 delay 与循环模式。
 Tween :: struct(T: Type) {
-    value:       Interpolated(T);
-    delay:       float32;
+    value: Interpolated(T);
+    delay: float32;
     repeat_mode: Repeat_Mode;
 }
 
 Tween_Config :: struct {
-    duration:    float32;
-    delay:       float32;
+    duration: float32;
+    delay: float32;
     repeat_mode: Repeat_Mode;
-    transition:  Transition;
+    transition: Transition;
 }
 
 TWEEN_CONFIG_DEFAULT :: Tween_Config.{
-    duration    = 1.0,
-    delay       = 0.0,
+    duration = 1.0,
+    delay = 0.0,
     repeat_mode = .Once,
-    transition  = .Linear,
+    transition = .Linear,
 };
 //@endregion
 
@@ -53,12 +53,12 @@ make :: (
 ) -> Tween(T) {
     result: Tween(T);
     result.value = Interpolated(T).{
-        start      = start,
-        finish     = finish,
+        start = start,
+        finish = finish,
         start_time = current_time,
-        speed      = 1.0,
+        speed = 1.0,
         transition = transition,
-        lerp       = lerp,
+        lerp = lerp,
     };
     result.delay = 0;
     result.repeat_mode = .Once;

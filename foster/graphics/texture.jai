@@ -10,7 +10,7 @@ Texture :: struct {
     handle: Graphics_Resource_Handle;
 
     Name: string;
-    Width:  s32;
+    Width: s32;
     Height: s32;
     Format: Texture_Format;
     SampleCount: Sample_Count;
@@ -49,9 +49,17 @@ texture_create_from_colors :: (device: *Graphics_Device, width: s32, height: s32
     return t;
 }
 
-texture_size :: (t: *Texture) -> Point2 { return .{ t.Width, t.Height }; }
-texture_memory_size :: (t: *Texture) -> s32 { return t.Width * t.Height * texture_format_size(t.Format); }
-texture_is_disposed :: (t: *Texture) -> bool { return t.is_disposed || t.device.disposed; }
+texture_size :: (t: *Texture) -> Point2 {
+    return .{ t.Width, t.Height };
+}
+
+texture_memory_size :: (t: *Texture) -> s32 {
+    return t.Width * t.Height * texture_format_size(t.Format);
+}
+
+texture_is_disposed :: (t: *Texture) -> bool {
+    return t.is_disposed || t.device.disposed;
+}
 
 // Uploads raw data covering the whole texture.
 texture_set_data :: (t: *Texture, data: [] $T) {
@@ -87,7 +95,7 @@ texture_get_data_region :: (t: *Texture, data: [] $T, source_region: Rect_Int) {
 }
 
 texture_blit :: (t: *Texture, dest: *Texture, filter := Texture_Filter.LINEAR) {
-    src_rect  := Rect_Int.{ 0, 0, t.Width, t.Height };
+    src_rect := Rect_Int.{ 0, 0, t.Width, t.Height };
     dest_rect := Rect_Int.{ 0, 0, dest.Width, dest.Height };
     graphics_device_blit_texture(t.device, t.handle, src_rect, dest.handle, dest_rect, filter);
 }
@@ -98,7 +106,7 @@ texture_blit_region :: (t: *Texture, src_rect: Rect_Int, dest: *Texture, dest_re
 
 texture_dispose :: (t: *Texture) {
     if !t.is_disposed {
-        if !t.IsTargetAttachment {   // the owning Target destroys the attachment
+        if !t.IsTargetAttachment { // the owning Target destroys the attachment
             graphics_device_destroy_resource(t.device, t.handle);
         }
         t.is_disposed = true;

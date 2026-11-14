@@ -78,25 +78,25 @@ Cli_Handler :: #type (args: string, userdata: *void);
 
 Cli_Command :: struct {
     description: string;
-    handler:     Cli_Handler;
-    userdata:    *void;
+    handler: Cli_Handler;
+    userdata: *void;
 }
 
 Cli_Console :: struct {
     commands: HASH.Table(string, Cli_Command); // key 为小写命令名（克隆）；只在主线程读写
 
     // 以下四项跨线程，由 mutex 保护；pending 及其字符串归 allocator。
-    mutex:       THREAD.Mutex;
-    mutex_ready: bool;      // Jai 侧：odin 的 Mutex 零值即可用，Jai 的必须先 init
-    allocator:   Allocator; // 零值表示未初始化或已 dispose，入列直接丢弃
-    pending:     [..] string; // 读取线程送来、尚未执行的原始行
-    accepting:   bool;        // cli_stop 后不再接收，读取线程随下一行退出
+    mutex: THREAD.Mutex;
+    mutex_ready: bool; // Jai 侧：odin 的 Mutex 零值即可用，Jai 的必须先 init
+    allocator: Allocator; // 零值表示未初始化或已 dispose，入列直接丢弃
+    pending: [..] string; // 读取线程送来、尚未执行的原始行
+    accepting: bool; // cli_stop 后不再接收，读取线程随下一行退出
 
     executing: [..] string; // 主线程独占：cli_update 与 pending 交换后逐条执行
-    started:   bool;        // 读取线程已启动（线程自清理，不 join）
+    started: bool; // 读取线程已启动（线程自清理，不 join）
 
-    reader:  *THREAD.Thread; // Jai 侧：读取线程句柄（odin 的线程自清理，不留句柄）
-    history: [..] string;    // Jai 侧：已执行命令的历史（内置 history 命令用）
+    reader: *THREAD.Thread; // Jai 侧：读取线程句柄（odin 的线程自清理，不留句柄）
+    history: [..] string; // Jai 侧：已执行命令的历史（内置 history 命令用）
 }
 
 cli_init :: (console: *Cli_Console) {
@@ -183,8 +183,8 @@ cli_register :: (console: *Cli_Console, name: string, description: string, handl
     lower := cli_ascii_lower_copy(name);
     command := Cli_Command.{
         description = copy_string(description),
-        handler     = handler,
-        userdata    = userdata,
+        handler = handler,
+        userdata = userdata,
     };
     slot := HASH.table_find_pointer(*console.commands, lower);
     if slot != null {
@@ -256,7 +256,9 @@ cli_execute :: (console: *Cli_Console, line: string) {
     if !ok return;
 
     lower := cli_ascii_lower_copy(name);
-    defer { if lower.data != null free(lower.data); }
+    defer {
+        if lower.data != null free(lower.data);
+    }
     slot := HASH.table_find_pointer(*console.commands, lower);
     if slot == null {
         print("[cli] 未知命令 '%'，输入 help 查看命令列表\n", name);

@@ -91,11 +91,11 @@ Value :: struct {
 
 components :: (kind: Kind) -> int {
     if kind == {
-        case .Scalar;   return 1;
-        case .Vector2;  return 2;
-        case .Vector3;  return 3;
-        case .Color;    return 4;
-        case .Texture;  return 0;
+        case .Scalar; return 1;
+        case .Vector2; return 2;
+        case .Vector3; return 3;
+        case .Color; return 4;
+        case .Texture; return 0;
     }
     return 0;
 }
@@ -195,7 +195,7 @@ field_sampler :: (f: Field) -> F.Texture_Sampler {
     if f.filter == .Nearest filter = .NEAREST;
     wrap: F.Texture_Wrap = .CLAMP;
     if f.wrap == {
-        case .Clamp;  wrap = .CLAMP;
+        case .Clamp; wrap = .CLAMP;
         case .Repeat; wrap = .REPEAT;
         case .Mirror; wrap = .MIRRORED_REPEAT;
     }
@@ -231,8 +231,8 @@ pack :: (schema: Schema, values: [] Value, buffer: [] u8) -> bool {
 // 按实例步进的顶点缓冲，一次 Draw 画出全部实例。
 Instancing :: enum {
     None;
-    Sprite;       // 精灵缓冲变体：实例记录含 2D 变换与图集矩形，单位四边形角点展开（常驻 Sprite_Buffer 用）
-    Model;        // 模型：实例数据含世界矩阵，着色器用 olib_world 取得
+    Sprite; // 精灵缓冲变体：实例记录含 2D 变换与图集矩形，单位四边形角点展开（常驻 Sprite_Buffer 用）
+    Model; // 模型：实例数据含世界矩阵，着色器用 olib_world 取得
     Sprite_Batch; // 精灵批量变体：foster BatcherVertex 输入，[Instance] 字段从顶点 storage buffer 按 mode 偏移读取
 }
 

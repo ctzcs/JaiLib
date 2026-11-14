@@ -59,107 +59,107 @@ using Hash_Table;
 // ATTACHMENT 相关），跨语言传的枚举一律由这里翻好再传下去。
 
 // buffer target / usage
-GL_ARRAY_BUFFER         :: 0x8892;
+GL_ARRAY_BUFFER :: 0x8892;
 GL_ELEMENT_ARRAY_BUFFER :: 0x8893;
 
 // primitive
 GL_TRIANGLES :: 0x0004;
 
 // data types
-GL_BYTE           :: 0x1400;
-GL_UNSIGNED_BYTE  :: 0x1401;
-GL_SHORT          :: 0x1402;
+GL_BYTE :: 0x1400;
+GL_UNSIGNED_BYTE :: 0x1401;
+GL_SHORT :: 0x1402;
 GL_UNSIGNED_SHORT :: 0x1403;
-GL_INT            :: 0x1404;
-GL_UNSIGNED_INT   :: 0x1405;
-GL_FLOAT          :: 0x1406;
-GL_HALF_FLOAT     :: 0x140B;
+GL_INT :: 0x1404;
+GL_UNSIGNED_INT :: 0x1405;
+GL_FLOAT :: 0x1406;
+GL_HALF_FLOAT :: 0x140B;
 
 // shader stages
-GL_VERTEX_SHADER   :: 0x8B31;
+GL_VERTEX_SHADER :: 0x8B31;
 GL_FRAGMENT_SHADER :: 0x8B30;
 
 // filters / wrap
-GL_NEAREST          :: 0x2600;
-GL_LINEAR           :: 0x2601;
-GL_REPEAT           :: 0x2901;
-GL_CLAMP_TO_EDGE    :: 0x812F;
-GL_MIRRORED_REPEAT  :: 0x8370;
+GL_NEAREST :: 0x2600;
+GL_LINEAR :: 0x2601;
+GL_REPEAT :: 0x2901;
+GL_CLAMP_TO_EDGE :: 0x812F;
+GL_MIRRORED_REPEAT :: 0x8370;
 
 // blend factors
-GL_ZERO                     :: 0;
-GL_ONE                      :: 1;
-GL_SRC_COLOR                :: 0x0300;
-GL_ONE_MINUS_SRC_COLOR      :: 0x0301;
-GL_SRC_ALPHA                :: 0x0302;
-GL_ONE_MINUS_SRC_ALPHA      :: 0x0303;
-GL_DST_ALPHA                :: 0x0304;
-GL_ONE_MINUS_DST_ALPHA      :: 0x0305;
-GL_DST_COLOR                :: 0x0306;
-GL_ONE_MINUS_DST_COLOR      :: 0x0307;
-GL_SRC_ALPHA_SATURATE       :: 0x0308;
-GL_CONSTANT_COLOR           :: 0x8001;
+GL_ZERO :: 0;
+GL_ONE :: 1;
+GL_SRC_COLOR :: 0x0300;
+GL_ONE_MINUS_SRC_COLOR :: 0x0301;
+GL_SRC_ALPHA :: 0x0302;
+GL_ONE_MINUS_SRC_ALPHA :: 0x0303;
+GL_DST_ALPHA :: 0x0304;
+GL_ONE_MINUS_DST_ALPHA :: 0x0305;
+GL_DST_COLOR :: 0x0306;
+GL_ONE_MINUS_DST_COLOR :: 0x0307;
+GL_SRC_ALPHA_SATURATE :: 0x0308;
+GL_CONSTANT_COLOR :: 0x8001;
 GL_ONE_MINUS_CONSTANT_COLOR :: 0x8002;
 
 // blend ops
-GL_FUNC_ADD              :: 0x8006;
-GL_FUNC_SUBTRACT         :: 0x800A;
+GL_FUNC_ADD :: 0x8006;
+GL_FUNC_SUBTRACT :: 0x800A;
 GL_FUNC_REVERSE_SUBTRACT :: 0x800B;
-GL_MIN                   :: 0x8007;
-GL_MAX                   :: 0x8008;
+GL_MIN :: 0x8007;
+GL_MAX :: 0x8008;
 
 // depth / stencil compare
-GL_NEVER    :: 0x0200;
-GL_LESS     :: 0x0201;
-GL_EQUAL    :: 0x0202;
-GL_LEQUAL   :: 0x0203;
-GL_GREATER  :: 0x0204;
+GL_NEVER :: 0x0200;
+GL_LESS :: 0x0201;
+GL_EQUAL :: 0x0202;
+GL_LEQUAL :: 0x0203;
+GL_GREATER :: 0x0204;
 GL_NOTEQUAL :: 0x0205;
-GL_GEQUAL   :: 0x0206;
-GL_ALWAYS   :: 0x0207;
+GL_GEQUAL :: 0x0206;
+GL_ALWAYS :: 0x0207;
 
 // stencil ops（GL_ZERO 上面已经有了，值相同）
-GL_KEEP      :: 0x1E00;
-GL_REPLACE   :: 0x1E01;
-GL_INCR      :: 0x1E02;
-GL_DECR      :: 0x1E03;
-GL_INVERT    :: 0x150A;
+GL_KEEP :: 0x1E00;
+GL_REPLACE :: 0x1E01;
+GL_INCR :: 0x1E02;
+GL_DECR :: 0x1E03;
+GL_INVERT :: 0x150A;
 GL_INCR_WRAP :: 0x8507;
 GL_DECR_WRAP :: 0x8508;
 
 // cull face
 GL_FRONT :: 0x0404;
-GL_BACK  :: 0x0405;
+GL_BACK :: 0x0405;
 
 // clear bits
-GL_DEPTH_BUFFER_BIT   :: 0x0100;
+GL_DEPTH_BUFFER_BIT :: 0x0100;
 GL_STENCIL_BUFFER_BIT :: 0x0400;
-GL_COLOR_BUFFER_BIT   :: 0x4000;
+GL_COLOR_BUFFER_BIT :: 0x4000;
 
 // sized internal formats（texStorage2D 要的是这些，不是 GL_RGBA 那种组合式）
-GL_R8                  :: 0x8229;
-GL_RG8                 :: 0x822B;
-GL_RGB8                :: 0x8051;   // [W6] 窗口级 MSAA 的 renderbuffer 用它，见 web_gl_window_msaa_ensure
-GL_RGBA8               :: 0x8058;
-GL_SRGB8_ALPHA8        :: 0x8C43;
-GL_R16F                :: 0x822D;
-GL_RG16F               :: 0x822F;
-GL_RGBA16F             :: 0x881A;
-GL_RGBA32F             :: 0x8814;
-GL_DEPTH_COMPONENT16   :: 0x81A5;
-GL_DEPTH_COMPONENT24   :: 0x81A6;
-GL_DEPTH_COMPONENT32F  :: 0x8CAC;
-GL_DEPTH24_STENCIL8    :: 0x88F0;
-GL_DEPTH32F_STENCIL8   :: 0x8CAD;
+GL_R8 :: 0x8229;
+GL_RG8 :: 0x822B;
+GL_RGB8 :: 0x8051; // [W6] 窗口级 MSAA 的 renderbuffer 用它，见 web_gl_window_msaa_ensure
+GL_RGBA8 :: 0x8058;
+GL_SRGB8_ALPHA8 :: 0x8C43;
+GL_R16F :: 0x822D;
+GL_RG16F :: 0x822F;
+GL_RGBA16F :: 0x881A;
+GL_RGBA32F :: 0x8814;
+GL_DEPTH_COMPONENT16 :: 0x81A5;
+GL_DEPTH_COMPONENT24 :: 0x81A6;
+GL_DEPTH_COMPONENT32F :: 0x8CAC;
+GL_DEPTH24_STENCIL8 :: 0x88F0;
+GL_DEPTH32F_STENCIL8 :: 0x8CAD;
 
 // 上传/读回时用的「数据格式」
-GL_RED             :: 0x1903;
-GL_RG              :: 0x8227;
-GL_RGBA            :: 0x1908;
-GL_BGRA            :: 0x80E1;
+GL_RED :: 0x1903;
+GL_RG :: 0x8227;
+GL_RGBA :: 0x1908;
+GL_BGRA :: 0x80E1;
 GL_DEPTH_COMPONENT :: 0x1902;
-GL_DEPTH_STENCIL   :: 0x84F9;
-GL_UNSIGNED_INT_24_8             :: 0x84FA;
+GL_DEPTH_STENCIL :: 0x84F9;
+GL_UNSIGNED_INT_24_8 :: 0x84FA;
 GL_FLOAT_32_UNSIGNED_INT_24_8_REV :: 0x8DAD;
 
 // framebuffer / 附件点（W5）
@@ -167,22 +167,22 @@ GL_FLOAT_32_UNSIGNED_INT_24_8_REV :: 0x8DAD;
 // COLOR_ATTACHMENTi 是**连续**的（0x8CE0 + i），所以第 i 个颜色附件的点用加法算；
 // 深度与深度模板是分开的两个点，挂错了 checkFramebufferStatus 会直接说
 // FRAMEBUFFER_INCOMPLETE_ATTACHMENT。
-GL_COLOR_ATTACHMENT0        :: 0x8CE0;
-GL_DEPTH_ATTACHMENT         :: 0x8D00;
-GL_STENCIL_ATTACHMENT       :: 0x8D20;
+GL_COLOR_ATTACHMENT0 :: 0x8CE0;
+GL_DEPTH_ATTACHMENT :: 0x8D00;
+GL_STENCIL_ATTACHMENT :: 0x8D20;
 GL_DEPTH_STENCIL_ATTACHMENT :: 0x821A;
 
-GL_FRAMEBUFFER_COMPLETE                      :: 0x8CD5;
-GL_FRAMEBUFFER_INCOMPLETE_ATTACHMENT         :: 0x8CD6;
+GL_FRAMEBUFFER_COMPLETE :: 0x8CD5;
+GL_FRAMEBUFFER_INCOMPLETE_ATTACHMENT :: 0x8CD6;
 GL_FRAMEBUFFER_INCOMPLETE_MISSING_ATTACHMENT :: 0x8CD7;
-GL_FRAMEBUFFER_UNSUPPORTED                   :: 0x8CDD;
-GL_FRAMEBUFFER_INCOMPLETE_MULTISAMPLE        :: 0x8D56;
+GL_FRAMEBUFFER_UNSUPPORTED :: 0x8CDD;
+GL_FRAMEBUFFER_INCOMPLETE_MULTISAMPLE :: 0x8D56;
 
 // glBlitFramebuffer 的 mask 位（和 GL 的 COLOR/DEPTH/STENCIL_BUFFER_BIT 不是同一
 // 组数值：那三个在 Jai 侧是 0x4000/0x0100/0x0400，用来做 glClear；blit 的 mask 是
 // 我们自己定义的三位，host.js 翻成 GL 的位）。见 host.js :: BLIT_COLOR。
-WEB_BLIT_COLOR   :: 1;
-WEB_BLIT_DEPTH   :: 2;
+WEB_BLIT_COLOR :: 1;
+WEB_BLIT_DEPTH :: 2;
 WEB_BLIT_STENCIL :: 4;
 
 // GLSL 那边声明的 sampler 名字（三个默认 program 都一样，见 §8.6）
@@ -194,30 +194,30 @@ WEB_SAMPLER_UNIFORM_NAME :: "Texture";
 
 web_gl_blend_factor :: (factor: Blend_Factor) -> s32 {
     if factor == {
-        case .ZERO;                     return GL_ZERO;
-        case .ONE;                      return GL_ONE;
-        case .SRC_COLOR;                return GL_SRC_COLOR;
-        case .ONE_MINUS_SRC_COLOR;      return GL_ONE_MINUS_SRC_COLOR;
-        case .DST_COLOR;                return GL_DST_COLOR;
-        case .ONE_MINUS_DST_COLOR;      return GL_ONE_MINUS_DST_COLOR;
-        case .SRC_ALPHA;                return GL_SRC_ALPHA;
-        case .ONE_MINUS_SRC_ALPHA;      return GL_ONE_MINUS_SRC_ALPHA;
-        case .DST_ALPHA;                return GL_DST_ALPHA;
-        case .ONE_MINUS_DST_ALPHA;      return GL_ONE_MINUS_DST_ALPHA;
-        case .CONSTANT_COLOR;           return GL_CONSTANT_COLOR;
+        case .ZERO; return GL_ZERO;
+        case .ONE; return GL_ONE;
+        case .SRC_COLOR; return GL_SRC_COLOR;
+        case .ONE_MINUS_SRC_COLOR; return GL_ONE_MINUS_SRC_COLOR;
+        case .DST_COLOR; return GL_DST_COLOR;
+        case .ONE_MINUS_DST_COLOR; return GL_ONE_MINUS_DST_COLOR;
+        case .SRC_ALPHA; return GL_SRC_ALPHA;
+        case .ONE_MINUS_SRC_ALPHA; return GL_ONE_MINUS_SRC_ALPHA;
+        case .DST_ALPHA; return GL_DST_ALPHA;
+        case .ONE_MINUS_DST_ALPHA; return GL_ONE_MINUS_DST_ALPHA;
+        case .CONSTANT_COLOR; return GL_CONSTANT_COLOR;
         case .ONE_MINUS_CONSTANT_COLOR; return GL_ONE_MINUS_CONSTANT_COLOR;
-        case .SRC_ALPHA_SATURATE;       return GL_SRC_ALPHA_SATURATE;
+        case .SRC_ALPHA_SATURATE; return GL_SRC_ALPHA_SATURATE;
     }
     return GL_ONE;
 }
 
 web_gl_blend_op :: (op: Blend_Op) -> s32 {
     if op == {
-        case .ADD;              return GL_FUNC_ADD;
-        case .SUBTRACT;         return GL_FUNC_SUBTRACT;
+        case .ADD; return GL_FUNC_ADD;
+        case .SUBTRACT; return GL_FUNC_SUBTRACT;
         case .REVERSE_SUBTRACT; return GL_FUNC_REVERSE_SUBTRACT;
-        case .MIN;              return GL_MIN;
-        case .MAX;              return GL_MAX;
+        case .MIN; return GL_MIN;
+        case .MAX; return GL_MAX;
     }
     return GL_FUNC_ADD;
 }
@@ -225,22 +225,22 @@ web_gl_blend_op :: (op: Blend_Op) -> s32 {
 // Blend_Mask → glColorMask 的四个 bool。返回值用位打包：bit0 R, bit1 G, bit2 B, bit3 A。
 web_gl_blend_mask_bits :: (mask: Blend_Mask) -> s32 {
     bits: s32 = 0;
-    if (mask & .RED)   != 0 bits |= 1;
+    if (mask & .RED) != 0 bits |= 1;
     if (mask & .GREEN) != 0 bits |= 2;
-    if (mask & .BLUE)  != 0 bits |= 4;
+    if (mask & .BLUE) != 0 bits |= 4;
     if (mask & .ALPHA) != 0 bits |= 8;
     return bits;
 }
 
 web_gl_compare :: (op: Depth_Compare) -> s32 {
     if op == {
-        case .ALWAYS;         return GL_ALWAYS;
-        case .NEVER;          return GL_NEVER;
-        case .LESS;           return GL_LESS;
-        case .EQUAL;          return GL_EQUAL;
-        case .LESS_OR_EQUAL;  return GL_LEQUAL;
-        case .GREATER;        return GL_GREATER;
-        case .NOT_EQUAL;      return GL_NOTEQUAL;
+        case .ALWAYS; return GL_ALWAYS;
+        case .NEVER; return GL_NEVER;
+        case .LESS; return GL_LESS;
+        case .EQUAL; return GL_EQUAL;
+        case .LESS_OR_EQUAL; return GL_LEQUAL;
+        case .GREATER; return GL_GREATER;
+        case .NOT_EQUAL; return GL_NOTEQUAL;
         case .GREATER_OR_EQUAL; return GL_GEQUAL;
     }
     return GL_ALWAYS;
@@ -248,15 +248,15 @@ web_gl_compare :: (op: Depth_Compare) -> s32 {
 
 web_gl_stencil_op :: (op: Stencil_Op) -> s32 {
     if op == {
-        case .INVALID;                return GL_KEEP;
-        case .KEEP;                   return GL_KEEP;
-        case .ZERO;                   return GL_ZERO;
-        case .REPLACE;                return GL_REPLACE;
-        case .INCREMENT_AND_CLAMP;    return GL_INCR;
-        case .DECREMENT_AND_CLAMP;    return GL_DECR;
-        case .INVERT;                 return GL_INVERT;
-        case .INCREMENT_AND_WRAP;     return GL_INCR_WRAP;
-        case .DECREMENT_AND_WRAP;     return GL_DECR_WRAP;
+        case .INVALID; return GL_KEEP;
+        case .KEEP; return GL_KEEP;
+        case .ZERO; return GL_ZERO;
+        case .REPLACE; return GL_REPLACE;
+        case .INCREMENT_AND_CLAMP; return GL_INCR;
+        case .DECREMENT_AND_CLAMP; return GL_DECR;
+        case .INVERT; return GL_INVERT;
+        case .INCREMENT_AND_WRAP; return GL_INCR_WRAP;
+        case .DECREMENT_AND_WRAP; return GL_DECR_WRAP;
     }
     return GL_KEEP;
 }
@@ -264,9 +264,9 @@ web_gl_stencil_op :: (op: Stencil_Op) -> s32 {
 // 0 = 不剔除（glDisable(CULL_FACE)），否则 GL_FRONT / GL_BACK。
 web_gl_cull :: (mode: Cull_Mode) -> s32 {
     if mode == {
-        case .NONE;  return 0;
+        case .NONE; return 0;
         case .FRONT; return GL_FRONT;
-        case .BACK;  return GL_BACK;
+        case .BACK; return GL_BACK;
     }
     return 0;
 }
@@ -278,9 +278,9 @@ web_gl_filter :: (filter: Texture_Filter) -> s32 {
 
 web_gl_wrap :: (wrap: Texture_Wrap) -> s32 {
     if wrap == {
-        case .REPEAT;          return GL_REPEAT;
+        case .REPEAT; return GL_REPEAT;
         case .MIRRORED_REPEAT; return GL_MIRRORED_REPEAT;
-        case .CLAMP;           return GL_CLAMP_TO_EDGE;
+        case .CLAMP; return GL_CLAMP_TO_EDGE;
     }
     return GL_REPEAT;
 }
@@ -325,16 +325,16 @@ web_gl_index_type :: (format: Index_Format) -> s32 {
 //     web_gl_sdl_internal_format 里能查到，作为「将来加枚举时照抄」的现成一行。
 web_gl_texture_formats :: (format: Texture_Format) -> (internal_format: s32, data_format: s32, data_type: s32, known: bool) {
     if format == {
-        case .R8G8B8A8;         return GL_RGBA8,  GL_RGBA, GL_UNSIGNED_BYTE, true;
-        case .R8;               return GL_R8,     GL_RED,  GL_UNSIGNED_BYTE, true;
-        case .R8G8;             return GL_RG8,    GL_RG,   GL_UNSIGNED_BYTE, true;
-        case .DEPTH16;          return GL_DEPTH_COMPONENT16,  GL_DEPTH_COMPONENT, GL_UNSIGNED_SHORT, true;
-        case .DEPTH24;          return GL_DEPTH_COMPONENT24,  GL_DEPTH_COMPONENT, GL_UNSIGNED_INT, true;
-        case .DEPTH32;          return GL_DEPTH_COMPONENT32F, GL_DEPTH_COMPONENT, GL_FLOAT, true;
-        case .DEPTH24STENCIL8;  return GL_DEPTH24_STENCIL8,   GL_DEPTH_STENCIL, GL_UNSIGNED_INT_24_8, true;
-        case .DEPTH32STENCIL8;  return GL_DEPTH32F_STENCIL8,  GL_DEPTH_STENCIL, GL_FLOAT_32_UNSIGNED_INT_24_8_REV, true;
+        case .R8G8B8A8; return GL_RGBA8, GL_RGBA, GL_UNSIGNED_BYTE, true;
+        case .R8; return GL_R8, GL_RED, GL_UNSIGNED_BYTE, true;
+        case .R8G8; return GL_RG8, GL_RG, GL_UNSIGNED_BYTE, true;
+        case .DEPTH16; return GL_DEPTH_COMPONENT16, GL_DEPTH_COMPONENT, GL_UNSIGNED_SHORT, true;
+        case .DEPTH24; return GL_DEPTH_COMPONENT24, GL_DEPTH_COMPONENT, GL_UNSIGNED_INT, true;
+        case .DEPTH32; return GL_DEPTH_COMPONENT32F, GL_DEPTH_COMPONENT, GL_FLOAT, true;
+        case .DEPTH24STENCIL8; return GL_DEPTH24_STENCIL8, GL_DEPTH_STENCIL, GL_UNSIGNED_INT_24_8, true;
+        case .DEPTH32STENCIL8; return GL_DEPTH32F_STENCIL8, GL_DEPTH_STENCIL, GL_FLOAT_32_UNSIGNED_INT_24_8_REV, true;
     }
-    return 0, 0, 0, false;   // 明确「没有对应」，不是 0x8058
+    return 0, 0, 0, false; // 明确「没有对应」，不是 0x8058
 }
 
 // 这张 jfoster 格式能不能当渲染目标？8 个全都是 renderable：
@@ -358,18 +358,18 @@ web_gl_texture_format_renderable :: (format: Texture_Format) -> bool {
 // 「能不能当 target 附件」这一层由 web_gl_sdl_format_renderable 再问一次扩展。
 web_gl_sdl_internal_format :: (format: SDL_GPUTextureFormat) -> s32 {
     if format == {
-        case .SDL_GPU_TEXTUREFORMAT_R8G8B8A8_UNORM;        return GL_RGBA8;
-        case .SDL_GPU_TEXTUREFORMAT_R8_UNORM;              return GL_R8;
-        case .SDL_GPU_TEXTUREFORMAT_R8G8_UNORM;            return GL_RG8;
-        case .SDL_GPU_TEXTUREFORMAT_R16G16B16A16_FLOAT;    return GL_RGBA16F;
-        case .SDL_GPU_TEXTUREFORMAT_R16_FLOAT;             return GL_R16F;
-        case .SDL_GPU_TEXTUREFORMAT_R16G16_FLOAT;          return GL_RG16F;
-        case .SDL_GPU_TEXTUREFORMAT_R32G32B32A32_FLOAT;    return GL_RGBA32F;
-        case .SDL_GPU_TEXTUREFORMAT_D16_UNORM;             return GL_DEPTH_COMPONENT16;
-        case .SDL_GPU_TEXTUREFORMAT_D24_UNORM;             return GL_DEPTH_COMPONENT24;
-        case .SDL_GPU_TEXTUREFORMAT_D32_FLOAT;             return GL_DEPTH_COMPONENT32F;
-        case .SDL_GPU_TEXTUREFORMAT_D24_UNORM_S8_UINT;     return GL_DEPTH24_STENCIL8;
-        case .SDL_GPU_TEXTUREFORMAT_D32_FLOAT_S8_UINT;     return GL_DEPTH32F_STENCIL8;
+        case .SDL_GPU_TEXTUREFORMAT_R8G8B8A8_UNORM; return GL_RGBA8;
+        case .SDL_GPU_TEXTUREFORMAT_R8_UNORM; return GL_R8;
+        case .SDL_GPU_TEXTUREFORMAT_R8G8_UNORM; return GL_RG8;
+        case .SDL_GPU_TEXTUREFORMAT_R16G16B16A16_FLOAT; return GL_RGBA16F;
+        case .SDL_GPU_TEXTUREFORMAT_R16_FLOAT; return GL_R16F;
+        case .SDL_GPU_TEXTUREFORMAT_R16G16_FLOAT; return GL_RG16F;
+        case .SDL_GPU_TEXTUREFORMAT_R32G32B32A32_FLOAT; return GL_RGBA32F;
+        case .SDL_GPU_TEXTUREFORMAT_D16_UNORM; return GL_DEPTH_COMPONENT16;
+        case .SDL_GPU_TEXTUREFORMAT_D24_UNORM; return GL_DEPTH_COMPONENT24;
+        case .SDL_GPU_TEXTUREFORMAT_D32_FLOAT; return GL_DEPTH_COMPONENT32F;
+        case .SDL_GPU_TEXTUREFORMAT_D24_UNORM_S8_UINT; return GL_DEPTH24_STENCIL8;
+        case .SDL_GPU_TEXTUREFORMAT_D32_FLOAT_S8_UINT; return GL_DEPTH32F_STENCIL8;
     }
     // 明确不支持的那一类，逐条写出来，免得以后有人以为是漏了：
     //   B8G8R8A8_UNORM / _SRGB  —— WebGL2 没有 BGRA8 的 sized internal format
@@ -427,15 +427,21 @@ web_gl_hex :: (value: s32) -> string {
     v := cast(u32) value;
 
     n: s32 = 0;
-    web_gl_hex_buffer[n] = #char "0"; n += 1;
-    web_gl_hex_buffer[n] = #char "x"; n += 1;
+    web_gl_hex_buffer[n] = #char "0";
+    n += 1;
+    web_gl_hex_buffer[n] = #char "x";
+    n += 1;
 
     // 数一下有几个 nibble，从最高位开始写（0 就写一个 "0"）。
     nibbles: s32 = 0;
     t := v;
-    while t != 0 { nibbles += 1; t >>= 4; }
+    while t != 0 {
+        nibbles += 1;
+        t >>= 4;
+    }
     if nibbles == 0 {
-        web_gl_hex_buffer[n] = #char "0"; n += 1;
+        web_gl_hex_buffer[n] = #char "0";
+        n += 1;
     } else {
         i: s32 = nibbles - 1;
         while i >= 0 {
@@ -451,17 +457,17 @@ web_gl_hex :: (value: s32) -> string {
 // Vertex_Type → vertexAttribPointer 的 (type, size)。size 是分量个数。
 web_gl_vertex_type :: (type: Vertex_Type) -> (gl_type: s32, components: s32) {
     if type == {
-        case .FLOAT;   return GL_FLOAT, 1;
-        case .FLOAT2;  return GL_FLOAT, 2;
-        case .FLOAT3;  return GL_FLOAT, 3;
-        case .FLOAT4;  return GL_FLOAT, 4;
-        case .BYTE4;   return GL_BYTE, 4;
-        case .UBYTE4;  return GL_UNSIGNED_BYTE, 4;
-        case .SHORT2;  return GL_SHORT, 2;
+        case .FLOAT; return GL_FLOAT, 1;
+        case .FLOAT2; return GL_FLOAT, 2;
+        case .FLOAT3; return GL_FLOAT, 3;
+        case .FLOAT4; return GL_FLOAT, 4;
+        case .BYTE4; return GL_BYTE, 4;
+        case .UBYTE4; return GL_UNSIGNED_BYTE, 4;
+        case .SHORT2; return GL_SHORT, 2;
         case .USHORT2; return GL_UNSIGNED_SHORT, 2;
-        case .SHORT4;  return GL_SHORT, 4;
+        case .SHORT4; return GL_SHORT, 4;
         case .USHORT4; return GL_UNSIGNED_SHORT, 4;
-        case .NONE;    return 0, 0;
+        case .NONE; return 0, 0;
     }
     return 0, 0;
 }
@@ -500,14 +506,14 @@ web_gl_vertex_type :: (type: Vertex_Type) -> (gl_type: s32, components: s32) {
 // 所以后端做的事只有一件：把 uniform_buffer_get() 那一段字节原样 bufferSubData。
 //
 
-WEB_UNIFORM_FRAGMENT_BASE :: 8;      // == MAX_UNIFORM_BUFFERS（graphics/draw_command.jai）
-WEB_MAX_UNIFORM_BINDINGS  :: 16;     // vertex 0..7 + fragment 8..15
+WEB_UNIFORM_FRAGMENT_BASE :: 8; // == MAX_UNIFORM_BUFFERS（graphics/draw_command.jai）
+WEB_MAX_UNIFORM_BINDINGS :: 16; // vertex 0..7 + fragment 8..15
 
 web_gl_uniform_binding_point :: (stage: Shader_Stage, slot: s32) -> s32 {
     if slot < 0 || slot >= MAX_UNIFORM_BUFFERS return -1;
     if stage == .VERTEX return slot;
     if stage == .FRAGMENT return WEB_UNIFORM_FRAGMENT_BASE + slot;
-    return -1;   // 计算阶段没有 uniform block 这条路
+    return -1; // 计算阶段没有 uniform block 这条路
 }
 
 // 采样器仍然按名字取：GLSL ES 3.00 不允许 opaque 类型（sampler2D）出现在
@@ -531,9 +537,9 @@ web_gl_sampler_name :: (slot: s32) -> string {
 // web_shader_source.jai 的 web_shader_variant_of_name —— graphics/
 // default_resource_data.jai 的 wasm 分支也要用它）。
 web_gl_stage_of :: (stage: Shader_Stage) -> (gl_stage: s32, web_stage: Web_Shader_Stage, found: bool) {
-    if stage == .VERTEX   return GL_VERTEX_SHADER,   .VERTEX,   true;
+    if stage == .VERTEX return GL_VERTEX_SHADER, .VERTEX, true;
     if stage == .FRAGMENT return GL_FRAGMENT_SHADER, .FRAGMENT, true;
-    return 0, .VERTEX, false;   // .COMPUTE：WebGL2 没有 compute stage
+    return 0, .VERTEX, false; // .COMPUTE：WebGL2 没有 compute stage
 }
 
 //
@@ -560,7 +566,7 @@ web_gl_ptr :: (id: s32) -> *void {
 // 它一个字段都没动，也不该为 web 加字段）。
 //
 
-WEB_MAX_ATTRIBUTES :: 64;   // 和桌面 sdl_get_graphics_pipeline 的 vertex_attributes[64] 一致
+WEB_MAX_ATTRIBUTES :: 64; // 和桌面 sdl_get_graphics_pipeline 的 vertex_attributes[64] 一致
 
 // 一个已链接 program 的缓存条目。句柄是 fw 的 GPU_Resource.handle（不是 GL 名字）：
 // 它们就是键的原料，也是 shader 销毁时找出「哪些 program 属于它」的依据。
@@ -579,7 +585,7 @@ web_gl_program_key_equal :: (a: Web_Program_Key, b: Web_Program_Key) -> bool {
 }
 
 Web_Program_Entry :: struct {
-    id: s32;                          // JS 侧 program 对象 id
+    id: s32; // JS 侧 program 对象 id
     vs: Graphics_Resource_Handle;
     fs: Graphics_Resource_Handle;
 }
@@ -600,20 +606,20 @@ Web_Target_Surface :: struct {
 }
 
 Web_Target_Entry :: struct {
-    fbo:          s32;   // private render-oriented textures (also MSAA resolve storage)
-    ms_fbo:       s32;   // 多重采样 FBO；0 = 不是 MSAA
-    width:        s32;
-    height:       s32;
-    sample_count: s32;   // 1 = 单采样
-    color_count:  s32;
-    has_depth:    bool;
+    fbo: s32; // private render-oriented textures (also MSAA resolve storage)
+    ms_fbo: s32; // 多重采样 FBO；0 = 不是 MSAA
+    width: s32;
+    height: s32;
+    sample_count: s32; // 1 = 单采样
+    color_count: s32;
+    has_depth: bool;
     resolve_depth: bool; // MSAA + 有深度附件：解析时要带 DEPTH bit
     resolve_stencil: bool;
     surfaces: [..] Web_Target_Surface;
-    renderbuffers: [..] s32;   // 建过的 renderbuffer（销毁时一起删）
-    built:        bool;
-    complete:     bool;        // false = 建过但 FBO 不完整，后续 pass 直接失败
-    warned:       bool;        // FBO 不完整的日志只打一次
+    renderbuffers: [..] s32; // 建过的 renderbuffer（销毁时一起删）
+    built: bool;
+    complete: bool; // false = 建过但 FBO 不完整，后续 pass 直接失败
+    warned: bool; // FBO 不完整的日志只打一次
 }
 
 // [W6] 窗口级 MSAA。桌面是「把整帧画到一张超采样的离屏 backbuffer，present 时
@@ -630,18 +636,18 @@ Web_Target_Entry :: struct {
 // 深度测试在 MSAA 打开后静默失效。深度**不解析**（blit 深度到默认 framebuffer
 // 是非法的），也就是「每帧结束深度丢弃」—— 与桌面 swapchain 的行为一致。
 Web_Window_MS :: struct {
-    fbo:       s32;
-    color_rb:  s32;
-    depth_rb:  s32;
-    width:     s32;
-    height:    s32;
-    samples:   s32;
-    ready:     bool;
-    failed:    bool;   // 建过一次就失败 → 不再重试（每帧重试只会刷屏）
+    fbo: s32;
+    color_rb: s32;
+    depth_rb: s32;
+    width: s32;
+    height: s32;
+    samples: s32;
+    ready: bool;
+    failed: bool; // 建过一次就失败 → 不再重试（每帧重试只会刷屏）
 }
 
 Web_GPU_State :: struct {
-    device: s32;               // JS 侧 device id；0 = 没有 WebGL2
+    device: s32; // JS 侧 device id；0 = 没有 WebGL2
 
     // 当前 render pass 指向的 framebuffer：0 = canvas 的默认 FBO。
     // 其余 pass 状态（目标/尺寸/已绑资源/视口/裁剪）放在 Graphics_Device 里，
@@ -676,13 +682,13 @@ Web_GPU_State :: struct {
     // hot-replace（ShaderPairTryReplace 换掉 shader 的 GPU 资源但保留 *Shader 的
     // 地址）自然产生新键；存下句柄是为了 shader 销毁时能精确回收旧 program
     // （见 web_gl_purge_programs_for）。
-    programs:  Table(Web_Program_Key, Web_Program_Entry, web_gl_program_key_hash, web_gl_program_key_equal);
-    pipelines: Table(u64, s32);    // key = 与桌面同构的大哈希（sdl_get_graphics_pipeline）
-    samplers:  Table(u32, s32);    // key = texture_sampler_key
+    programs: Table(Web_Program_Key, Web_Program_Entry, web_gl_program_key_hash, web_gl_program_key_equal);
+    pipelines: Table(u64, s32); // key = 与桌面同构的大哈希（sdl_get_graphics_pipeline）
+    samplers: Table(u32, s32); // key = texture_sampler_key
 
     // std140 uniform buffer：一个 binding point 一个 UBO，整块重传（W4）。
     // 下标就是 binding 号（web_gl_uniform_binding_point）。
-    uniform_buffers:    [WEB_MAX_UNIFORM_BINDINGS] s32;
+    uniform_buffers: [WEB_MAX_UNIFORM_BINDINGS] s32;
     uniform_capacities: [WEB_MAX_UNIFORM_BINDINGS] s32;
 
     // [W5] render-to-target / MSAA
@@ -697,67 +703,67 @@ Web_GPU_State :: struct {
     texture_fbos: Table(u32, s32);
 
     // 设备能力（gl_device_create 时问一次）
-    float_renderable: bool;   // EXT_color_buffer_float 在不在
-    max_samples:      s32;    // gl_get_param(5)
-    max_renderbuffer: s32;    // gl_get_param(9)
+    float_renderable: bool; // EXT_color_buffer_float 在不在
+    max_samples: s32; // gl_get_param(5)
+    max_renderbuffer: s32; // gl_get_param(9)
     max_color_attachments: s32;
-    max_texture_size: s32;    // [W6] gl_get_param(2)：超过它的纹理创建要明确失败
+    max_texture_size: s32; // [W6] gl_get_param(2)：超过它的纹理创建要明确失败
 
     // [W6] 窗口级 MSAA（见 Web_Window_MS 的说明）
-    window_msaa_wanted:  bool;   // graphics_device_web 的 sdl_device_create 打开
-    window_msaa_samples: s32;    // 期望的采样数（会被 MAX_SAMPLES 夹住）
-    window_ms:           Web_Window_MS;
+    window_msaa_wanted: bool; // graphics_device_web 的 sdl_device_create 打开
+    window_msaa_samples: s32; // 期望的采样数（会被 MAX_SAMPLES 夹住）
+    window_ms: Web_Window_MS;
 
     // gl_create_pipeline 的属性表缓冲：每个属性 8 个 s32
     // (slot, location, size, type, normalized, stride, offset, divisor)
     attr_scratch: [WEB_MAX_ATTRIBUTES * 8] s32;
 
     // 客观计数（fw_stats / 报告用）
-    passes:           s32;
-    clears:           s32;
-    draws:            s32;
-    texture_uploads:  s32;
-    buffer_uploads:   s32;
+    passes: s32;
+    clears: s32;
+    draws: s32;
+    texture_uploads: s32;
+    buffer_uploads: s32;
     shaders_compiled: s32;
-    programs_linked:  s32;
-    programs_released: s32;   // hot-replace / shader 销毁回收掉的旧 program
+    programs_linked: s32;
+    programs_released: s32; // hot-replace / shader 销毁回收掉的旧 program
     pipelines_created: s32;
-    uniform_uploads:  s32;    // 推了多少次 std140 block（每 draw 每槽一次）
-    readbacks:        s32;
-    gl_errors:        s32;
-    draw_skips:       s32;
+    uniform_uploads: s32; // 推了多少次 std140 block（每 draw 每槽一次）
+    readbacks: s32;
+    gl_errors: s32;
+    draw_skips: s32;
     // [W5]
-    targets_built:      s32;  // 建了几个 target FBO（含重建）
-    target_incomplete:  s32;  // 多少次 checkFramebufferStatus 不是 COMPLETE
-    target_resolves:    s32;  // 多少次 MSAA resolve（blitFramebuffer ms → resolve）
-    msaa_targets:       s32;  // 采样数 > 1 的 target 数
-    blits:              s32;  // sdl_blit_texture 成功的次数
-    blit_failures:      s32;  // 被拒的次数（格式不匹配 / GL 报错）
+    targets_built: s32; // 建了几个 target FBO（含重建）
+    target_incomplete: s32; // 多少次 checkFramebufferStatus 不是 COMPLETE
+    target_resolves: s32; // 多少次 MSAA resolve（blitFramebuffer ms → resolve）
+    msaa_targets: s32; // 采样数 > 1 的 target 数
+    blits: s32; // sdl_blit_texture 成功的次数
+    blit_failures: s32; // 被拒的次数（格式不匹配 / GL 报错）
     unsupported_formats: s32; // 「格式不认识」导致创建被拒的次数
     // [W6]
-    texture_size_rejections: s32;  // 超过 MAX_TEXTURE_SIZE 被拒的次数
-    renderbuffer_size_rejections: s32;  // 超过 MAX_RENDERBUFFER_SIZE 被拒的次数
-    readback_refusals:       s32;  // 读回被明确拒绝的次数（格式不支持 / 深度）
-    readback_unsupported_format: s32;  // 其中「不是 RGBA8/R8/RG8」的那一类
-    window_resolves:         s32;  // 窗口级 MSAA 的 resolve 次数
-    window_msaa_rebuilt:     s32;  // 窗口 MS FBO 重建次数（尺寸变化）
-    targets_invalidated:     s32;  // 因纹理销毁而作废的 target 数（W6 收窄后应远小于旧值）
-    targets_kept:            s32;  // 纹理销毁时被**保住**的 target 数（W6 的证据）
+    texture_size_rejections: s32; // 超过 MAX_TEXTURE_SIZE 被拒的次数
+    renderbuffer_size_rejections: s32; // 超过 MAX_RENDERBUFFER_SIZE 被拒的次数
+    readback_refusals: s32; // 读回被明确拒绝的次数（格式不支持 / 深度）
+    readback_unsupported_format: s32; // 其中「不是 RGBA8/R8/RG8」的那一类
+    window_resolves: s32; // 窗口级 MSAA 的 resolve 次数
+    window_msaa_rebuilt: s32; // 窗口 MS FBO 重建次数（尺寸变化）
+    targets_invalidated: s32; // 因纹理销毁而作废的 target 数（W6 收窄后应远小于旧值）
+    targets_kept: s32; // 纹理销毁时被**保住**的 target 数（W6 的证据）
 
     // 一次性日志的开关（避免每帧刷屏）
-    warned_no_gl:           bool;
-    warned_no_shader:       bool;
-    warned_no_uniform:      bool;
-    warned_texture_data:    bool;
-    warned_target_draw:     bool;
-    warned_msaa:            bool;
-    warned_base_vertex:     bool;
-    warned_blit_format:     bool;   // blit 两边格式不同（ES 3.0 的 blitFramebuffer 要求相同）
-    warned_depth_readback:  bool;   // 想读回深度纹理
-    warned_msaa_supported:  bool;   // 采样数超过 MAX_SAMPLES
-    warned_readback_format: bool;   // [W6] 读回只支持 8 位 UNORM（RGBA8 / R8 / RG8）
-    warned_window_msaa:     bool;   // [W6] 窗口级 MSAA 的降级说明只打一次
-    warned_readback_refusal: bool;  // [W6] 「这个格式不能读回」的 error 只打一次
+    warned_no_gl: bool;
+    warned_no_shader: bool;
+    warned_no_uniform: bool;
+    warned_texture_data: bool;
+    warned_target_draw: bool;
+    warned_msaa: bool;
+    warned_base_vertex: bool;
+    warned_blit_format: bool; // blit 两边格式不同（ES 3.0 的 blitFramebuffer 要求相同）
+    warned_depth_readback: bool; // 想读回深度纹理
+    warned_msaa_supported: bool; // 采样数超过 MAX_SAMPLES
+    warned_readback_format: bool; // [W6] 读回只支持 8 位 UNORM（RGBA8 / R8 / RG8）
+    warned_window_msaa: bool; // [W6] 窗口级 MSAA 的降级说明只打一次
+    warned_readback_refusal: bool; // [W6] 「这个格式不能读回」的 error 只打一次
 }
 
 web_gpu: Web_GPU_State;
@@ -789,7 +795,7 @@ web_gpu_reset :: () {
     }
     table_reset(*web_gpu.targets);
     table_reset(*web_gpu.texture_fbos);
-    for i: 0..WEB_MAX_UNIFORM_BINDINGS-1 {
+    for i: 0..WEB_MAX_UNIFORM_BINDINGS - 1 {
         web_gpu.uniform_buffers[i] = 0;
         web_gpu.uniform_capacities[i] = 0;
     }
@@ -863,16 +869,16 @@ web_gl_off :: (ptr: *void) -> s32 {
 // （W3 那版是「回落成 RGBA/UNSIGNED_BYTE」，对 R8 来说那会把 1 字节/像素的数据
 // 当成 4 字节读完 —— 静默越界读，比失败糟糕得多）。
 web_gl_sdl_data_format :: (format: SDL_GPUTextureFormat) -> (data_format: s32, data_type: s32) {
-    if format == .SDL_GPU_TEXTUREFORMAT_R8G8B8A8_UNORM      return GL_RGBA, GL_UNSIGNED_BYTE;
-    if format == .SDL_GPU_TEXTUREFORMAT_R8_UNORM            return GL_RED,  GL_UNSIGNED_BYTE;
-    if format == .SDL_GPU_TEXTUREFORMAT_R8G8_UNORM          return GL_RG,   GL_UNSIGNED_BYTE;
-    if format == .SDL_GPU_TEXTUREFORMAT_R16G16B16A16_FLOAT  return GL_RGBA, GL_HALF_FLOAT;
-    if format == .SDL_GPU_TEXTUREFORMAT_R32G32B32A32_FLOAT  return GL_RGBA, GL_FLOAT;
-    if format == .SDL_GPU_TEXTUREFORMAT_D16_UNORM           return GL_DEPTH_COMPONENT, GL_UNSIGNED_SHORT;
-    if format == .SDL_GPU_TEXTUREFORMAT_D24_UNORM           return GL_DEPTH_COMPONENT, GL_UNSIGNED_INT;
-    if format == .SDL_GPU_TEXTUREFORMAT_D32_FLOAT           return GL_DEPTH_COMPONENT, GL_FLOAT;
-    if format == .SDL_GPU_TEXTUREFORMAT_D24_UNORM_S8_UINT   return GL_DEPTH_STENCIL, GL_UNSIGNED_INT_24_8;
-    if format == .SDL_GPU_TEXTUREFORMAT_D32_FLOAT_S8_UINT   return GL_DEPTH_STENCIL, GL_FLOAT_32_UNSIGNED_INT_24_8_REV;
+    if format == .SDL_GPU_TEXTUREFORMAT_R8G8B8A8_UNORM return GL_RGBA, GL_UNSIGNED_BYTE;
+    if format == .SDL_GPU_TEXTUREFORMAT_R8_UNORM return GL_RED, GL_UNSIGNED_BYTE;
+    if format == .SDL_GPU_TEXTUREFORMAT_R8G8_UNORM return GL_RG, GL_UNSIGNED_BYTE;
+    if format == .SDL_GPU_TEXTUREFORMAT_R16G16B16A16_FLOAT return GL_RGBA, GL_HALF_FLOAT;
+    if format == .SDL_GPU_TEXTUREFORMAT_R32G32B32A32_FLOAT return GL_RGBA, GL_FLOAT;
+    if format == .SDL_GPU_TEXTUREFORMAT_D16_UNORM return GL_DEPTH_COMPONENT, GL_UNSIGNED_SHORT;
+    if format == .SDL_GPU_TEXTUREFORMAT_D24_UNORM return GL_DEPTH_COMPONENT, GL_UNSIGNED_INT;
+    if format == .SDL_GPU_TEXTUREFORMAT_D32_FLOAT return GL_DEPTH_COMPONENT, GL_FLOAT;
+    if format == .SDL_GPU_TEXTUREFORMAT_D24_UNORM_S8_UINT return GL_DEPTH_STENCIL, GL_UNSIGNED_INT_24_8;
+    if format == .SDL_GPU_TEXTUREFORMAT_D32_FLOAT_S8_UINT return GL_DEPTH_STENCIL, GL_FLOAT_32_UNSIGNED_INT_24_8_REV;
     return 0, 0;
 }
 
@@ -902,8 +908,10 @@ web_gl_color_attachment :: (index: s32) -> s32 {
 // graphics_device_web.jai 里的 sdl_get_texture_format。
 web_gl_hash_mix :: (h: u64) -> u64 {
     x := h;
-    x ^= x >> 30; x *= 0xbf58476d1ce4e5b9;
-    x ^= x >> 27; x *= 0x94d049bb133111eb;
+    x ^= x >> 30;
+    x *= 0xbf58476d1ce4e5b9;
+    x ^= x >> 27;
+    x *= 0x94d049bb133111eb;
     x ^= x >> 31;
     return x;
 }
@@ -946,7 +954,7 @@ web_gl_upload_uniform_block :: (stage: Shader_Stage, slot: s32, data: [] u8) -> 
 
     if ubo <= 0 || capacity < needed {
         capacity = needed;
-        if capacity < 16 capacity = 16;   // 最小 std140 block 是 16 B（vec4 对齐）
+        if capacity < 16 capacity = 16; // 最小 std140 block 是 16 B（vec4 对齐）
         if ubo <= 0 {
             ubo = gl_create_uniform_buffer(capacity);
             if ubo <= 0 {
@@ -1035,7 +1043,7 @@ web_gl_shader_compiled :: (d: *Graphics_Device, shader: *Shader) -> bool {
 //
 
 web_gl_handle_in :: (list: [] Graphics_Resource_Handle, count: s32, handle: Graphics_Resource_Handle) -> bool {
-    for i: 0..count-1 if list[i] == handle return true;
+    for i: 0..count - 1 if list[i] == handle return true;
     return false;
 }
 
@@ -1211,22 +1219,32 @@ web_gl_target_entry :: (d: *Graphics_Device, handle: Graphics_Resource_Handle) -
 
         depth_point := cast(s32) (ifx web_gl_sdl_format_has_stencil(r.format) then GL_DEPTH_STENCIL_ATTACHMENT else GL_DEPTH_ATTACHMENT);
         if is_depth {
-            if entry.has_depth continue;   // 一个 target 只能有一个深度附件
+            if entry.has_depth continue; // 一个 target 只能有一个深度附件
             entry.has_depth = true;
             entry.resolve_stencil = web_gl_sdl_format_has_stencil(r.format);
 
             // 深度侧：MSAA 时 ms_fbo 上放 renderbuffer，fbo 上放解析纹理。
             depth_texture := web_gl_target_surface(d, *entry, r, internal, depth_point, samples);
-            if depth_texture <= 0 { ok = false; break; }
+            if depth_texture <= 0 {
+                ok = false;
+                break;
+            }
             if samples > 1 {
                 if entry.ms_fbo <= 0 entry.ms_fbo = gl_create_framebuffer();
-                if entry.ms_fbo <= 0 { ok = false; break; }
+                if entry.ms_fbo <= 0 {
+                    ok = false;
+                    break;
+                }
                 rb := gl_create_renderbuffer(internal, entry.width, entry.height, samples);
-                if rb <= 0 { ok = false; break; }
+                if rb <= 0 {
+                    ok = false;
+                    break;
+                }
                 array_add(*entry.renderbuffers, rb);
                 surface := entry.surfaces[entry.surfaces.count - 1];
                 if gl_attach_renderbuffer(surface.ms_fbo, depth_point, rb) != GL_FRAMEBUFFER_COMPLETE {
-                    ok = false; break;
+                    ok = false;
+                    break;
                 }
                 point := cast(s32) (ifx entry.resolve_stencil then GL_DEPTH_STENCIL_ATTACHMENT else GL_DEPTH_ATTACHMENT);
                 status := gl_attach_renderbuffer(entry.ms_fbo, point, rb);
@@ -1268,13 +1286,20 @@ web_gl_target_entry :: (d: *Graphics_Device, handle: Graphics_Resource_Handle) -
             }
             if samples > 1 {
                 if entry.ms_fbo <= 0 entry.ms_fbo = gl_create_framebuffer();
-                if entry.ms_fbo <= 0 { ok = false; break; }
+                if entry.ms_fbo <= 0 {
+                    ok = false;
+                    break;
+                }
                 rb := gl_create_renderbuffer(internal, entry.width, entry.height, samples);
-                if rb <= 0 { ok = false; break; }
+                if rb <= 0 {
+                    ok = false;
+                    break;
+                }
                 array_add(*entry.renderbuffers, rb);
                 surface := entry.surfaces[entry.surfaces.count - 1];
                 if gl_attach_renderbuffer(surface.ms_fbo, GL_COLOR_ATTACHMENT0, rb) != GL_FRAMEBUFFER_COMPLETE {
-                    ok = false; break;
+                    ok = false;
+                    break;
                 }
                 status := gl_attach_renderbuffer(entry.ms_fbo, point, rb);
                 if status != GL_FRAMEBUFFER_COMPLETE {
@@ -1429,7 +1454,10 @@ web_gl_texture_released :: (d: *Graphics_Device, handle: Graphics_Resource_Handl
 
         referenced := false;
         for att: target_res.attachments {
-            if att == handle { referenced = true; break; }
+            if att == handle {
+                referenced = true;
+                break;
+            }
         }
         if referenced array_add(*doomed, k);
     }
@@ -1495,7 +1523,9 @@ web_gl_readback_fbo :: (d: *Graphics_Device) -> s32 {
 // App_Flags.MULTI_SAMPLED_BACK_BUFFER 打开时调用。
 web_gl_window_msaa_configure :: (samples: s32) {
     wanted := samples;
-    if wanted < 2 { wanted = 4; }                       // 只说了"要 MSAA"：按桌面默认 4×
+    if wanted < 2 {
+        wanted = 4;
+    } // 只说了"要 MSAA"：按桌面默认 4×
     if web_gpu.max_samples > 0 && wanted > web_gpu.max_samples wanted = web_gpu.max_samples;
     web_gpu.window_msaa_samples = wanted;
     web_gpu.window_msaa_wanted = wanted > 1;

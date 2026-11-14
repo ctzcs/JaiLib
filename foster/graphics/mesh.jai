@@ -9,11 +9,11 @@ using Math;
 
 Mesh :: struct {
     device: *Graphics_Device;
-    Name:   string;
+    Name: string;
 
-    VertexBuffer:   *Graphics_Buffer;
-    InstanceBuffer: *Graphics_Buffer = null;   // optional
-    IndexBuffer:    *Graphics_Buffer;
+    VertexBuffer: *Graphics_Buffer;
+    InstanceBuffer: *Graphics_Buffer = null; // optional
+    IndexBuffer: *Graphics_Buffer;
 }
 
 mesh_create :: (device: *Graphics_Device, vertex_format: Vertex_Format, index_format: Index_Format, name := "") -> *Mesh {
@@ -21,7 +21,7 @@ mesh_create :: (device: *Graphics_Device, vertex_format: Vertex_Format, index_fo
     m.device = device;
     m.Name = name;
     m.VertexBuffer = vertex_buffer_create(device, vertex_format, ifx name != "" then tprint("%-Vertices", name) else "");
-    m.IndexBuffer  = index_buffer_create(device, index_format,  ifx name != "" then tprint("%-Indices",  name) else "");
+    m.IndexBuffer = index_buffer_create(device, index_format, ifx name != "" then tprint("%-Indices", name) else "");
     return m;
 }
 
@@ -38,12 +38,29 @@ mesh_is_disposed :: (m: *Mesh) -> bool {
            buffer_is_disposed(m.IndexBuffer);
 }
 
-mesh_vertex_count :: (m: *Mesh) -> s32 { return m.VertexBuffer.Count; }
-mesh_instance_count :: (m: *Mesh) -> s32 { return ifx m.InstanceBuffer != null then m.InstanceBuffer.Count else 0; }
-mesh_index_count :: (m: *Mesh) -> s32 { return m.IndexBuffer.Count; }
-mesh_vertex_format :: (m: *Mesh) -> Vertex_Format { return m.VertexBuffer.Format; }
-mesh_instance_format :: (m: *Mesh) -> Vertex_Format { return ifx m.InstanceBuffer != null then m.InstanceBuffer.Format else Vertex_Format.{}; }
-mesh_index_format :: (m: *Mesh) -> Index_Format { return m.IndexBuffer.IndexFormat; }
+mesh_vertex_count :: (m: *Mesh) -> s32 {
+    return m.VertexBuffer.Count;
+}
+
+mesh_instance_count :: (m: *Mesh) -> s32 {
+    return ifx m.InstanceBuffer != null then m.InstanceBuffer.Count else 0;
+}
+
+mesh_index_count :: (m: *Mesh) -> s32 {
+    return m.IndexBuffer.Count;
+}
+
+mesh_vertex_format :: (m: *Mesh) -> Vertex_Format {
+    return m.VertexBuffer.Format;
+}
+
+mesh_instance_format :: (m: *Mesh) -> Vertex_Format {
+    return ifx m.InstanceBuffer != null then m.InstanceBuffer.Format else Vertex_Format.{};
+}
+
+mesh_index_format :: (m: *Mesh) -> Index_Format {
+    return m.IndexBuffer.IndexFormat;
+}
 
 mesh_clear :: (m: *Mesh) {
     buffer_clear(m.VertexBuffer);

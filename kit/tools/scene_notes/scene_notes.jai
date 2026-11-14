@@ -156,15 +156,15 @@ can_redo :: (s: *Session) -> bool {
 
 error_text :: (err: Error) -> string {
     if err == {
-        case .None;              return "";
-        case .Invalid_Argument;  return "无效参数或会话尚未初始化";
-        case .Invalid_File;      return "批注格式无效：请检查版本、ID、状态、必填文字、单行标题与字段长度";
-        case .Read_Failed;       return "无法读取批注文件，当前内容未改变";
-        case .Write_Failed;      return "无法保存批注文件，旧文件与未保存内容均已保留";
-        case .External_Change;   return "磁盘批注已被 Agent 或其他程序修改，请先重新载入；不会覆盖外部结果";
-        case .Unsaved_Changes;   return "仍有未保存修改，请先保存，或明确放弃后重新载入";
-        case .Not_Found;         return "批注已不存在，请重新选择";
-        case .No_History;        return "没有可撤销或重做的操作";
+        case .None; return "";
+        case .Invalid_Argument; return "无效参数或会话尚未初始化";
+        case .Invalid_File; return "批注格式无效：请检查版本、ID、状态、必填文字、单行标题与字段长度";
+        case .Read_Failed; return "无法读取批注文件，当前内容未改变";
+        case .Write_Failed; return "无法保存批注文件，旧文件与未保存内容均已保留";
+        case .External_Change; return "磁盘批注已被 Agent 或其他程序修改，请先重新载入；不会覆盖外部结果";
+        case .Unsaved_Changes; return "仍有未保存修改，请先保存，或明确放弃后重新载入";
+        case .Not_Found; return "批注已不存在，请重新选择";
+        case .No_History; return "没有可撤销或重做的操作";
     }
     return "未知批注错误";
 }
@@ -236,6 +236,7 @@ redo :: (s: *Session) -> Error {
     if !can_redo(s) return .No_History;
     return restore(s, *s.redo_stack, *s.undo_stack);
 }
+
 commit :: (s: *Session, candidate: File, persist := false) -> Error {
     if !valid_file(candidate) return .Invalid_File;
     bytes, err := encode(candidate, s.allocator);

@@ -142,8 +142,8 @@ matrix4_from_quaternion :: (q: [4] float32) -> Matrix4 {
 
     return Matrix4.{
         .[1 - 2 * (q_yy + q_zz), 2 * (q_xy + q_wz), 2 * (q_xz - q_wy), 0],
-        .[2 * (q_xy - q_wz), 1 - 2 * (q_xx +q_zz), 2 * (q_yz + q_wx), 0],
-        .[2 * (q_xz + q_wy), 2 * (q_yz - q_wx), 1 - 2 * (q_xx +q_yy), 0],
+        .[2 * (q_xy - q_wz), 1 - 2 * (q_xx + q_zz), 2 * (q_yz + q_wx), 0],
+        .[2 * (q_xz + q_wy), 2 * (q_yz - q_wx), 1 - 2 * (q_xx + q_yy), 0],
         .[0, 0, 0, 1],
     };
 }
@@ -196,7 +196,7 @@ matrix4_orthographic :: (width: float32, height: float32, near: float32, far: fl
 matrix4_orthographic_off_center :: (
     left: float32, right: float32, bottom: float32, top: float32, near: float32, far: float32,
 ) -> (Matrix4, bool) {
-    bounds : [6] float32 = .[left, right, bottom, top, near, far];
+    bounds: [6] float32 = .[left, right, bottom, top, near, far];
     for value: bounds {
         if JM.isnan(value) || JM.isinf(value) {
             return MATRIX4_IDENTITY, false;
@@ -217,7 +217,7 @@ matrix4_orthographic_off_center :: (
         .[0, 0, cast(float32) (-1 / dz), cast(float32) (-cast(float64) near / dz)],
         .[0, 0, 0, 1],
     };
-    columns : [4] Vec4 = .[result.c0, result.c1, result.c2, result.c3];
+    columns: [4] Vec4 = .[result.c0, result.c1, result.c2, result.c3];
     for column: columns {
         for value: column {
             if JM.isnan(value) || JM.isinf(value) {
@@ -253,14 +253,22 @@ matrix4_multiply :: (a: Matrix4, b: Matrix4) -> Matrix4 {
 // 一般 4x4 求逆（伴随法）。不可逆返回 identity + false。
 matrix4_inverse :: (m: Matrix4) -> (Matrix4, bool) {
     // m[row][col]：行 r 列 c 的元素（olib 的嵌套 proc at）
-    a00 := matrix4_inverse_at(m, 0, 0); a01 := matrix4_inverse_at(m, 0, 1);
-    a02 := matrix4_inverse_at(m, 0, 2); a03 := matrix4_inverse_at(m, 0, 3);
-    a10 := matrix4_inverse_at(m, 1, 0); a11 := matrix4_inverse_at(m, 1, 1);
-    a12 := matrix4_inverse_at(m, 1, 2); a13 := matrix4_inverse_at(m, 1, 3);
-    a20 := matrix4_inverse_at(m, 2, 0); a21 := matrix4_inverse_at(m, 2, 1);
-    a22 := matrix4_inverse_at(m, 2, 2); a23 := matrix4_inverse_at(m, 2, 3);
-    a30 := matrix4_inverse_at(m, 3, 0); a31 := matrix4_inverse_at(m, 3, 1);
-    a32 := matrix4_inverse_at(m, 3, 2); a33 := matrix4_inverse_at(m, 3, 3);
+    a00 := matrix4_inverse_at(m, 0, 0);
+    a01 := matrix4_inverse_at(m, 0, 1);
+    a02 := matrix4_inverse_at(m, 0, 2);
+    a03 := matrix4_inverse_at(m, 0, 3);
+    a10 := matrix4_inverse_at(m, 1, 0);
+    a11 := matrix4_inverse_at(m, 1, 1);
+    a12 := matrix4_inverse_at(m, 1, 2);
+    a13 := matrix4_inverse_at(m, 1, 3);
+    a20 := matrix4_inverse_at(m, 2, 0);
+    a21 := matrix4_inverse_at(m, 2, 1);
+    a22 := matrix4_inverse_at(m, 2, 2);
+    a23 := matrix4_inverse_at(m, 2, 3);
+    a30 := matrix4_inverse_at(m, 3, 0);
+    a31 := matrix4_inverse_at(m, 3, 1);
+    a32 := matrix4_inverse_at(m, 3, 2);
+    a33 := matrix4_inverse_at(m, 3, 3);
 
     b00 := a00 * a11 - a01 * a10;
     b01 := a00 * a12 - a02 * a10;
@@ -383,7 +391,7 @@ matrix4_c :: (m: Matrix4, col: int) -> Vec4 {
         case 0; return m.c0;
         case 1; return m.c1;
         case 2; return m.c2;
-        case;   return m.c3;
+        case; return m.c3;
     }
 }
 

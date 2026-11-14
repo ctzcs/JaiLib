@@ -13,69 +13,69 @@
 // 焦点框长什么样。零值是 2 像素 accent 色描边、贴着控件边缘。
 // 焦点框在绘制阶段画在焦点控件自身之后，与控件同一层、同一裁剪，不影响布局和命中。
 UI_Focus_Style :: struct {
-    color:  F.Color;  // 描边颜色；零值用主题 accent
-    width:  float32;  // 描边宽度（逻辑像素）；0 用 2
-    offset: float32;  // 相对控件边缘外扩（负数内缩）
+    color: F.Color; // 描边颜色；零值用主题 accent
+    width: float32; // 描边宽度（逻辑像素）；0 用 2
+    offset: float32; // 相对控件边缘外扩（负数内缩）
     // 设置后画这张九宫格贴图代替描边（圆角框、发光、角标等）；颜色作为染色，零值不染色。
     image: F.Subtexture;
     image_source_border, image_border: float32; // 源图片像素 / 逻辑像素，同 ui_nine_slice_decl
     keyboard_only: bool; // 只在导航或 ui_focus 获得的焦点上显示，鼠标点击获得的不画
-    hidden:        bool;
+    hidden: bool;
 }
 
 UI_Theme :: struct {
-    window_bg:     F.Color;
-    panel:         F.Color;
-    panel_border:  F.Color;
-    button:        F.Color;
-    button_hover:  F.Color;
-    button_press:  F.Color;
-    primary:       F.Color; // 主按钮底色（accent 填充）
+    window_bg: F.Color;
+    panel: F.Color;
+    panel_border: F.Color;
+    button: F.Color;
+    button_hover: F.Color;
+    button_press: F.Color;
+    primary: F.Color; // 主按钮底色（accent 填充）
     primary_hover: F.Color;
     primary_press: F.Color;
-    text:          F.Color;
-    text_dim:      F.Color; // 次级文本
+    text: F.Color;
+    text_dim: F.Color; // 次级文本
     text_on_accent: F.Color; // 主按钮上的文字
-    accent:        F.Color;
-    ghost_hover:   F.Color; // 幽灵按钮 hover 蒙层（半透明叠加色）
-    ghost_press:   F.Color;
-    corner_radius:  float32;
-    padding:        u16;
-    body_font_id:   u16;
+    accent: F.Color;
+    ghost_hover: F.Color; // 幽灵按钮 hover 蒙层（半透明叠加色）
+    ghost_press: F.Color;
+    corner_radius: float32;
+    padding: u16;
+    body_font_id: u16;
     body_font_size: u16;
     heading_font_size: u16;
-    small_font_size:   u16;
+    small_font_size: u16;
     focus: UI_Focus_Style;
 }
 
 UI_THEME_DARK :: UI_Theme.{
-    window_bg       = .{ 14, 15, 19, 255 },
-    panel           = .{ 24, 26, 32, 255 },
-    panel_border    = .{ 47, 51, 62, 255 },
-    button          = .{ 42, 46, 56, 255 },
-    button_hover    = .{ 55, 60, 73, 255 },
-    button_press    = .{ 33, 36, 44, 255 },
-    primary         = .{ 62, 109, 232, 255 },
-    primary_hover   = .{ 82, 128, 242, 255 },
-    primary_press   = .{ 48, 86, 196, 255 },
-    text            = .{ 235, 237, 243, 255 },
-    text_dim        = .{ 148, 154, 168, 255 },
-    text_on_accent  = .{ 255, 255, 255, 255 },
-    accent          = .{ 62, 109, 232, 255 },
-    ghost_hover     = .{ 255, 255, 255, 26 },
-    ghost_press     = .{ 255, 255, 255, 46 },
-    corner_radius   = 8,
-    padding         = 10,
-    body_font_id    = 0,
-    body_font_size  = 16,
+    window_bg = .{ 14, 15, 19, 255 },
+    panel = .{ 24, 26, 32, 255 },
+    panel_border = .{ 47, 51, 62, 255 },
+    button = .{ 42, 46, 56, 255 },
+    button_hover = .{ 55, 60, 73, 255 },
+    button_press = .{ 33, 36, 44, 255 },
+    primary = .{ 62, 109, 232, 255 },
+    primary_hover = .{ 82, 128, 242, 255 },
+    primary_press = .{ 48, 86, 196, 255 },
+    text = .{ 235, 237, 243, 255 },
+    text_dim = .{ 148, 154, 168, 255 },
+    text_on_accent = .{ 255, 255, 255, 255 },
+    accent = .{ 62, 109, 232, 255 },
+    ghost_hover = .{ 255, 255, 255, 26 },
+    ghost_press = .{ 255, 255, 255, 46 },
+    corner_radius = 8,
+    padding = 10,
+    body_font_id = 0,
+    body_font_size = 16,
     heading_font_size = 22,
-    small_font_size   = 13,
+    small_font_size = 13,
 }
 
 // clay 颜色换算（F.Color 的 u8 通道 -> clay 的 0..1）。
 ui_clay_color :: (c: F.Color) -> clay.Color {
-    return .[ cast(float32) c.r / 255, cast(float32) c.g / 255,
-               cast(float32) c.b / 255, cast(float32) c.a / 255 ];
+    return .[cast(float32) c.r / 255, cast(float32) c.g / 255,
+               cast(float32) c.b / 255, cast(float32) c.a / 255];
 }
 
 // F.Color 的全零判定（Jai 里 `==` 要求声明它的模块在作用域内，统一走这个助手）。
@@ -95,9 +95,9 @@ ui_clay_border :: (width: u16, color: clay.Color) -> clay.BorderElementConfig {
 //@region 控件
 
 UI_Button_Style :: enum {
-    Normal;  // 常规：深灰底
+    Normal; // 常规：深灰底
     Primary; // 主操作：accent 填充白字
-    Ghost;   // 幽灵：透明底，hover 半透明白
+    Ghost; // 幽灵：透明底，hover 半透明白
 }
 
 // 按钮默认在内部松开时触发；options.trigger = .Press 可保留按下即触发。
@@ -448,9 +448,9 @@ ui_column_decl :: (gap: u16 = 8) -> clay.ElementDeclaration {
 
 // 内容竖排、滚轮滚动、双轴裁剪；width=0 时占满父容器。
 UI_Scroll_Entry :: struct {
-    id:     u32;
+    id: u32;
     offset: clay.Vector2;
-    seen:   bool;
+    seen: bool;
 }
 
 ui_scroll_decl :: (ctx: *UI_Context, id: string, height: float32,
@@ -483,7 +483,7 @@ ui_modal_decl :: (ctx: *UI_Context, id: string) -> clay.ElementDeclaration {
             sizing = .{ width = clay.SizingFixed(ctx.width), height = clay.SizingFixed(ctx.height) },
             childAlignment = .{ x = .CENTER, y = .CENTER },
         },
-        backgroundColor = .[ 0, 0, 0, 0.65 ],
+        backgroundColor = .[0, 0, 0, 0.65],
         floating = .{ attachTo = .ROOT, zIndex = 100, pointerCaptureMode = .CAPTURE },
     };
 }

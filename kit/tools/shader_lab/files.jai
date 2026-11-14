@@ -19,8 +19,8 @@
 sl_is_absolute :: (path: string) -> bool {
     if path.count >= 2 {
         c := path[0];
-        upper := c >= 65 && c <= 90;   // 'A'..'Z'
-        lower := c >= 97 && c <= 122;  // 'a'..'z'
+        upper := c >= 65 && c <= 90; // 'A'..'Z'
+        lower := c >= 97 && c <= 122; // 'a'..'z'
         if (upper || lower) && path[1] == 58 return true; // 58 == ':'
     }
     if path.count >= 1 {
@@ -45,7 +45,12 @@ sl_replace_first :: (text: string, needle: string, replacement: string) -> strin
 }
 //@endregion
 
-File_Action :: enum { None; Texture; Save_Preset; Load_Preset; }
+File_Action :: enum {
+    None;
+    Texture;
+    Save_Preset;
+    Load_Preset;
+}
 
 File_Request :: struct {
     id, generation: u64;
@@ -185,33 +190,33 @@ textures_update :: (s: *Session) {
 // 新建着色器：把能直接编译、满足 D3D12 规则的 .oshader 模板写到 source_root，热重载发现后自动选中。
 // 模板在 templates/ 下，是普通 .oshader，单元测试按游戏同一解析器检查。
 Shader_Template :: enum {
-    Sprite;          // 2D 精灵材质
-    Model;           // 3D 模型材质
+    Sprite; // 2D 精灵材质
+    Model; // 3D 模型材质
     Model_Instanced; // 3D 实例化模型材质
-    Post_Process;    // 2D 后处理：铺满屏幕的精灵材质
+    Post_Process; // 2D 后处理：铺满屏幕的精灵材质
 }
 
 // 模板文件名（文件里的 Shader 名是 "Template"）、新文件的默认名与显示名。
 // olib 在这里 `#load` 模板正文；jacket 0.35.1 没有 `#string #load`，正文改由 new_shader 运行时读取，
 // 这里只给出文件名，text 恒为空（签名保持与 olib 一致）。
 template_source :: (template: Shader_Template) -> (text: string, base: string, label: string) {
-    if template == .Sprite          return "", "NewSprite",         "新 2D 精灵 Shader";
-    if template == .Model           return "", "NewModel",          "新 3D 模型 Shader";
+    if template == .Sprite return "", "NewSprite", "新 2D 精灵 Shader";
+    if template == .Model return "", "NewModel", "新 3D 模型 Shader";
     if template == .Model_Instanced return "", "NewInstancedModel", "新 3D 实例化模型 Shader";
     return "", "NewPostProcess", "新后处理 Shader";
 }
 
 template_file :: (template: Shader_Template) -> string {
-    if template == .Sprite          return "Sprite.oshader";
-    if template == .Model           return "Model.oshader";
+    if template == .Sprite return "Sprite.oshader";
+    if template == .Model return "Model.oshader";
     if template == .Model_Instanced return "Model_Instanced.oshader";
     return "Post_Process.oshader";
 }
 
 // Shader 菜单里的文字：新建的是 .oshader 源文件，要在代码编辑器里改。
 template_menu_label :: (template: Shader_Template) -> string {
-    if template == .Sprite          return "新建 Shader：2D 精灵";
-    if template == .Model           return "新建 Shader：3D 模型";
+    if template == .Sprite return "新建 Shader：2D 精灵";
+    if template == .Model return "新建 Shader：3D 模型";
     if template == .Model_Instanced return "新建 Shader：3D 实例化模型";
     return "新建 Shader：后处理";
 }

@@ -34,12 +34,12 @@ make_cube :: (size: float32, material: DA.Dasset_Material) -> DA.Dasset_Primitiv
     h := size * 0.5;
     // 每面：法线 n 与面内两轴 u、v（u × v = n，保证外侧看 CCW）
     faces: [6][3][3] float32;
-    faces[0] = .[ .[1, 0, 0],  .[0, 0, -1], .[0, 1, 0] ];
-    faces[1] = .[ .[-1, 0, 0], .[0, 0, 1],  .[0, 1, 0] ];
-    faces[2] = .[ .[0, 1, 0],  .[1, 0, 0],  .[0, 0, -1] ];
-    faces[3] = .[ .[0, -1, 0], .[1, 0, 0],  .[0, 0, 1] ];
-    faces[4] = .[ .[0, 0, 1],  .[1, 0, 0],  .[0, 1, 0] ];
-    faces[5] = .[ .[0, 0, -1], .[-1, 0, 0], .[0, 1, 0] ];
+    faces[0] = .[.[1, 0, 0], .[0, 0, -1], .[0, 1, 0]];
+    faces[1] = .[.[-1, 0, 0], .[0, 0, 1], .[0, 1, 0]];
+    faces[2] = .[.[0, 1, 0], .[1, 0, 0], .[0, 0, -1]];
+    faces[3] = .[.[0, -1, 0], .[1, 0, 0], .[0, 0, 1]];
+    faces[4] = .[.[0, 0, 1], .[1, 0, 0], .[0, 1, 0]];
+    faces[5] = .[.[0, 0, -1], .[-1, 0, 0], .[0, 1, 0]];
     corners: [4][2] float32;
     corners[0] = .[-1, -1];
     corners[1] = .[1, -1];
@@ -62,9 +62,9 @@ make_cube :: (size: float32, material: DA.Dasset_Material) -> DA.Dasset_Primitiv
             pos := sl_v3_scale(sl_v3_add(n, sl_v3_add(sl_v3_scale(u, c[0]), sl_v3_scale(v, c[1]))), h);
             p.vertices[f * 4 + i] = DA.Dasset_Vertex.{
                 position = pos,
-                normal   = n,
-                uv       = .[ (c[0] + 1) * 0.5, (1 - c[1]) * 0.5 ],
-                tangent  = .[ u[0], u[1], u[2], 1 ],
+                normal = n,
+                uv = .[(c[0] + 1) * 0.5, (1 - c[1]) * 0.5],
+                tangent = .[u[0], u[1], u[2], 1],
             };
         }
         base := f * 4;
@@ -95,9 +95,9 @@ make_sphere :: (radius: float32, rings: int, segments: int, material: DA.Dasset_
             n := sl_v3(JM.sin(theta) * JM.cos(phi), JM.cos(theta), JM.sin(theta) * JM.sin(phi));
             p.vertices[ring * (segments + 1) + seg] = DA.Dasset_Vertex.{
                 position = sl_v3_scale(n, radius),
-                normal   = n,
-                uv       = .[ cast(float32) seg / cast(float32) segments, cast(float32) ring / cast(float32) rings ],
-                tangent  = .[ -JM.sin(phi), 0, JM.cos(phi), 1 ],
+                normal = n,
+                uv = .[cast(float32) seg / cast(float32) segments, cast(float32) ring / cast(float32) rings],
+                tangent = .[-JM.sin(phi), 0, JM.cos(phi), 1],
             };
         }
     }
@@ -105,7 +105,7 @@ make_sphere :: (radius: float32, rings: int, segments: int, material: DA.Dasset_
     for ring: 0..rings - 1 {
         for seg: 0..segments - 1 {
             a := cast(u32) (ring * (segments + 1) + seg); // a b  （ring 向下、seg 绕 +Y 转向 -Z 侧）
-            b := a + 1;                                   // d c
+            b := a + 1; // d c
             d := a + cast(u32) (segments + 1);
             c := d + 1;
             p.indices[i + 0] = a;

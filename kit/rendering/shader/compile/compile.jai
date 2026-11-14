@@ -198,7 +198,9 @@ identify_tool :: (requested: string, fallback: string) -> (tool: Tool, error: st
         free(entry.data);
     }
     if siblings.data != null free(siblings.data);
-    SORT.quick_sort(files, (a: string, b: string) -> s64 { return SORT.compare_strings(a, b); });
+    SORT.quick_sort(files, (a: string, b: string) -> s64 {
+        return SORT.compare_strings(a, b);
+    });
 
     h: u64 = 0xcbf29ce484222325;
     failure: string;
@@ -228,7 +230,7 @@ identify_tool :: (requested: string, fallback: string) -> (tool: Tool, error: st
 // base 为带阶段名、不带扩展名的输出路径。始终先生成 SPIR-V（包括 Direct 的资源反射）。
 // 返回的每一行都是独立拥有的 [] string，用 command_list_free 释放。
 commands :: (tc: Toolchain, source: string, include: string, stage: string, base: string,
-             dxil: bool, msl: bool, allocator_in: Allocator = context.allocator) -> [] [] string {
+             dxil: bool, msl: bool, allocator_in: Allocator = context.allocator) -> [][] string {
     allocator := allocator_in;
     push_allocator(allocator);
 
@@ -255,7 +257,7 @@ commands :: (tc: Toolchain, source: string, include: string, stage: string, base
                                      "-e", entry, "-o", tprint("%.msl", base)));
     }
 
-    result: [] [] string;
+    result: [][] string;
     result, _ = NewArray(list.count, [] string);
     for row, i: list result[i] = row;
     if list.data != null free(list.data);
@@ -271,7 +273,7 @@ command_make :: (arguments: ..string) -> [] string {
 }
 
 // commands 的结果释放（olib 侧 delete(rows)）。
-command_list_free :: (rows: [] [] string, allocator: Allocator = context.allocator) {
+command_list_free :: (rows: [][] string, allocator: Allocator = context.allocator) {
     for row: rows {
         for argument: row if argument.data != null allocator.proc(.FREE, 0, 0, argument.data, allocator.data);
         if row.data != null allocator.proc(.FREE, 0, 0, row.data, allocator.data);

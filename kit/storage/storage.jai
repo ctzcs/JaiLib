@@ -31,29 +31,29 @@
 // Web 目标没有存储后端，直接不提供——与 olib 里 Web 侧 CreateDirectory 必然失败的等价。
 #if OS != .WASM {
 
-// olib 的回调类型 `proc(storage: ^foster.DirectoryStorage, userdata: rawptr)`。
-// Jai 的过程类型必须先在作用域里有名字，才可作为参数类型，故这里立 Storage_Use。
-// 参数顺序（storage, userdata）与 olib 相同；*void 对应 rawptr。
-Storage_Use :: (storage: *F.Storage_Container, userdata: *void);
+    // olib 的回调类型 `proc(storage: ^foster.DirectoryStorage, userdata: rawptr)`。
+    // Jai 的过程类型必须先在作用域里有名字，才可作为参数类型，故这里立 Storage_Use。
+    // 参数顺序（storage, userdata）与 olib 相同；*void 对应 rawptr。
+    Storage_Use :: (storage: *F.Storage_Container, userdata: *void);
 
-// 打开用户存储执行 use 后立即释放（桌面和 Web 均同步调用；true 表示打开成功，读写结果由 use 检查）。
-// use 内部完成全部读写；不要把 storage 带出回调。
-// Jai 侧：Web 目标没有存储后端，本过程只在桌面目标下存在（见上面的 #if）。
-with_user_storage :: (app_name: string, use: Storage_Use, userdata: *void = null) -> bool {
-    root := user_root(app_name);
-    if root == "" return false;
-    defer storage_free(root, context.allocator);
+    // 打开用户存储执行 use 后立即释放（桌面和 Web 均同步调用；true 表示打开成功，读写结果由 use 检查）。
+    // use 内部完成全部读写；不要把 storage 带出回调。
+    // Jai 侧：Web 目标没有存储后端，本过程只在桌面目标下存在（见上面的 #if）。
+    with_user_storage :: (app_name: string, use: Storage_Use, userdata: *void = null) -> bool {
+        root := user_root(app_name);
+        if root == "" return false;
+        defer storage_free(root, context.allocator);
 
-    // olib: foster.DirectoryStorageInit(&ds, root, true)
-    // jfoster 没有 DirectoryStorageInit，容器就地构造（Root 借用 root，不复制）。
-    ds: F.Storage_Container;
-    ds.Root = root;
-    ds.Writable = true;
-    use(*ds, userdata);
-    return true;
-}
+        // olib: foster.DirectoryStorageInit(&ds, root, true)
+        // jfoster 没有 DirectoryStorageInit，容器就地构造（Root 借用 root，不复制）。
+        ds: F.Storage_Container;
+        ds.Root = root;
+        ds.Writable = true;
+        use(*ds, userdata);
+        return true;
+    }
 
-}  // #if OS != .WASM
+} // #if OS != .WASM
 
 // 用户数据内某文件的路径（temp 分配）；Web 为虚拟路径，不能传给系统文件 API。
 // 根不可用时返回空字符串，不回退到当前工作目录。

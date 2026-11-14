@@ -20,10 +20,11 @@
 // 这三者只在桌面目标下存在（jfoster 依赖 SDL，System 只写桌面平台），
 // 所以和 olib 的 `#+build !js` 一样放进条件里：`-os wasm` 走 storage_web.jai 的空实现。
 #import "Basic";
+
 #if OS != .WASM {
-F :: #import "foster";
-FILE :: #import "File";
-SYS :: #import "System";
+    F :: #import "foster";
+    FILE :: #import "File";
+    SYS :: #import "System";
 }
 
 #load "storage.jai";

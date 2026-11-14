@@ -12,21 +12,53 @@ Rect :: struct {
 
 Rect_Empty :: Rect.{ 0, 0, 0, 0 };
 
-rect_position :: (r: Rect) -> Vector2 { return .{ r.x, r.y }; }
-rect_size     :: (r: Rect) -> Vector2 { return .{ r.w, r.h }; }
+rect_position :: (r: Rect) -> Vector2 {
+    return .{ r.x, r.y };
+}
 
-rect_left   :: (r: Rect) -> float { return r.x; }
-rect_right  :: (r: Rect) -> float { return r.x + r.w; }
-rect_top    :: (r: Rect) -> float { return r.y; }
-rect_bottom :: (r: Rect) -> float { return r.y + r.h; }
+rect_size :: (r: Rect) -> Vector2 {
+    return .{ r.w, r.h };
+}
 
-rect_center  :: (r: Rect) -> Vector2 { return .{ r.x + r.w / 2, r.y + r.h / 2 }; }
-rect_top_left     :: (r: Rect) -> Vector2 { return .{ r.x, r.y }; }
-rect_top_right    :: (r: Rect) -> Vector2 { return .{ r.x + r.w, r.y }; }
-rect_bottom_left  :: (r: Rect) -> Vector2 { return .{ r.x, r.y + r.h }; }
-rect_bottom_right :: (r: Rect) -> Vector2 { return .{ r.x + r.w, r.y + r.h }; }
+rect_left :: (r: Rect) -> float {
+    return r.x;
+}
 
-rect_is_empty :: (r: Rect) -> bool { return r.w == 0 && r.h == 0; }
+rect_right :: (r: Rect) -> float {
+    return r.x + r.w;
+}
+
+rect_top :: (r: Rect) -> float {
+    return r.y;
+}
+
+rect_bottom :: (r: Rect) -> float {
+    return r.y + r.h;
+}
+
+rect_center :: (r: Rect) -> Vector2 {
+    return .{ r.x + r.w / 2, r.y + r.h / 2 };
+}
+
+rect_top_left :: (r: Rect) -> Vector2 {
+    return .{ r.x, r.y };
+}
+
+rect_top_right :: (r: Rect) -> Vector2 {
+    return .{ r.x + r.w, r.y };
+}
+
+rect_bottom_left :: (r: Rect) -> Vector2 {
+    return .{ r.x, r.y + r.h };
+}
+
+rect_bottom_right :: (r: Rect) -> Vector2 {
+    return .{ r.x + r.w, r.y + r.h };
+}
+
+rect_is_empty :: (r: Rect) -> bool {
+    return r.w == 0 && r.h == 0;
+}
 
 rect_contains :: (r: Rect, px: float, py: float) -> bool {
     return px >= r.x && px < r.x + r.w && py >= r.y && py < r.y + r.h;
@@ -49,7 +81,18 @@ rect_get_intersection :: (a: Rect, b: Rect) -> Rect {
     return .{ x1, y1, x2 - x1, y2 - y1 };
 }
 
-operator == :: (a: Rect, b: Rect) -> bool { return a.x == b.x && a.y == b.y && a.w == b.w && a.h == b.h; }
-operator != :: (a: Rect, b: Rect) -> bool { return !(a == b); }
-operator + :: (a: Rect, b: Vector2) -> Rect { return .{ a.x + b.x, a.y + b.y, a.w, a.h }; }
-operator - :: (a: Rect, b: Vector2) -> Rect { return .{ a.x - b.x, a.y - b.y, a.w, a.h }; }
+operator == :: (a: Rect, b: Rect) -> bool {
+    return a.x == b.x && a.y == b.y && a.w == b.w && a.h == b.h;
+}
+
+operator != :: (a: Rect, b: Rect) -> bool {
+    return !(a == b);
+}
+
+operator + :: (a: Rect, b: Vector2) -> Rect {
+    return .{ a.x + b.x, a.y + b.y, a.w, a.h };
+}
+
+operator - :: (a: Rect, b: Vector2) -> Rect {
+    return .{ a.x - b.x, a.y - b.y, a.w, a.h };
+}

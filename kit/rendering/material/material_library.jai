@@ -58,6 +58,7 @@ Material_Shader :: struct {
     gpu: [] *F.Material;
     ready: bool;
 }
+
 Material_Texture :: struct {
     path: string;
     texture: *F.Texture;

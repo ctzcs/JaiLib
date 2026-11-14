@@ -40,28 +40,28 @@ Material_Binding :: struct {
 // 出错时不会发出任何 Draw，调用方可用 draw_error_text 得到可读说明。
 Draw_Error :: enum {
     None;
-    Missing_Device;          // 没有图形设备
-    Missing_Material;        // 精灵/模型没有材质，或材质尚未成功加载
-    Device_Mismatch;         // 材质属于另一个设备
-    Missing_Mesh;            // 没有可绘制的网格
-    Invalid_Target;          // 绘制目标尺寸无效
-    Not_Material_Shader;     // Shader 不是 Sprite/Model 对象材质
-    Too_Many_Passes;         // Shader 没有 Pass 或超过 MAX_PASSES
-    Unknown_Pass;            // 指定的 Pass ID 不存在
-    Wrong_Pass_Kind;         // Pass 种类与本次绘制（Sprite/Model）不符
-    Missing_Binding;         // 某个 Pass 的参数组没有绑定
-    Invalid_Binding;         // 绑定的 Shader、数值或贴图不完整
-    Missing_Sprite_Texture;  // Pass 需要当前帧贴图，但没有提供或字段不是 Texture
+    Missing_Device; // 没有图形设备
+    Missing_Material; // 精灵/模型没有材质，或材质尚未成功加载
+    Device_Mismatch; // 材质属于另一个设备
+    Missing_Mesh; // 没有可绘制的网格
+    Invalid_Target; // 绘制目标尺寸无效
+    Not_Material_Shader; // Shader 不是 Sprite/Model 对象材质
+    Too_Many_Passes; // Shader 没有 Pass 或超过 MAX_PASSES
+    Unknown_Pass; // 指定的 Pass ID 不存在
+    Wrong_Pass_Kind; // Pass 种类与本次绘制（Sprite/Model）不符
+    Missing_Binding; // 某个 Pass 的参数组没有绑定
+    Invalid_Binding; // 绑定的 Shader、数值或贴图不完整
+    Missing_Sprite_Texture; // Pass 需要当前帧贴图，但没有提供或字段不是 Texture
     Instance_Buffer_Required; // r2d/r3d.buffer 传了未创建的缓冲，或自动实例化的缓冲创建失败
-    Not_Instanced_Shader;    // 用实例缓冲绘制，但 Shader 没有声明 instanced
-    Instance_Mismatch;       // 实例缓冲的字段数与 Shader 的 [Instance] 字段数不一致
-    Unsupported_Mesh;        // 网格顶点格式与本次静态/蒙皮绘制入口不符
-    Missing_View_Matrix;     // 3D 视图没有设置视矩阵（view_matrix 为零矩阵）
-    View_Globals_Too_Large;  // 视图块超过 VIEW_GLOBALS_SIZE 字节
+    Not_Instanced_Shader; // 用实例缓冲绘制，但 Shader 没有声明 instanced
+    Instance_Mismatch; // 实例缓冲的字段数与 Shader 的 [Instance] 字段数不一致
+    Unsupported_Mesh; // 网格顶点格式与本次静态/蒙皮绘制入口不符
+    Missing_View_Matrix; // 3D 视图没有设置视矩阵（view_matrix 为零矩阵）
+    View_Globals_Too_Large; // 视图块超过 VIEW_GLOBALS_SIZE 字节
 
-    Skin_Mismatch;           // 蒙皮入口与 Shader 声明不符，或请求了不支持的蒙皮实例化
+    Skin_Mismatch; // 蒙皮入口与 Shader 声明不符，或请求了不支持的蒙皮实例化
 
-    Invalid_Joint_Palette;   // 蒙皮 palette 必须有 1..128 个矩阵
+    Invalid_Joint_Palette; // 蒙皮 palette 必须有 1..128 个矩阵
 }
 
 draw_error_text :: (error: Draw_Error) -> string {
@@ -123,28 +123,44 @@ BLEND_MODE_DISABLED :: F.Blend_Mode.{
 pass_state_apply :: (command: *F.Draw_Command, state: sh.Pass_State) {
     if state.cull == {
         case .Default;
-        case .None;  command.CullMode = .NONE;
+        case .None; command.CullMode = .NONE;
         case .Front; command.CullMode = .FRONT;
-        case .Back;  command.CullMode = .BACK;
+        case .Back; command.CullMode = .BACK;
     }
     if state.blend == {
         case .Default;
-        case .Opaque;        command.BlendMode = BLEND_MODE_DISABLED;
-        case .Alpha;         command.BlendMode = F.Blend_Mode_NonPremultiplied;
+        case .Opaque; command.BlendMode = BLEND_MODE_DISABLED;
+        case .Alpha; command.BlendMode = F.Blend_Mode_NonPremultiplied;
         case .Premultiplied; command.BlendMode = F.Blend_Mode_Premultiply;
-        case .Additive;      command.BlendMode = F.blend_mode_make(.ADD, .ONE, .ONE);
+        case .Additive; command.BlendMode = F.blend_mode_make(.ADD, .ONE, .ONE);
     }
     if state.depth == {
         case .Default;
         case .Off;
-        case .Less;          command.DepthTestEnabled = true; command.DepthCompare = .LESS;
-        case .Less_Equal;    command.DepthTestEnabled = true; command.DepthCompare = .LESS_OR_EQUAL;
-        case .Equal;         command.DepthTestEnabled = true; command.DepthCompare = .EQUAL;
-        case .Always;        command.DepthTestEnabled = true; command.DepthCompare = .ALWAYS;
-        case .Greater;       command.DepthTestEnabled = true; command.DepthCompare = .GREATER;
-        case .Greater_Equal; command.DepthTestEnabled = true; command.DepthCompare = .GREATER_OR_EQUAL;
-        case .Not_Equal;     command.DepthTestEnabled = true; command.DepthCompare = .NOT_EQUAL;
-        case .Never;         command.DepthTestEnabled = true; command.DepthCompare = .NEVER;
+        case .Less;
+            command.DepthTestEnabled = true;
+            command.DepthCompare = .LESS;
+        case .Less_Equal;
+            command.DepthTestEnabled = true;
+            command.DepthCompare = .LESS_OR_EQUAL;
+        case .Equal;
+            command.DepthTestEnabled = true;
+            command.DepthCompare = .EQUAL;
+        case .Always;
+            command.DepthTestEnabled = true;
+            command.DepthCompare = .ALWAYS;
+        case .Greater;
+            command.DepthTestEnabled = true;
+            command.DepthCompare = .GREATER;
+        case .Greater_Equal;
+            command.DepthTestEnabled = true;
+            command.DepthCompare = .GREATER_OR_EQUAL;
+        case .Not_Equal;
+            command.DepthTestEnabled = true;
+            command.DepthCompare = .NOT_EQUAL;
+        case .Never;
+            command.DepthTestEnabled = true;
+            command.DepthCompare = .NEVER;
     }
     if state.depth == .Off command.DepthTestEnabled = false;
     if state.depth_write != .Default command.DepthWriteEnabled = state.depth_write == .On;

@@ -21,18 +21,18 @@
 // Progress 非过渡状态下恒为 1；过渡期间渲染代码可同时绘制 Previous 与
 // Current 两屏做过渡效果。
 Scene_Router :: struct(Screen: Type) {
-    Current:       Screen;
-    Previous:      Screen;
+    Current: Screen;
+    Previous: Screen;
     Transitioning: bool;
-    Progress:      float32; // 0..1
+    Progress: float32; // 0..1
 
     duration: float32;
-    elapsed:  float32;
+    elapsed: float32;
 }
 
 scene_router_init :: (r: *Scene_Router($Screen), initial: Screen) {
     r.* = .{
-        Current  = initial,
+        Current = initial,
         Previous = initial,
         Progress = 1,
     };
@@ -67,5 +67,7 @@ scene_router_update :: (r: *Scene_Router($Screen), dt: float32) {
     } else {
         r.Progress = clamp(r.elapsed / r.duration, 0, 1);
     }
-    if r.Progress >= 1 { r.Transitioning = false; }
+    if r.Progress >= 1 {
+        r.Transitioning = false;
+    }
 }

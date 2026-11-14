@@ -92,85 +92,85 @@ Virtual_Input_Kind :: enum {
 
 // Foster: VirtualDevice.IndexModes
 Virtual_Device_Index_Mode :: enum {
-    MANUAL;             // ControllerIndex is assigned by hand
-    AUTOMATIC_LATEST;   // follow the most recently used controller
+    MANUAL; // ControllerIndex is assigned by hand
+    AUTOMATIC_LATEST; // follow the most recently used controller
 }
 
 // Foster: VirtualAction
 Virtual_Action :: struct {
-    Set:      *Action_Binding_Set;
-    Set_Owned: bool;              // Set was allocated by virtual_action_create_empty
+    Set: *Action_Binding_Set;
+    Set_Owned: bool; // Set was allocated by virtual_action_create_empty
 
-    RepeatDelay:    float;        // seconds before the first repeat
-    RepeatInterval: float;        // seconds between repeats
-    Buffer:         float;        // input buffer, in seconds
+    RepeatDelay: float; // seconds before the first repeat
+    RepeatInterval: float; // seconds between repeats
+    Buffer: float; // input buffer, in seconds
 
-    Pressed:        bool;         // pressed this frame (or still inside the buffer)
-    PressConsumed:  bool;
-    Down:           bool;         // currently held
-    Released:       bool;         // released this frame
-    Repeated:       bool;         // repeated this frame
+    Pressed: bool; // pressed this frame (or still inside the buffer)
+    PressConsumed: bool;
+    Down: bool; // currently held
+    Released: bool; // released this frame
+    Repeated: bool; // repeated this frame
 
-    Value:           float;       // 0..1
-    ValueNoDeadzone: float;       // C# declares it and never writes it: always 0
-    LastPressTimestamp: float64;  // seconds of the last real press
+    Value: float; // 0..1
+    ValueNoDeadzone: float; // C# declares it and never writes it: always 0
+    LastPressTimestamp: float64; // seconds of the last real press
 }
 
 // Foster: VirtualAxis
 Virtual_Axis :: struct {
-    Set:      *Axis_Binding_Set;
+    Set: *Axis_Binding_Set;
     Set_Owned: bool;
 
-    RepeatDelay:    float;
+    RepeatDelay: float;
     RepeatInterval: float;
 
-    Value:      float;   // -1..1
-    IntValue:   s32;     // sign of Value
-    PressedSign: s32;    // sign of the press this frame (0 if none)
+    Value: float; // -1..1
+    IntValue: s32; // sign of Value
+    PressedSign: s32; // sign of the press this frame (0 if none)
 
-    Repeated: bool;      // a repeat produced a press this frame
+    Repeated: bool; // a repeat produced a press this frame
     LastPressTimestamp: float64;
     last_down_sign: s32; // private repeat bookkeeping
 }
 
 // Foster: VirtualStick
 Virtual_Stick :: struct {
-    Set:      *Stick_Binding_Set;
+    Set: *Stick_Binding_Set;
     Set_Owned: bool;
 
-    Value:    Vector2;
-    IntValue: Point2;    // sign of Value per axis
-    PressedLeft:  bool;
+    Value: Vector2;
+    IntValue: Point2; // sign of Value per axis
+    PressedLeft: bool;
     PressedRight: bool;
-    PressedUp:    bool;
-    PressedDown:  bool;
+    PressedUp: bool;
+    PressedDown: bool;
 }
 
 // Foster: VirtualDevice
 Virtual_Device :: struct {
     IndexMode: Virtual_Device_Index_Mode;
-    Inputs:    [..] *Virtual_Input;   // C#: ReadOnlyCollection<VirtualInput>
+    Inputs: [..] *Virtual_Input; // C#: ReadOnlyCollection<VirtualInput>
 
     // C#: the protected virtual Controller*Changed() hooks
     on_controller_index_changed: (data: *void, device: *Virtual_Input) = null;
-    on_controller_connected:     (data: *void, device: *Virtual_Input) = null;
-    on_controller_disconnected:  (data: *void, device: *Virtual_Input) = null;
+    on_controller_connected: (data: *void, device: *Virtual_Input) = null;
+    on_controller_disconnected: (data: *void, device: *Virtual_Input) = null;
     callbacks_data: *void = null;
 }
 
 // Foster: VirtualInput (the abstract base class)
 Virtual_Input :: struct {
-    Kind:            Virtual_Input_Kind;
-    Manager:         *Input;      // the input manager we belong to (C# `Input`, renamed: the field would shadow the type)
-    Name:            string;
-    ControllerIndex: s32;         // which controller we are subscribed to
-    Active:          bool = true; // Update is only called when true
-    IsDisposed:      bool;
+    Kind: Virtual_Input_Kind;
+    Manager: *Input; // the input manager we belong to (C# `Input`, renamed: the field would shadow the type)
+    Name: string;
+    ControllerIndex: s32; // which controller we are subscribed to
+    Active: bool = true; // Update is only called when true
+    IsDisposed: bool;
 
     Data: union {
         Action: Virtual_Action;
-        Axis:   Virtual_Axis;
-        Stick:  Virtual_Stick;
+        Axis: Virtual_Axis;
+        Stick: Virtual_Stick;
         Device: Virtual_Device;
     }
 }
@@ -205,9 +205,9 @@ virtual_inputs_count :: () -> s32 {
 virtual_input_create :: (kind: Virtual_Input_Kind, input: *Input, name: string, controller_index: s32) -> *Virtual_Input {
     v := New(Virtual_Input);
     v.* = .{
-        Kind            = kind,
-        Manager         = input,
-        Name            = name,
+        Kind = kind,
+        Manager = input,
+        Name = name,
         ControllerIndex = controller_index,
     };
     v.Active = true;
@@ -243,8 +243,8 @@ virtual_input_update :: (v: *Virtual_Input, time: Time) {
     if v == null || v.IsDisposed return;
     if v.Kind == {
         case .ACTION; virtual_action_update(v, time);
-        case .AXIS;   virtual_axis_update(v, time);
-        case .STICK;  virtual_stick_update(v, time);
+        case .AXIS; virtual_axis_update(v, time);
+        case .STICK; virtual_stick_update(v, time);
         case .DEVICE; virtual_device_update(v, time);
     }
 }
@@ -254,10 +254,10 @@ virtual_input_update :: (v: *Virtual_Input, time: Time) {
 // application never calls this itself; it stays public so a caller that drives
 // its own `Input` outside App (tests, tools) can step one by hand.
 virtual_inputs_update :: (input: *Input, time: Time) {
-    for i: 0..virtual_inputs.count-1 {
+    for i: 0..virtual_inputs.count - 1 {
         v := virtual_inputs[i];
         if v == null || v.IsDisposed continue;
-        if v.Manager != input continue;         // C# kept a registry per Input
+        if v.Manager != input continue; // C# kept a registry per Input
         if v.Active virtual_input_update(v, time);
     }
 }
@@ -269,7 +269,7 @@ virtual_input_destroy :: (v: *Virtual_Input) {
     if v.Kind == .DEVICE {
         d := *v.Data.Device;
         // children first, like VirtualDevice.Dispose(bool)
-        for i: 0..d.Inputs.count-1 {
+        for i: 0..d.Inputs.count - 1 {
             child := d.Inputs[i];
             if child != null virtual_input_destroy(child);
         }
@@ -315,7 +315,7 @@ virtual_action_create :: (input: *Input, name: string, set: *Action_Binding_Set,
                           controller_index: s32 = 0, buffer: float = 0) -> *Virtual_Input {
     v := virtual_input_create(.ACTION, input, name, controller_index);
     a := *v.Data.Action;
-    a.Set    = set;
+    a.Set = set;
     a.Buffer = buffer;
     return v;
 }
@@ -349,10 +349,10 @@ virtual_action_update :: (v: *Virtual_Input, time: Time) {
 
     state := action_binding_set_get_state(a.Set, v.Manager, v.ControllerIndex);
 
-    a.Pressed  = state.Pressed;
+    a.Pressed = state.Pressed;
     a.Released = state.Released;
-    a.Down     = state.Down;
-    a.Value    = state.Value;
+    a.Down = state.Down;
+    a.Value = state.Value;
     a.Repeated = false;
 
     if a.Pressed {
@@ -360,14 +360,14 @@ virtual_action_update :: (v: *Virtual_Input, time: Time) {
         a.LastPressTimestamp = time.elapsed;
     } else if !a.PressConsumed && a.LastPressTimestamp > 0 &&
               (time.elapsed - a.LastPressTimestamp) < cast(float64) a.Buffer {
-        a.Pressed = true;   // still inside the input buffer
+        a.Pressed = true; // still inside the input buffer
     }
 
     // repeating logic
     if !a.Pressed && a.Down && a.RepeatInterval > 0 &&
        (time.elapsed - a.LastPressTimestamp) > cast(float64) a.RepeatDelay {
         if virtual_input_repeat_due(time, a.LastPressTimestamp, a.RepeatDelay, a.RepeatInterval) {
-            a.Pressed  = true;
+            a.Pressed = true;
             a.Repeated = true;
         }
     }
@@ -388,13 +388,13 @@ virtual_action_manual_update :: (v: *Virtual_Input, time: Time, down: bool) {
     }
 
     a.Released = !down && a.Down;
-    a.Down     = down;
+    a.Down = down;
 
     // repeating logic
     if !a.Pressed && down && a.RepeatInterval > 0 &&
        (time.elapsed - a.LastPressTimestamp) > cast(float64) a.RepeatDelay {
         if virtual_input_repeat_due(time, a.LastPressTimestamp, a.RepeatDelay, a.RepeatInterval) {
-            a.Pressed  = true;
+            a.Pressed = true;
             a.Repeated = true;
         }
     }
@@ -416,23 +416,54 @@ virtual_action_consume_press :: (v: *Virtual_Input) -> bool {
 virtual_action_clear :: (v: *Virtual_Input) {
     if v == null || v.Kind != .ACTION return;
     a := *v.Data.Action;
-    a.Pressed       = false;
-    a.Released      = false;
+    a.Pressed = false;
+    a.Released = false;
     a.PressConsumed = true;
-    a.Down          = false;
-    a.Repeated      = false;
-    a.Value         = 0;
+    a.Down = false;
+    a.Repeated = false;
+    a.Value = 0;
 }
 
 // Foster: the VirtualAction properties
-virtual_action_pressed   :: (v: *Virtual_Input) -> bool { if v == null || v.Kind != .ACTION return false; return (*v.Data.Action).Pressed; }
-virtual_action_down      :: (v: *Virtual_Input) -> bool { if v == null || v.Kind != .ACTION return false; return (*v.Data.Action).Down; }
-virtual_action_released  :: (v: *Virtual_Input) -> bool { if v == null || v.Kind != .ACTION return false; return (*v.Data.Action).Released; }
-virtual_action_repeated  :: (v: *Virtual_Input) -> bool { if v == null || v.Kind != .ACTION return false; return (*v.Data.Action).Repeated; }
-virtual_action_value     :: (v: *Virtual_Input) -> float { if v == null || v.Kind != .ACTION return 0; return (*v.Data.Action).Value; }
-virtual_action_value_no_deadzone :: (v: *Virtual_Input) -> float { if v == null || v.Kind != .ACTION return 0; return (*v.Data.Action).ValueNoDeadzone; }
-virtual_action_press_consumed :: (v: *Virtual_Input) -> bool { if v == null || v.Kind != .ACTION return false; return (*v.Data.Action).PressConsumed; }
-virtual_action_last_press_timestamp :: (v: *Virtual_Input) -> float64 { if v == null || v.Kind != .ACTION return 0; return (*v.Data.Action).LastPressTimestamp; }
+virtual_action_pressed :: (v: *Virtual_Input) -> bool {
+    if v == null || v.Kind != .ACTION return false;
+    return (*v.Data.Action).Pressed;
+}
+
+virtual_action_down :: (v: *Virtual_Input) -> bool {
+    if v == null || v.Kind != .ACTION return false;
+    return (*v.Data.Action).Down;
+}
+
+virtual_action_released :: (v: *Virtual_Input) -> bool {
+    if v == null || v.Kind != .ACTION return false;
+    return (*v.Data.Action).Released;
+}
+
+virtual_action_repeated :: (v: *Virtual_Input) -> bool {
+    if v == null || v.Kind != .ACTION return false;
+    return (*v.Data.Action).Repeated;
+}
+
+virtual_action_value :: (v: *Virtual_Input) -> float {
+    if v == null || v.Kind != .ACTION return 0;
+    return (*v.Data.Action).Value;
+}
+
+virtual_action_value_no_deadzone :: (v: *Virtual_Input) -> float {
+    if v == null || v.Kind != .ACTION return 0;
+    return (*v.Data.Action).ValueNoDeadzone;
+}
+
+virtual_action_press_consumed :: (v: *Virtual_Input) -> bool {
+    if v == null || v.Kind != .ACTION return false;
+    return (*v.Data.Action).PressConsumed;
+}
+
+virtual_action_last_press_timestamp :: (v: *Virtual_Input) -> float64 {
+    if v == null || v.Kind != .ACTION return 0;
+    return (*v.Data.Action).LastPressTimestamp;
+}
 
 //
 // VirtualAxis
@@ -473,8 +504,8 @@ virtual_axis_update :: (v: *Virtual_Input, time: Time) {
     a := *v.Data.Axis;
     if a.Set == null return;
 
-    a.Value       = axis_binding_set_value(a.Set, v.Manager, v.ControllerIndex);
-    a.IntValue    = binding_sign_f32(a.Value);
+    a.Value = axis_binding_set_value(a.Set, v.Manager, v.ControllerIndex);
+    a.IntValue = binding_sign_f32(a.Value);
     a.PressedSign = axis_binding_set_pressed_sign(a.Set, v.Manager, v.ControllerIndex);
 
     // repeating logic
@@ -491,7 +522,7 @@ virtual_axis_update :: (v: *Virtual_Input, time: Time) {
               (time.elapsed - a.LastPressTimestamp) > cast(float64) a.RepeatDelay {
         if virtual_input_repeat_due(time, a.LastPressTimestamp, a.RepeatDelay, a.RepeatInterval) {
             a.PressedSign = a.last_down_sign;
-            a.Repeated    = true;
+            a.Repeated = true;
         }
     }
 }
@@ -503,7 +534,7 @@ virtual_axis_manual_update :: (v: *Virtual_Input, time: Time, value: float) {
 
     prev_int_value := a.IntValue;
 
-    a.Value    = value;
+    a.Value = value;
     a.IntValue = binding_sign_f32(a.Value);
 
     if a.IntValue != 0 && a.IntValue != prev_int_value a.PressedSign = a.IntValue;
@@ -521,7 +552,7 @@ virtual_axis_manual_update :: (v: *Virtual_Input, time: Time, value: float) {
               (time.elapsed - a.LastPressTimestamp) > cast(float64) a.RepeatDelay {
         if virtual_input_repeat_due(time, a.LastPressTimestamp, a.RepeatDelay, a.RepeatInterval) {
             a.PressedSign = a.last_down_sign;
-            a.Repeated    = true;
+            a.Repeated = true;
         }
     }
 }
@@ -530,20 +561,48 @@ virtual_axis_manual_update :: (v: *Virtual_Input, time: Time, value: float) {
 virtual_axis_clear :: (v: *Virtual_Input) {
     if v == null || v.Kind != .AXIS return;
     a := *v.Data.Axis;
-    a.Value       = 0;
-    a.IntValue    = 0;
+    a.Value = 0;
+    a.IntValue = 0;
     a.PressedSign = 0;
 }
 
 // Foster: the VirtualAxis properties
-virtual_axis_value            :: (v: *Virtual_Input) -> float { if v == null || v.Kind != .AXIS return 0; return (*v.Data.Axis).Value; }
-virtual_axis_int_value        :: (v: *Virtual_Input) -> s32   { if v == null || v.Kind != .AXIS return 0; return (*v.Data.Axis).IntValue; }
-virtual_axis_pressed_sign     :: (v: *Virtual_Input) -> s32   { if v == null || v.Kind != .AXIS return 0; return (*v.Data.Axis).PressedSign; }
-virtual_axis_pressed          :: (v: *Virtual_Input) -> bool  { return virtual_axis_pressed_sign(v) != 0; }
-virtual_axis_pressed_negative :: (v: *Virtual_Input) -> bool  { return virtual_axis_pressed_sign(v) < 0; }
-virtual_axis_pressed_positive :: (v: *Virtual_Input) -> bool  { return virtual_axis_pressed_sign(v) > 0; }
-virtual_axis_repeated         :: (v: *Virtual_Input) -> bool  { if v == null || v.Kind != .AXIS return false; return (*v.Data.Axis).Repeated; }
-virtual_axis_last_press_timestamp :: (v: *Virtual_Input) -> float64 { if v == null || v.Kind != .AXIS return 0; return (*v.Data.Axis).LastPressTimestamp; }
+virtual_axis_value :: (v: *Virtual_Input) -> float {
+    if v == null || v.Kind != .AXIS return 0;
+    return (*v.Data.Axis).Value;
+}
+
+virtual_axis_int_value :: (v: *Virtual_Input) -> s32 {
+    if v == null || v.Kind != .AXIS return 0;
+    return (*v.Data.Axis).IntValue;
+}
+
+virtual_axis_pressed_sign :: (v: *Virtual_Input) -> s32 {
+    if v == null || v.Kind != .AXIS return 0;
+    return (*v.Data.Axis).PressedSign;
+}
+
+virtual_axis_pressed :: (v: *Virtual_Input) -> bool {
+    return virtual_axis_pressed_sign(v) != 0;
+}
+
+virtual_axis_pressed_negative :: (v: *Virtual_Input) -> bool {
+    return virtual_axis_pressed_sign(v) < 0;
+}
+
+virtual_axis_pressed_positive :: (v: *Virtual_Input) -> bool {
+    return virtual_axis_pressed_sign(v) > 0;
+}
+
+virtual_axis_repeated :: (v: *Virtual_Input) -> bool {
+    if v == null || v.Kind != .AXIS return false;
+    return (*v.Data.Axis).Repeated;
+}
+
+virtual_axis_last_press_timestamp :: (v: *Virtual_Input) -> float64 {
+    if v == null || v.Kind != .AXIS return 0;
+    return (*v.Data.Axis).LastPressTimestamp;
+}
 
 //
 // VirtualStick
@@ -587,19 +646,19 @@ virtual_stick_update :: (v: *Virtual_Input, time: Time) {
     s := *v.Data.Stick;
     if s.Set == null return;
 
-    s.Value    = stick_binding_set_value(s.Set, v.Manager, v.ControllerIndex);
+    s.Value = stick_binding_set_value(s.Set, v.Manager, v.ControllerIndex);
     s.IntValue = Point2.{ binding_sign_f32(s.Value.x), binding_sign_f32(s.Value.y) };
-    s.PressedLeft  = false;
+    s.PressedLeft = false;
     s.PressedRight = false;
-    s.PressedUp    = false;
-    s.PressedDown  = false;
+    s.PressedUp = false;
+    s.PressedDown = false;
 
     for *entry: s.Set.Entries {
         if !input_is_included(entry.Masks) continue;
-        if binding_get_state(entry.Left,  v.Manager, v.ControllerIndex).Pressed s.PressedLeft  = true;
+        if binding_get_state(entry.Left, v.Manager, v.ControllerIndex).Pressed s.PressedLeft = true;
         if binding_get_state(entry.Right, v.Manager, v.ControllerIndex).Pressed s.PressedRight = true;
-        if binding_get_state(entry.Up,    v.Manager, v.ControllerIndex).Pressed s.PressedUp    = true;
-        if binding_get_state(entry.Down,  v.Manager, v.ControllerIndex).Pressed s.PressedDown  = true;
+        if binding_get_state(entry.Up, v.Manager, v.ControllerIndex).Pressed s.PressedUp = true;
+        if binding_get_state(entry.Down, v.Manager, v.ControllerIndex).Pressed s.PressedDown = true;
     }
 }
 
@@ -610,33 +669,56 @@ virtual_stick_manual_update :: (v: *Virtual_Input, time: Time, value: Vector2) {
 
     prev := s.IntValue;
 
-    s.Value    = value;
+    s.Value = value;
     s.IntValue = Point2.{ binding_sign_f32(s.Value.x), binding_sign_f32(s.Value.y) };
-    s.PressedLeft  = s.IntValue.x < 0 && prev.x >= 0;
+    s.PressedLeft = s.IntValue.x < 0 && prev.x >= 0;
     s.PressedRight = s.IntValue.x > 0 && prev.x <= 0;
-    s.PressedUp    = s.IntValue.y < 0 && prev.y >= 0;
-    s.PressedDown  = s.IntValue.y > 0 && prev.y <= 0;
+    s.PressedUp = s.IntValue.y < 0 && prev.y >= 0;
+    s.PressedDown = s.IntValue.y > 0 && prev.y <= 0;
 }
 
 // Foster: VirtualStick.Clear
 virtual_stick_clear :: (v: *Virtual_Input) {
     if v == null || v.Kind != .STICK return;
     s := *v.Data.Stick;
-    s.Value       = Vector2.{ 0, 0 };
-    s.IntValue    = Point2.{ 0, 0 };
-    s.PressedLeft  = false;
+    s.Value = Vector2.{ 0, 0 };
+    s.IntValue = Point2.{ 0, 0 };
+    s.PressedLeft = false;
     s.PressedRight = false;
-    s.PressedUp    = false;
-    s.PressedDown  = false;
+    s.PressedUp = false;
+    s.PressedDown = false;
 }
 
 // Foster: the VirtualStick properties
-virtual_stick_value        :: (v: *Virtual_Input) -> Vector2 { if v == null || v.Kind != .STICK return Vector2.{ 0, 0 }; return (*v.Data.Stick).Value; }
-virtual_stick_int_value    :: (v: *Virtual_Input) -> Point2  { if v == null || v.Kind != .STICK return Point2.{ 0, 0 }; return (*v.Data.Stick).IntValue; }
-virtual_stick_pressed_left :: (v: *Virtual_Input) -> bool   { if v == null || v.Kind != .STICK return false; return (*v.Data.Stick).PressedLeft; }
-virtual_stick_pressed_right :: (v: *Virtual_Input) -> bool  { if v == null || v.Kind != .STICK return false; return (*v.Data.Stick).PressedRight; }
-virtual_stick_pressed_up   :: (v: *Virtual_Input) -> bool   { if v == null || v.Kind != .STICK return false; return (*v.Data.Stick).PressedUp; }
-virtual_stick_pressed_down :: (v: *Virtual_Input) -> bool   { if v == null || v.Kind != .STICK return false; return (*v.Data.Stick).PressedDown; }
+virtual_stick_value :: (v: *Virtual_Input) -> Vector2 {
+    if v == null || v.Kind != .STICK return Vector2.{ 0, 0 };
+    return (*v.Data.Stick).Value;
+}
+
+virtual_stick_int_value :: (v: *Virtual_Input) -> Point2 {
+    if v == null || v.Kind != .STICK return Point2.{ 0, 0 };
+    return (*v.Data.Stick).IntValue;
+}
+
+virtual_stick_pressed_left :: (v: *Virtual_Input) -> bool {
+    if v == null || v.Kind != .STICK return false;
+    return (*v.Data.Stick).PressedLeft;
+}
+
+virtual_stick_pressed_right :: (v: *Virtual_Input) -> bool {
+    if v == null || v.Kind != .STICK return false;
+    return (*v.Data.Stick).PressedRight;
+}
+
+virtual_stick_pressed_up :: (v: *Virtual_Input) -> bool {
+    if v == null || v.Kind != .STICK return false;
+    return (*v.Data.Stick).PressedUp;
+}
+
+virtual_stick_pressed_down :: (v: *Virtual_Input) -> bool {
+    if v == null || v.Kind != .STICK return false;
+    return (*v.Data.Stick).PressedDown;
+}
 
 //
 // VirtualDevice
@@ -663,7 +745,7 @@ virtual_device_input_count :: (v: *Virtual_Input) -> s32 {
 virtual_device_get_by_input_name :: (v: *Virtual_Input, name: string) -> *Virtual_Input {
     if v == null || v.Kind != .DEVICE return null;
     d := *v.Data.Device;
-    for i: 0..d.Inputs.count-1 {
+    for i: 0..d.Inputs.count - 1 {
         child := d.Inputs[i];
         if child == null continue;
         if child.Name == name return child;
@@ -683,7 +765,7 @@ virtual_device_force_controller_index :: (v: *Virtual_Input, index: s32) {
 
     v.ControllerIndex = index;
     d := *v.Data.Device;
-    for i: 0..d.Inputs.count-1 {
+    for i: 0..d.Inputs.count - 1 {
         child := d.Inputs[i];
         if child == null continue;
         child.ControllerIndex = index;
@@ -720,7 +802,7 @@ virtual_device_update :: (v: *Virtual_Input, time: Time) {
 
     latest: s32 = 0;
     base := *v.Manager.State.Controllers[latest];
-    for i: 1..CONTROLLER_MAX-1 {
+    for i: 1..CONTROLLER_MAX - 1 {
         c := *v.Manager.State.Controllers[i];
         if c.IsGamepad && c.InputTimestamp > base.InputTimestamp {
             latest = cast(s32) i;
@@ -802,7 +884,7 @@ virtual_device_can_add :: (v: *Virtual_Input) -> bool {
 // Foster: Input.ConnectController -> `device.ControllerConnected()` for every
 // device sitting on slot `controller_index`.
 virtual_inputs_notify_controller_connected :: (input: *Input, controller_index: s32) {
-    for i: 0..virtual_inputs.count-1 {
+    for i: 0..virtual_inputs.count - 1 {
         v := virtual_inputs[i];
         if v == null || v.IsDisposed || v.Kind != .DEVICE continue;
         if v.Manager != input || v.ControllerIndex != controller_index continue;
@@ -813,7 +895,7 @@ virtual_inputs_notify_controller_connected :: (input: *Input, controller_index: 
 
 // Foster: Input.DisconnectController -> `device.ControllerDisconnected()`
 virtual_inputs_notify_controller_disconnected :: (input: *Input, controller_index: s32) {
-    for i: 0..virtual_inputs.count-1 {
+    for i: 0..virtual_inputs.count - 1 {
         v := virtual_inputs[i];
         if v == null || v.IsDisposed || v.Kind != .DEVICE continue;
         if v.Manager != input || v.ControllerIndex != controller_index continue;

@@ -24,29 +24,29 @@
 // 一帧：可绘制子图 + 停留时长（秒）。
 Animation_Frame :: struct {
     subtexture: F.Subtexture;
-    duration:   float32;
+    duration: float32;
 }
 
 // 一段命名动画：frames 数组里 [frame_start, frame_start+frame_count) 的帧。
 Animation :: struct {
-    name:        string;
+    name: string;
     frame_start: int;
     frame_count: int;
-    duration:    float32; // 区间内帧时长总和（add 时累计）
+    duration: float32; // 区间内帧时长总和（add 时累计）
 }
 
 // 包含动画的集合。名称与动画名为克隆字符串，dispose 统一释放。
 Animation_Set :: struct {
-    name:   string;
+    name: string;
     origin: F.Vector2; // 绘制锚点（像素）
 
-    frames:     [..] Animation_Frame;
+    frames: [..] Animation_Frame;
     animations: [..] Animation;
 }
 
-animation_set_init :: (sprite: *Animation_Set, name: string, origin := F.Vector2.{0, 0}) {
+animation_set_init :: (sprite: *Animation_Set, name: string, origin := F.Vector2.{ 0, 0 }) {
     sprite.* = Animation_Set.{
-        name   = clone_owned(name),
+        name = clone_owned(name),
         origin = origin,
     };
 }
@@ -80,10 +80,10 @@ animation_set_add_animation :: (sprite: *Animation_Set, name: string, frame_star
     }
 
     array_add(*sprite.animations, Animation.{
-        name        = clone_owned(name),
+        name = clone_owned(name),
         frame_start = frame_start,
         frame_count = frame_count,
-        duration    = duration,
+        duration = duration,
     });
 }
 

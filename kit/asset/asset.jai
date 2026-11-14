@@ -89,7 +89,7 @@
 // 移动/重命名文件只要 .meta 跟着走，所有 GUID 引用不断。
 Guid :: [16] u8;
 
-GUID_NONE :: u8.[ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 ];
+GUID_NONE :: u8.[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
 
 // olib 的 `g1 == g2`：Jai 的数组不支持 ==（hash-table 的键比较也一样），
 // 所以本包所有 Guid 比较都走这个具名过程；它是相对 olib 的必要补充。
@@ -133,7 +133,7 @@ guid_generate :: () -> Guid {
     for i: 0..1 {
         v := splitmix64(*s);
         for j: 0..7 {
-            bytes[i * 8 + j] = cast(u8) ((v >> (8 * j)) & 0xFF);   // 先掩码再窄化，jacket 的 cast 会做溢出检查
+            bytes[i * 8 + j] = cast(u8) ((v >> (8 * j)) & 0xFF); // 先掩码再窄化，jacket 的 cast 会做溢出检查
         }
     }
     return bytes;
@@ -198,7 +198,11 @@ guid_hex_into :: (g: Guid, dst: [] u8) {
 guid_filename :: (g: Guid, dst: [] u8) -> (name: string, ok: bool) {
     if dst.count < 37 return "", false;
     guid_hex_into(g, dst);
-    dst[32] = #char "."; dst[33] = #char "b"; dst[34] = #char "l"; dst[35] = #char "o"; dst[36] = #char "b";
+    dst[32] = #char ".";
+    dst[33] = #char "b";
+    dst[34] = #char "l";
+    dst[35] = #char "o";
+    dst[36] = #char "b";
     return cast(string) asset_view(dst, 37), true;
 }
 //@endregion
@@ -207,21 +211,21 @@ guid_filename :: (g: Guid, dst: [] u8) -> (name: string, ok: bool) {
 
 // blob payload 的运行时形态（决定 loader 建什么对象）。
 Asset_Kind :: enum u8 {
-    Raw;     // 原样字节：shader blob / .cache / .field 等自定义二进制
+    Raw; // 原样字节：shader blob / .cache / .field 等自定义二进制
     Texture; // 解码后的 RGBA8 像素
-    Json;    // utf8 JSON 文本
+    Json; // utf8 JSON 文本
 }
 
 Asset_Error :: enum u32 {
     None;
-    File_Not_Found;  // Library 里没有该 guid 的 blob
-    Meta_Missing;    // 源文件旁没有 .meta（先跑 import_all）
-    Parse_Error;     // blob/JSON/.meta 内容不合法，或 blob 内 guid 与请求不符
-    Write_Error;     // blob/.meta 写盘失败
-    Import_Failed;   // 导入器无法处理该源文件
-    Kind_Mismatch;   // 用 Texture 的 getter 取 Json 资产之类
-    Duplicate_Guid;  // 两个 .meta 持有同一 GUID（人为复制 .meta 所致，需手动处理）
-    Not_Supported;   // 未配置 assets_root 却调用 assets_load_path 等
+    File_Not_Found; // Library 里没有该 guid 的 blob
+    Meta_Missing; // 源文件旁没有 .meta（先跑 import_all）
+    Parse_Error; // blob/JSON/.meta 内容不合法，或 blob 内 guid 与请求不符
+    Write_Error; // blob/.meta 写盘失败
+    Import_Failed; // 导入器无法处理该源文件
+    Kind_Mismatch; // 用 Texture 的 getter 取 Json 资产之类
+    Duplicate_Guid; // 两个 .meta 持有同一 GUID（人为复制 .meta 所致，需手动处理）
+    Not_Supported; // 未配置 assets_root 却调用 assets_load_path 等
 }
 
 // 运行时资产句柄。带代数，卸载后旧句柄自动失效。
@@ -239,22 +243,22 @@ asset_handle_equal :: (a: Asset_Handle, b: Asset_Handle) -> bool {
     return a.idx == b.idx && a.gen == b.gen;
 }
 
-ASSET_HANDLE_NONE :: Asset_Handle.{ };
+ASSET_HANDLE_NONE :: Asset_Handle.{};
 //@endregion
 
 //@region Asset_Manager —— 运行时加载与缓存
 
 // 一条已加载资产。payload 按 kind 有效，其余字段为零值。
 Asset_Record :: struct {
-    guid:      Guid;
-    kind:      Asset_Kind;
+    guid: Guid;
+    kind: Asset_Kind;
     allocator: Allocator; // 载荷分配器（卸载时释放用）
 
-    has_texture: bool;           // .Texture：texture 有效（已上 GPU）
-    texture:     *F.Texture;     // .Texture 且 device != null（jfoster 是堆对象）
-    image:       F.Image;        // .Texture 且 device == null（保留 CPU 副本）
-    json:        ENC.Json_Value; // .Json
-    bytes:       [] u8;          // .Raw
+    has_texture: bool; // .Texture：texture 有效（已上 GPU）
+    texture: *F.Texture; // .Texture 且 device != null（jfoster 是堆对象）
+    image: F.Image; // .Texture 且 device == null（保留 CPU 副本）
+    json: ENC.Json_Value; // .Json
+    bytes: [] u8; // .Raw
 }
 
 // assets_init 的缺省 Library 根（config.library_root 留空时使用）。
@@ -282,16 +286,16 @@ Asset_Manager :: struct {
     records: HA.HANDLE_ARRAY.Pool(Asset_Record, Asset_Handle);
     by_guid: Table(Guid, Asset_Handle, guid_hash, guid_equal);
 
-    storage:         Asset_Storage;
+    storage: Asset_Storage;
     directory_state: Directory_State; // 默认后端的状态
-    map_state:       Map_State;
+    map_state: Map_State;
 
-    manifest:        Table(string, Guid); // path -> guid（manifest blob 惰性加载）
+    manifest: Table(string, Guid); // path -> guid（manifest blob 惰性加载）
     manifest_loaded: bool;
 
     assets_root: string;
-    device:      *F.Graphics_Device;
-    allocator:   Allocator;
+    device: *F.Graphics_Device;
+    allocator: Allocator;
 }
 
 assets_init :: (m: *Asset_Manager, config: Asset_Manager_Config) -> Asset_Error {
@@ -346,8 +350,8 @@ assets_load :: (m: *Asset_Manager, guid: Guid) -> (Asset_Handle, Asset_Error) {
     }
 
     rec: Asset_Record;
-    rec.guid      = guid;
-    rec.kind      = cast(Asset_Kind) header.kind;
+    rec.guid = guid;
+    rec.kind = cast(Asset_Kind) header.kind;
     rec.allocator = m.allocator;
 
     if rec.kind == {
@@ -357,9 +361,9 @@ assets_load :: (m: *Asset_Manager, guid: Guid) -> (Asset_Handle, Asset_Error) {
 
             pixel_buf, px_ok := asset_alloc_colors(pixels.count / size_of(F.Color), m.allocator);
             if !px_ok return ASSET_HANDLE_NONE, .Import_Failed;
-            rec.image.Width  = cast(s32) w;
+            rec.image.Width = cast(s32) w;
             rec.image.Height = cast(s32) h;
-            rec.image.Data   = pixel_buf;
+            rec.image.Data = pixel_buf;
             if pixels.count > 0 memcpy(rec.image.Data.data, pixels.data, pixels.count);
 
             if m.device != null {
@@ -369,7 +373,7 @@ assets_load :: (m: *Asset_Manager, guid: Guid) -> (Asset_Handle, Asset_Error) {
                 tex := F.texture_create_from_colors(m.device, rec.image.Width, rec.image.Height, rec.image.Data);
                 if tex == null return ASSET_HANDLE_NONE, .Import_Failed;
                 asset_free_bytes(asset_colors_as_bytes(rec.image.Data), m.allocator);
-                rec.image = F.Image.{ };
+                rec.image = F.Image.{};
                 rec.texture = tex;
                 rec.has_texture = true;
             }
@@ -437,7 +441,7 @@ assets_get_texture :: (m: *Asset_Manager, handle: Asset_Handle) -> *F.Texture {
 assets_get_image :: (m: *Asset_Manager, handle: Asset_Handle) -> *F.Image {
     rec := HA.HANDLE_ARRAY.get(*m.records, handle);
     if rec == null || rec.kind != .Texture || rec.has_texture return null;
-    return *rec.image;   // Jai 的取地址就是 `*`（没有 & 运算符）
+    return *rec.image; // Jai 的取地址就是 `*`（没有 & 运算符）
 }
 
 assets_get_json :: (m: *Asset_Manager, handle: Asset_Handle) -> *ENC.Json_Value {
@@ -487,7 +491,7 @@ destroy_record :: (rec: *Asset_Record) {
             }
             if rec.image.Data.count > 0 {
                 asset_free_bytes(asset_colors_as_bytes(rec.image.Data), rec.allocator);
-                rec.image = F.Image.{ };
+                rec.image = F.Image.{};
             }
         case .Json;
             if rec.json.kind != .Null ENC.json_destroy_value(rec.json);
@@ -704,8 +708,8 @@ asset_process_id :: () -> u64 {
 }
 
 #if OS == .WINDOWS {
-// odin 的 core:sys/windows 现成声明；Jai 侧自备（同 core/hotreload/scan_windows.jai）。
-kernel32_asset :: #library,system "kernel32";
-asset_get_current_process_id :: () -> u32 #foreign kernel32_asset "GetCurrentProcessId";
+    // odin 的 core:sys/windows 现成声明；Jai 侧自备（同 core/hotreload/scan_windows.jai）。
+    kernel32_asset :: #library,system "kernel32";
+    asset_get_current_process_id :: () -> u32 #foreign kernel32_asset "GetCurrentProcessId";
 }
 //@endregion

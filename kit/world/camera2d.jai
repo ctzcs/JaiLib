@@ -33,26 +33,26 @@ matrix3x2_equal :: (a: F.Matrix3x2, b: F.Matrix3x2) -> bool {
 // (平移 viewport/2)→ Screen。矩阵惰性重建；直接改字段后请调 camera2d_set_dirty，
 // 或一律使用 camera2d_set_* 设值（值未变化不会弄脏矩阵）。
 Camera2D :: struct {
-    position:      Vec2;      // 相机中心（世界单位）
-    zoom:          float32;      // 相对 ppu 的额外缩放
-    rotation:      float32;      // 弧度
-    ppu:           float32;      // pixels per unit（32 = 一个世界单位 32 像素）
-    viewport_size: F.Point2;     // 像素
+    position: Vec2; // 相机中心（世界单位）
+    zoom: float32; // 相对 ppu 的额外缩放
+    rotation: float32; // 弧度
+    ppu: float32; // pixels per unit（32 = 一个世界单位 32 像素）
+    viewport_size: F.Point2; // 像素
 
-    dirty:          bool;
-    cached_matrix:  F.Matrix3x2;
+    dirty: bool;
+    cached_matrix: F.Matrix3x2;
     cached_inverse: F.Matrix3x2;
-    inverse_ok:     bool;
+    inverse_ok: bool;
 }
 
 // 初始化。zoom=1、ppu=32、相机在原点。之后每帧用 camera2d_set_viewport
 // 同步窗口尺寸（值没变不会弄脏矩阵）。
 camera2d_init :: (cam: *Camera2D, viewport_w: s32, viewport_h: s32) {
     cam.* = .{
-        zoom          = 1,
-        ppu           = 32,
+        zoom = 1,
+        ppu = 32,
         viewport_size = F.Point2.{ viewport_w, viewport_h },
-        dirty         = true,
+        dirty = true,
     };
 }
 

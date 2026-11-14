@@ -61,17 +61,17 @@ Error :: enum u32 {
 
 // String 的 UTF-8 或 Number 的原始 JSON 词法（text），Array/Object 用 items/members。
 Member :: struct {
-    key:   string;
+    key: string;
     value: Value;
 }
 
 Value :: struct {
-    kind:      Kind;
+    kind: Kind;
     allocator: Allocator;
-    text:      string; // String 的 UTF-8 或 Number 的原始 JSON 词法。
-    boolean:   bool;
-    items:     [..] Value;
-    members:   [..] Member;
+    text: string; // String 的 UTF-8 或 Number 的原始 JSON 词法。
+    boolean: bool;
+    items: [..] Value;
+    members: [..] Member;
 }
 
 // ---- 分配桥接：Jai 的 Allocator 失败返回 null，全部经这里检查 ----
@@ -215,7 +215,9 @@ make_u64 :: (n: u64, allocator: Allocator) -> (Value, Error) {
 }
 
 dispose :: (v: *Value) {
-    for *item: v.items { dispose(item); }
+    for *item: v.items {
+        dispose(item);
+    }
     for *member: v.members {
         oj_free_string(v.allocator, member.key);
         dispose(*member.value);
@@ -476,7 +478,9 @@ oj_valid_utf8 :: (input: string) -> bool {
     return true;
 }
 
-oj_is_digit :: (c: u8) -> bool { return c >= 48 && c <= 57; }
+oj_is_digit :: (c: u8) -> bool {
+    return c >= 48 && c <= 57;
+}
 
 // 严格 RFC 8259 数字词法（对位 odin json.is_valid_number(s, .JSON)）：
 //   -? (0 | [1-9][0-9]*) ( '.' [0-9]+ )? ( [eE] [+-]? [0-9]+ )?
@@ -644,15 +648,15 @@ Oj_Token_Kind :: enum u32 {
 }
 
 Oj_Token :: struct {
-    kind:   Oj_Token_Kind;
+    kind: Oj_Token_Kind;
     offset: int;
-    text:   string;
+    text: string;
 }
 
 Oj_Decoder :: struct {
-    data:  string;
-    pos:   int;
-    mode:  Mode;
+    data: string;
+    pos: int;
+    mode: Mode;
     token: Oj_Token;
 }
 

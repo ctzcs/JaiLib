@@ -310,8 +310,8 @@ manager_add_sequence :: (manager: *Tween_Manager) -> Tween_Handle {
     node.payload = cast(*void) data;
     node.vtable = Tween_Node_VTable.{
         update = sequence_update_proc,
-        reset  = sequence_reset_proc,
-        kill   = sequence_kill_proc,
+        reset = sequence_reset_proc,
+        kill = sequence_kill_proc,
     };
 
     return manager_add_node(manager, node);
@@ -341,8 +341,8 @@ sequence_append :: (manager: *Tween_Manager, seq: Tween_Handle, child: Tween_Han
     }
 
     entry := Sequence_Entry.{
-        kind     = .Tween,
-        child    = child,
+        kind = .Tween,
+        child = child,
         start_at = data.runtime.duration,
         duration = duration,
     };
@@ -408,8 +408,8 @@ sequence_join :: (manager: *Tween_Manager, seq: Tween_Handle, child: Tween_Handl
     }
 
     entry := Sequence_Entry.{
-        kind     = .Tween,
-        child    = child,
+        kind = .Tween,
+        child = child,
         start_at = start_at,
         duration = duration,
     };
@@ -473,8 +473,8 @@ sequence_insert :: (manager: *Tween_Manager, seq: Tween_Handle, at: float32, chi
     }
 
     entry := Sequence_Entry.{
-        kind     = .Tween,
-        child    = child,
+        kind = .Tween,
+        child = child,
         start_at = at,
         duration = duration,
     };
@@ -552,8 +552,8 @@ sequence_prepend :: (manager: *Tween_Manager, seq: Tween_Handle, child: Tween_Ha
     }
 
     entry := Sequence_Entry.{
-        kind     = .Tween,
-        child    = child,
+        kind = .Tween,
+        child = child,
         start_at = 0,
         duration = duration,
     };
@@ -599,7 +599,7 @@ sequence_append_callback :: (manager: *Tween_Manager, seq: Tween_Handle, callbac
     }
 
     entry := Sequence_Entry.{
-        kind     = .Callback,
+        kind = .Callback,
         callback = callback,
         start_at = data.runtime.duration,
         duration = 0,
@@ -622,7 +622,7 @@ sequence_append_interval :: (manager: *Tween_Manager, seq: Tween_Handle, interva
     }
 
     entry := Sequence_Entry.{
-        kind     = .Interval,
+        kind = .Interval,
         start_at = data.runtime.duration,
         duration = interval,
     };

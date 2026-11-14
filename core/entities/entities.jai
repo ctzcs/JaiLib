@@ -51,19 +51,19 @@
 
 //@region 类型 —— Handle / Base / Entity_Ptr / Entities / Buffer
 
-Handle_Index   :: u32;
-Handle_Gen     :: u32;
+Handle_Index :: u32;
+Handle_Gen :: u32;
 Handle_Variant :: u8;
 
 // olib 里的 max(Handle_Index) / max(Handle_Gen) / max(Handle_Variant)。
-Handle_Index_Max   : Handle_Index   : 0xFFFF_FFFF;
-Handle_Gen_Max     : Handle_Gen     : 0xFFFF_FFFF;
-Handle_Variant_Max : Handle_Variant : 0xFF;
+Handle_Index_Max: Handle_Index : 0xFFFF_FFFF;
+Handle_Gen_Max: Handle_Gen : 0xFFFF_FFFF;
+Handle_Variant_Max: Handle_Variant : 0xFF;
 
 // A handle uniquely identifies an entity.
 Handle :: struct {
-    index:   Handle_Index;
-    gen:     Handle_Gen;
+    index: Handle_Index;
+    gen: Handle_Gen;
     variant: Handle_Variant;
 }
 
@@ -78,7 +78,7 @@ operator == :: (a: Handle, b: Handle) -> bool {
 // 约束与偏移 0 由 init 用反射校验）：
 //     My_Entity :: struct { base: Base; /* 其它字段 */ }
 Base :: struct {
-    handle:     Handle; // Self
+    handle: Handle; // Self
     _next_free: Handle_Index;
 }
 
@@ -87,26 +87,26 @@ Base :: struct {
 // olib: #raw_union { using base: ^Base, variant: <pointer union> }
 // Jai: 见文件头 2)；variant 是 variant 下标，具体指针用 (cast(*Foo) ptr.base)。
 Entity_Ptr :: struct {
-    base:    *Base;
+    base: *Base;
     variant: int;
 }
 
 // Container for all the entities.
 // olib 的 Val_Union / Sub_Union 在这里换成运行期类型列表，见文件头 1)。
 Entities :: struct {
-    buffers:   [..] Buffer;
-    sizes:     [..] s64;
-    offsets:   [..] [..] s64;
+    buffers: [..] Buffer;
+    sizes: [..] s64;
+    offsets: [..][..] s64;
     allocator: Allocator;
     val_types: [] Type; // olib 没有（编译期 union 代替）；本轮新增，init 写入
     sub_types: [] Type; // 同上
 }
 
 Buffer :: struct {
-    data:    *u8;
-    cap:     s32; // 包括保留槽 0，以实体数量计费，不是字节数。
-    top:     s32; // 已使用槽的最高水位；clear 不回退，保持容量。
-    free:    s32;
+    data: *u8;
+    cap: s32; // 包括保留槽 0，以实体数量计费，不是字节数。
+    top: s32; // 已使用槽的最高水位；clear 不回退，保持容量。
+    free: s32;
     retired: s32; // 代数耗尽的槽永久占用容量，不进入 free list。
 }
 //@endregion
@@ -115,7 +115,7 @@ Buffer :: struct {
 
 // olib UNION_INDEX / UNION_HAS 的运行期替代：T 在 types 里的下标，-1 表示未注册。
 type_index_of :: (types: [] Type, $T: Type) -> int {
-    for i: 0..types.count-1 {
+    for i: 0..types.count - 1 {
         if cast(*Type_Info) types[i] == cast(*Type_Info) T {
             return i;
         }
@@ -157,12 +157,12 @@ entities_capacity_valid :: (size: s64, capacity: int) -> bool {
 // 只初始化零值或已 shutdown 的容器；先验证全部类型和容量，再原子安装。失败不改 ents。
 // Jai 差异：多出 val_types / sub_types 两个前置参数（见文件头 1)），返回值同 olib 是 bool。
 init :: (
-    ents:        *Entities,
-    val_types:   [] Type,
-    sub_types:   [] Type,
+    ents: *Entities,
+    val_types: [] Type,
+    sub_types: [] Type,
     default_cap: int = 4096,
-    caps:        [] int = .[],
-    allocator:   Allocator = context.allocator,
+    caps: [] int = .[],
+    allocator: Allocator = context.allocator,
 ) -> bool {
     // olib 的 buffers / sizes / offsets 是内联定长数组，这里只能是动态数组：
     // count 非零同样说明容器已被安装过（照单覆盖会泄漏元数据）。
@@ -174,7 +174,7 @@ init :: (
     if val_types.count == 0 || val_types.count > 256 return false; // Handle_Variant 是 u8
 
     // 1) 只校验，不分配：全部布局与容量验证先于任何分配。
-    for i: 0..val_types.count-1 {
+    for i: 0..val_types.count - 1 {
         ti := cast(*Type_Info) val_types[i];
         if ti.type != .STRUCT return false;
         si := cast(*Type_Info_Struct) ti;
@@ -194,29 +194,29 @@ init :: (
     candidate.val_types = val_types;
     candidate.sub_types = sub_types;
 
-    for i: 0..val_types.count-1 {
+    for i: 0..val_types.count - 1 {
         array_add(*candidate.sizes, cast(s64) (cast(*Type_Info) val_types[i]).runtime_size);
         array_add(*candidate.buffers, Buffer.{});
     }
 
     // offsets 先全部置 -1，再填实际偏移（olib: candidate.offsets = -1）。
-    for s: 0..sub_types.count-1 {
+    for s: 0..sub_types.count - 1 {
         row: [..] s64;
-        for v: 0..val_types.count-1 {
+        for v: 0..val_types.count - 1 {
             array_add(*row, cast(s64) -1);
         }
         array_add(*candidate.offsets, row);
     }
 
-    for s: 0..sub_types.count-1 {
-        for v: 0..val_types.count-1 {
+    for s: 0..sub_types.count - 1 {
+        for v: 0..val_types.count - 1 {
             offset := find_sub_offset(val_types[v], sub_types[s]);
             if offset != -1 candidate.offsets[s][v] = offset;
         }
     }
 
     // 3) 逐个 variant 安装 buffer；任何一个失败就回滚整个候选。
-    for i: 0..val_types.count-1 {
+    for i: 0..val_types.count - 1 {
         capacity := default_cap;
         if i < caps.count capacity = caps[i];
         if !reserve_variant(*candidate, cast(Handle_Variant) i, capacity) {
@@ -249,7 +249,7 @@ reserve_variant :: (ents: *Entities, variant: Handle_Variant, capacity: int) -> 
     new_size := cast(s64) capacity * size;
     memory := allocator.proc(.ALLOCATE, new_size, 0, null, allocator.data);
     if memory == null return false; // 失败时旧 buffer 与全部句柄不变
-    memset(memory, 0, new_size);    // Odin 的 make 清零；Jai 的分配不清零（文件头 11）
+    memset(memory, 0, new_size); // Odin 的 make 清零；Jai 的分配不清零（文件头 11）
 
     if buf.data != null {
         memcpy(memory, buf.data, (cast(s64) buf.top + 1) * size);
@@ -264,7 +264,7 @@ reserve_variant :: (ents: *Entities, variant: Handle_Variant, capacity: int) -> 
 // shutdown 结束容器生命周期，旧句柄不得用于重新 init 的容器。
 shutdown :: (ents: *Entities) {
     allocator := entities_allocator(ents.allocator);
-    for * buf, i: ents.buffers {
+    for *buf, i: ents.buffers {
         if buf.data != null {
             allocator.proc(.FREE, 0, cast(s64) buf.cap * ents.sizes[i], buf.data, allocator.data);
         }
@@ -279,7 +279,7 @@ shutdown :: (ents: *Entities) {
 // 失效所有存活句柄；保留水位/代数，重建 free list，不重复推进空槽或复活退休槽。
 // 与 destroy/shutdown 一样，不递归释放用户字段。
 clear :: (ents: *Entities) {
-    for * buf, var_index: ents.buffers {
+    for *buf, var_index: ents.buffers {
         buf.free = 0;
         i := buf.top;
         while i > 0 {
@@ -307,7 +307,7 @@ clone :: (src: *Entities, allocator: Allocator = context.allocator) -> Entities 
         return Entities.{};
     }
 
-    for i: 0..src.buffers.count-1 {
+    for i: 0..src.buffers.count - 1 {
         src_buf := src.buffers[i];
         dst_buf := *result.buffers[i];
 
@@ -338,8 +338,8 @@ create :: (ents: *Entities, val: $Val) -> (Handle, bool) {
     // 槽位的代数在写入实体值之前读取：写入会覆盖 base.handle。
     gen := base.handle.gen;
     result := Handle.{
-        index   = cast(Handle_Index) index,
-        gen     = gen,
+        index = cast(Handle_Index) index,
+        gen = gen,
         variant = cast(Handle_Variant) variant_index,
     };
 
@@ -487,7 +487,7 @@ get_entity_base :: (ents: Entities, buf: Buffer, handle: Handle) -> (*Base, bool
 
 // Usage: for it := begin_val(&s, Val); val, ok := next_val(&it); ok { ... }
 // 遍历期间调用方不得 reserve；扩容会使迭代器内部指针失效。
-Iter_Val :: struct (Val: Type) {
+Iter_Val :: struct(Val: Type) {
     val: *Val;
     end: u64;
 }
@@ -520,12 +520,12 @@ next_val :: (it: *Iter_Val($Val)) -> (*Val, bool) {
 // The handle isn't exposed directly, but it's stored in the iterator through base pointer.
 // olib 的 `using ptr: ^Base` 在 Jai 里就是普通字段 ptr（无 using）。
 Iter_Sub :: struct {
-    ents:      *Entities;
-    ptr:       *Base;
-    step:      u64;
-    offset:    u64;
-    end:       u64;
-    variant:   int;
+    ents: *Entities;
+    ptr: *Base;
+    step: u64;
+    offset: u64;
+    end: u64;
+    variant: int;
     sub_index: int;
 }
 

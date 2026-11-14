@@ -42,19 +42,19 @@ gizmo_transform_equal :: (a: Transform, b: Transform) -> bool {
 // 零值可用，不持有对象或资源。拖拽中更换对象必须传 input.cancel。
 Transform_Gizmo :: struct {
     dragging, captured: bool;
-    mode:               Mode;
-    axis:               int; // 0/1/2 对应 XYZ；3 为等比缩放。
-    start:              Transform;
+    mode: Mode;
+    axis: int; // 0/1/2 对应 XYZ；3 为等比缩放。
+    start: Transform;
     pointer, direction: W.Vec2;
-    normal:             W.Vec3;
+    normal: W.Vec3;
     distance, last_angle, angle: float32;
-    viewport:           F.Rect;
-    view_projection:    W.Matrix4;
+    viewport: F.Rect;
+    view_projection: W.Matrix4;
 }
 
 Transform_Result :: struct {
     transform: Transform;
-    axis:      int;
+    axis: int;
     angle, factor: float32; // 本次拖拽累计弧度 / 比例；其余模式为 0 / 1。
     started, changed, ended, cancelled, captured: bool;
 }
@@ -62,11 +62,11 @@ Transform_Result :: struct {
 RING_SEGMENTS :: 64;
 
 Transform_Geometry :: struct {
-    mode:           Mode;
-    axes:           Translation_Geometry;
+    mode: Mode;
+    axes: Translation_Geometry;
     center_visible: bool;
-    rings:          [3][RING_SEGMENTS + 1] W.Vec2;
-    segments:       [3][RING_SEGMENTS] bool;
+    rings: [3][RING_SEGMENTS + 1] W.Vec2;
+    segments: [3][RING_SEGMENTS] bool;
 }
 
 // olib 的 math.pow(x, 2)。
@@ -81,7 +81,7 @@ transform_geometry :: (
     camera: *W.Camera3D, value: Transform, viewport: F.Rect, mode: Mode,
     scale: float32 = 1, style := DEFAULT_TRANSLATION_STYLE,
 ) -> Transform_Geometry {
-    g := Transform_Geometry.{mode = mode};
+    g := Transform_Geometry.{ mode = mode };
     if mode == .Translate {
         g.axes = translation_geometry(camera, value.position, viewport, scale, style);
         return g;
@@ -169,7 +169,7 @@ transform_update :: (
     style := DEFAULT_TRANSLATION_STYLE,
     min_scale: float32 = 0.001, max_scale: float32 = 10000,
 ) -> Transform_Result {
-    r := Transform_Result.{transform = value, axis = -1, factor = 1, captured = g.captured};
+    r := Transform_Result.{ transform = value, axis = -1, factor = 1, captured = g.captured };
     if g.dragging {
         r.axis = g.axis;
         r.angle = g.angle;
@@ -203,7 +203,7 @@ transform_update :: (
         return r;
     }
     if !gizmo_finite(input.pointer.x) || !gizmo_finite(input.pointer.y) return r;
-    local := gizmo_v2_sub(input.pointer, W.Vec2.{viewport.x, viewport.y});
+    local := gizmo_v2_sub(input.pointer, W.Vec2.{ viewport.x, viewport.y });
     ray, ray_ok := W.camera3d_screen_point_to_ray(camera, local);
     if g.dragging {
         candidate := g.start;
@@ -266,7 +266,7 @@ transform_update :: (
         g.last_angle = a;
         g.angle = 0;
     } else {
-        g.direction = W.Vec2.{0.70710678, -0.70710678};
+        g.direction = W.Vec2.{ 0.70710678, -0.70710678 };
         if axis < 3 {
             d := gizmo_v2_sub(geometry.axes.ends[axis], geometry.axes.origin);
             g.direction = gizmo_v2_div(d, JM.sqrt(gizmo_v2_dot(d, d)));
@@ -324,11 +324,11 @@ gizmo_rotate_xyz :: (v: W.Vec3, angles: W.Vec3) -> W.Vec3 {
 gizmo_rotate_world :: (initial: W.Vec3, axis: int, angle: float32, reference: W.Vec3) -> W.Vec3 {
     delta: W.Vec3;
     delta.component[axis] = angle;
-    x := gizmo_rotate_xyz(gizmo_rotate_xyz(W.Vec3.{1, 0, 0}, initial), delta);
-    y := gizmo_rotate_xyz(gizmo_rotate_xyz(W.Vec3.{0, 1, 0}, initial), delta);
-    z := gizmo_rotate_xyz(gizmo_rotate_xyz(W.Vec3.{0, 0, 1}, initial), delta);
+    x := gizmo_rotate_xyz(gizmo_rotate_xyz(W.Vec3.{ 1, 0, 0 }, initial), delta);
+    y := gizmo_rotate_xyz(gizmo_rotate_xyz(W.Vec3.{ 0, 1, 0 }, initial), delta);
+    z := gizmo_rotate_xyz(gizmo_rotate_xyz(W.Vec3.{ 0, 0, 1 }, initial), delta);
     cy := JM.sqrt(x.component[0] * x.component[0] + x.component[1] * x.component[1]);
-    r := W.Vec3.{0, JM.atan2(-x.component[2], cy), 0};
+    r := W.Vec3.{ 0, JM.atan2(-x.component[2], cy), 0 };
     if cy > 0.000001 {
         r.component[0] = JM.atan2(y.component[2], z.component[2]);
         r.component[2] = JM.atan2(x.component[1], x.component[0]);
@@ -340,7 +340,7 @@ gizmo_rotate_world :: (initial: W.Vec3, axis: int, angle: float32, reference: W.
         if r.component[1] > 0 sign_z = r.component[2];
         r.component[0] = JM.atan2(-z.component[1], y.component[1]) + sign_z;
     }
-    alternative := W.Vec3.{r.component[0] + JM.PI, JM.PI - r.component[1], r.component[2] + JM.PI};
+    alternative := W.Vec3.{ r.component[0] + JM.PI, JM.PI - r.component[1], r.component[2] + JM.PI };
     for i: 0..2 {
         r.component[i] = reference.component[i] + gizmo_wrap_angle(r.component[i] - reference.component[i]);
         alternative.component[i] = reference.component[i] +

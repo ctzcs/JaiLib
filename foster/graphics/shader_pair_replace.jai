@@ -112,22 +112,22 @@ ShaderPairTryReplace :: (
 
     candidate_vertex := shader_create(
         device, .VERTEX, vertex_info.Bytes,
-        sampler_count        = vertex_info.SamplerCount,
+        sampler_count = vertex_info.SamplerCount,
         uniform_buffer_count = vertex_info.UniformBufferCount,
         storage_buffer_count = vertex_info.StorageBufferCount,
-        entry_point          = vertex_info.EntryPoint,
-        name                 = vertex.Name);
+        entry_point = vertex_info.EntryPoint,
+        name = vertex.Name);
     if candidate_vertex == null {
         return false, "Failed to create candidate vertex shader";
     }
 
     candidate_fragment := shader_create(
         device, .FRAGMENT, fragment_info.Bytes,
-        sampler_count        = fragment_info.SamplerCount,
+        sampler_count = fragment_info.SamplerCount,
         uniform_buffer_count = fragment_info.UniformBufferCount,
         storage_buffer_count = fragment_info.StorageBufferCount,
-        entry_point          = fragment_info.EntryPoint,
-        name                 = fragment.Name);
+        entry_point = fragment_info.EntryPoint,
+        name = fragment.Name);
     if candidate_fragment == null {
         shader_pair_discard(null, candidate_vertex, null);
         return false, "Failed to create candidate fragment shader";
@@ -145,7 +145,7 @@ ShaderPairTryReplace :: (
     // 4. one real pipeline per probe against the candidate pair -----------------
     for probe: probes {
         command := probe;
-        command.VertexShader   = material.Vertex.shader;
+        command.VertexShader = material.Vertex.shader;
         command.FragmentShader = material.Fragment.shader;
 
         pipeline := pipeline_for_draw_command(device, command);
@@ -162,7 +162,7 @@ ShaderPairTryReplace :: (
     //    Shader structs (same addresses — borrowed pointers stay valid).
     shader_dispose(vertex);
     shader_dispose(fragment);
-    vertex.*   = candidate_vertex.*;
+    vertex.* = candidate_vertex.*;
     fragment.* = candidate_fragment.*;
 
     // The GPU handles now belong to *vertex / *fragment; only the wrapper structs

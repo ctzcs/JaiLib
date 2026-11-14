@@ -157,8 +157,8 @@ Case :: struct {
 Config :: struct {
     cases: [] Case;
     user_data: *void;
-    fixed_dt: float64;   // 0 使用 1/120 秒；每个案例最多 MAX_STEPS 步。
-    step_budget: int;    // 0 使用每帧 480 步，时间定位可跨帧完成。
+    fixed_dt: float64; // 0 使用 1/120 秒；每个案例最多 MAX_STEPS 步。
+    step_budget: int; // 0 使用每帧 480 步，时间定位可跨帧完成。
     open_source: Case_Open_Source;
 }
 

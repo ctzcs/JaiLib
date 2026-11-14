@@ -6,31 +6,31 @@ using Hash_Table;
 // texture pages and renders text through the Batcher.
 
 Sprite_Font_Character :: struct {
-    Codepoint:  s32;
-    Subtex:    Subtexture;   // renamed from Subtexture (shadows type)
-    Advance:    float;
-    Offset:     Vector2;
-    Exists:     bool;
+    Codepoint: s32;
+    Subtex: Subtexture; // renamed from Subtexture (shadows type)
+    Advance: float;
+    Offset: Vector2;
+    Exists: bool;
 }
 
 Sprite_Font :: struct {
     device: *Graphics_Device;
 
-    Size:      float;
-    Ascent:    float;
-    Descent:   float;
-    LineGap:   float;
+    Size: float;
+    Ascent: float;
+    Descent: float;
+    LineGap: float;
 
     characters: Table(s32, Sprite_Font_Character);
     generated_textures: [..] *Texture;
     kerning: Table(s64, float);
 
-    NewlineCharacters:  string = "\n";
+    NewlineCharacters: string = "\n";
     WordbreakCharacters: string = "\n ";
 
-    Mat:       *Material = null;   // renamed from Material (shadows type)
-    IsMsdf:    bool;
-    Sampler:   Texture_Sampler;
+    Mat: *Material = null; // renamed from Material (shadows type)
+    IsMsdf: bool;
+    Sampler: Texture_Sampler;
     Kerning_Provider: *Font = null;
 
     font: *Font = null;
@@ -55,7 +55,7 @@ sprite_font_create_from_font :: (device: *Graphics_Device, font: *Font, size: fl
     sf.Kerning_Provider = font;
 
     sf.Size = size;
-    sf.Ascent  = font.Ascent  * size;
+    sf.Ascent = font.Ascent * size;
     sf.Descent = font.Descent * size;
     sf.LineGap = font.LineGap * size;
 
@@ -67,7 +67,8 @@ sprite_font_create_from_font :: (device: *Graphics_Device, font: *Font, size: fl
         advance: float;
         offset: Vector2;
         pixels: [] Color;
-        w: s32; h: s32;
+        w: s32;
+        h: s32;
         exists: bool;
     };
     glyphs: [..] Glyph_Entry;
@@ -150,7 +151,10 @@ sprite_font_create_from_font :: (device: *Graphics_Device, font: *Font, size: fl
 }
 
 sprite_font_destroy :: (sf: *Sprite_Font) {
-    for t: sf.generated_textures { texture_dispose(t); free(t); }
+    for t: sf.generated_textures {
+        texture_dispose(t);
+        free(t);
+    }
     array_free(sf.generated_textures);
     deinit(*sf.characters);
     deinit(*sf.kerning);
@@ -171,7 +175,7 @@ sprite_font_create_from_msdf :: (device: *Graphics_Device, msdf: *Msdf_Font) -> 
     sf.Sampler = texture_sampler_make(.LINEAR, .CLAMP);
     sf.Mat = material_clone(defaults_msdf_material(device));
     params: [4] float32 = .[msdf.DistanceRange, 0, 0, 0];
-    bytes := ([] u8).{data = cast(*u8) *params, count = size_of([4] float32)};
+    bytes := ([] u8).{ data = cast(*u8) *params, count = size_of([4] float32) };
     material_stage_set_uniform(*sf.Mat.Fragment, 0, bytes);
     tex := texture_create_from_colors(device, msdf.Atlas.Width, msdf.Atlas.Height, msdf.Atlas.Data);
     array_add(*sf.generated_textures, tex);
@@ -179,18 +183,23 @@ sprite_font_create_from_msdf :: (device: *Graphics_Device, msdf: *Msdf_Font) -> 
         ch: Sprite_Font_Character;
         ch.Codepoint = g.Unicode;
         ch.Advance = g.Advance;
-        ch.Offset = .{g.pl * msdf.Size, g.pt * msdf.Size};
+        ch.Offset = .{ g.pl * msdf.Size, g.pt * msdf.Size };
         ch.Exists = true; // Space has advance but no drawable quad.
         if g.ar > g.al && g.ab > g.at {
-            ch.Subtex = subtexture_make_source(tex, .{g.al, g.at, g.ar - g.al, g.ab - g.at});
+            ch.Subtex = subtexture_make_source(tex, .{ g.al, g.at, g.ar - g.al, g.ab - g.at });
         }
         table_set(*sf.characters, g.Unicode, ch);
     }
     return sf;
 }
 
-sprite_font_height :: (sf: *Sprite_Font) -> float { return sf.Ascent - sf.Descent; }
-sprite_font_line_height :: (sf: *Sprite_Font) -> float { return sf.Ascent - sf.Descent + sf.LineGap; }
+sprite_font_height :: (sf: *Sprite_Font) -> float {
+    return sf.Ascent - sf.Descent;
+}
+
+sprite_font_line_height :: (sf: *Sprite_Font) -> float {
+    return sf.Ascent - sf.Descent + sf.LineGap;
+}
 
 sprite_font_get_character :: (sf: *Sprite_Font, codepoint: s32) -> Sprite_Font_Character {
     ch := table_find_pointer(*sf.characters, codepoint);
@@ -296,7 +305,7 @@ rune_iterator :: (text: string) -> Rune_Iterator {
 
 Rune_Iterator :: struct {
     text: string;
-    pos:  s32 = 0;
+    pos: s32 = 0;
 }
 
 rune_next :: (it: *Rune_Iterator) -> s32, s32 {
@@ -308,12 +317,21 @@ rune_next :: (it: *Rune_Iterator) -> s32, s32 {
     }
     len := 1;
     rune: u32 = 0;
-    if c & 0xE0 == 0xC0 { len = 2; rune = c & 0x1F; }
-    else if c & 0xF0 == 0xE0 { len = 3; rune = c & 0x0F; }
-    else if c & 0xF8 == 0xF0 { len = 4; rune = c & 0x07; }
-    else { it.pos += 1; return #char "?", it.pos - 1; }
+    if c & 0xE0 == 0xC0 {
+        len = 2;
+        rune = c & 0x1F;
+    } else if c & 0xF0 == 0xE0 {
+        len = 3;
+        rune = c & 0x0F;
+    } else if c & 0xF8 == 0xF0 {
+        len = 4;
+        rune = c & 0x07;
+    } else {
+        it.pos += 1;
+        return #char "?", it.pos - 1;
+    }
 
-    for i: 1..len-1 {
+    for i: 1..len - 1 {
         if it.pos + cast(s32) i >= it.text.count break;
         rune = (rune << 6) | (it.text[it.pos + cast(s32) i] & 0x3F);
     }

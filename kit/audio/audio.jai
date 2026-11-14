@@ -54,10 +54,12 @@ SDL3 :: F.SDL3;
 audio_sdl_get_audio_stream_format :: (stream: *F.SDL_AudioStream, src_spec: *F.SDL_AudioSpec, dst_spec: *F.SDL_AudioSpec) -> bool #foreign SDL3 "SDL_GetAudioStreamFormat";
 audio_sdl_get_audio_stream_device :: (stream: *F.SDL_AudioStream) -> u32 #foreign SDL3 "SDL_GetAudioStreamDevice";
 audio_sdl_get_audio_device_format :: (devid: u32, spec: *F.SDL_AudioSpec, sample_frames: *s32) -> bool #foreign SDL3 "SDL_GetAudioDeviceFormat";
+
 audio_sdl_convert_audio_samples :: (
     src_spec: *F.SDL_AudioSpec, src_data: *u8, src_len: s32,
     dst_spec: *F.SDL_AudioSpec, dst_data: **u8, dst_len: *s32,
 ) -> bool #foreign SDL3 "SDL_ConvertAudioSamples";
+
 audio_sdl_io_from_const_mem :: (memory: *void, size: u64) -> *void #foreign SDL3 "SDL_IOFromConstMem";
 audio_sdl_load_wav_io :: (src: *void, closeio: bool, spec: *F.SDL_AudioSpec, audio_buf: **u8, audio_len: *u32) -> bool #foreign SDL3 "SDL_LoadWAV_IO";
 audio_sdl_load_file :: (file: *u8, datasize: *u64) -> *void #foreign SDL3 "SDL_LoadFile";
@@ -103,7 +105,10 @@ audio_u32_be :: (bytes: [] u8, offset: s64) -> u32 {
 
 // u32 <-> f32 的比特重解释：Jai 没有 transmute，用 union 取同一块内存的另一种读法。
 audio_bits_f32 :: (bits: u32) -> float32 {
-    u: union { f: float32; i: u32; }
+    u: union {
+        f: float32;
+        i: u32;
+    }
     u.i = bits;
     return u.f;
 }
@@ -136,9 +141,9 @@ audio_shutdown :: () {
 // is_recording 为 true 时是录音设备（audio_device_open_recording 打开），
 // 只能 read，audio_play 会拒绝。
 Audio_Device :: struct {
-    stream:       *F.SDL_AudioStream;
-    spec:         F.SDL_AudioSpec; // 打开时绑定设备的实际格式快照，不是入队格式
-    input_spec:   F.SDL_AudioSpec; // 固定的应用侧格式：本机字节序 F32
+    stream: *F.SDL_AudioStream;
+    spec: F.SDL_AudioSpec; // 打开时绑定设备的实际格式快照，不是入队格式
+    input_spec: F.SDL_AudioSpec; // 固定的应用侧格式：本机字节序 F32
     is_recording: bool;
 }
 
@@ -156,11 +161,11 @@ audio_device_open :: (
         return false;
     }
     desired: F.SDL_AudioSpec = .{
-        format   = AUDIO_F32,
+        format = AUDIO_F32,
         channels = cast(s32) channels,
-        freq     = cast(s32) sample_rate,
+        freq = cast(s32) sample_rate,
     };
-    stream := F.SDL_OpenAudioDeviceStream(ifx device_id==0 then F.SDL_AUDIO_DEVICE_DEFAULT_PLAYBACK else device_id, *desired, null, null);
+    stream := F.SDL_OpenAudioDeviceStream(ifx device_id == 0 then F.SDL_AUDIO_DEVICE_DEFAULT_PLAYBACK else device_id, *desired, null, null);
     if !stream return false;
 
     input_spec: F.SDL_AudioSpec;
@@ -199,11 +204,11 @@ audio_device_open_recording :: (
         return false;
     }
     desired: F.SDL_AudioSpec = .{
-        format   = AUDIO_F32,
+        format = AUDIO_F32,
         channels = cast(s32) channels,
-        freq     = cast(s32) sample_rate,
+        freq = cast(s32) sample_rate,
     };
-    stream := F.SDL_OpenAudioDeviceStream(ifx device_id==0 then F.SDL_AUDIO_DEVICE_DEFAULT_RECORDING else device_id, *desired, null, null);
+    stream := F.SDL_OpenAudioDeviceStream(ifx device_id == 0 then F.SDL_AUDIO_DEVICE_DEFAULT_RECORDING else device_id, *desired, null, null);
     if !stream return false;
 
     // 录音方向：设备写入 src、应用读取 dst，应用侧格式取 dst。
@@ -287,9 +292,9 @@ audio_pcm_format_valid :: (channels: s64, rate: s64) -> bool {
 // 手工构造的拥有切片可指定 allocator；零 allocator 沿用旧契约（context.allocator）。
 // 借入的切片不要 dispose；零值可直接装载、释放。
 Audio_Sound :: struct {
-    samples:   [] float32;
-    channels:  s64;
-    rate:      s64;
+    samples: [] float32;
+    channels: s64;
+    rate: s64;
     allocator: Allocator;
 }
 
@@ -309,7 +314,7 @@ audio_sound_dispose :: (sound: *Audio_Sound) {
 // 非零 channels 为 1..8，rate 为正的 i32 范围 Hz，不代表物理设备格式。
 Audio_PCM_Format :: struct {
     channels: s64;
-    rate:     s64;
+    rate: s64;
 }
 
 // 从完整 WAV 字节解码；只在调用期间借用 bytes，结果由 allocator 独立拥有。
@@ -335,7 +340,9 @@ audio_sound_load_wav_bytes :: (
     buf_len: u32;
     // closeio 同时覆盖 SDL 解码失败的 IO 释放，不改变进程级 WAV 容错 hints。
     if !audio_sdl_load_wav_io(io, true, *spec, *buf, *buf_len) return false;
-    defer { if buf F.SDL_free(buf); }
+    defer {
+        if buf F.SDL_free(buf);
+    }
     frame_bytes := audio_framesize(spec);
     if !audio_pcm_format_valid(cast(s64) spec.channels, cast(s64) spec.freq) ||
        frame_bytes <= 0 || buf_len == 0 || cast(s64) buf_len > 2147483647 ||
@@ -374,7 +381,9 @@ audio_sound_load_wav_bytes :: (
     if !audio_sdl_convert_audio_samples(*spec, buf, cast(s32) buf_len, *dst_spec, *dst, *dst_len) {
         return false;
     }
-    defer { if dst F.SDL_free(dst); }
+    defer {
+        if dst F.SDL_free(dst);
+    }
     if dst_len <= 0 || cast(s64) dst_len % (channels * size_of(float32)) != 0 return false;
     samples: [] float32;
     samples.data = cast(*float32) dst;
@@ -490,7 +499,9 @@ audio_play :: (device: *Audio_Device, sound: *Audio_Sound, volume: float32 = 1) 
 
     data := sound.samples;
     converted: *u8;
-    defer { if converted F.SDL_free(converted); }
+    defer {
+        if converted F.SDL_free(converted);
+    }
     if sound.channels != cast(s64) device.input_spec.channels || sound.rate != cast(s64) device.input_spec.freq {
         // 转换后长度也必须适合 SDL 的 i32 字节数；先算上界，避免巨大分配。
         frames := data.count / sound.channels;
@@ -499,9 +510,9 @@ audio_play :: (device: *Audio_Device, sound: *Audio_Sound, volume: float32 = 1) 
             return false;
         }
         src_spec: F.SDL_AudioSpec = .{
-            format   = AUDIO_F32,
+            format = AUDIO_F32,
             channels = cast(s32) sound.channels,
-            freq     = cast(s32) sound.rate,
+            freq = cast(s32) sound.rate,
         };
         dst_spec := device.input_spec;
         converted_len: s32;
@@ -520,7 +531,9 @@ audio_play :: (device: *Audio_Device, sound: *Audio_Sound, volume: float32 = 1) 
 
     vol := clamp(volume, cast(float32) 0, cast(float32) 1);
     scaled: [] float32;
-    defer { if scaled.data != null context.allocator.proc(.FREE, 0, 0, scaled.data, context.allocator.data); }
+    defer {
+        if scaled.data != null context.allocator.proc(.FREE, 0, 0, scaled.data, context.allocator.data);
+    }
     if vol != 1 {
         // olib 用 make([]f32, len(data))（context.allocator）：分配失败时直接返回 false。
         memory := context.allocator.proc(.ALLOCATE, data.count * size_of(float32), 0, null, context.allocator.data);
@@ -573,12 +586,28 @@ operator == :: (a: Audio_Sound, b: Audio_Sound) -> bool {
 //@endregion
 
 // Enumerated names are owned by the returned list, freed with audio_device_list_free.
-Audio_Device_Info :: struct { id:u32; name:string; }
-audio_sdl_get_audio_playback_devices :: (count:*s32)->*u32 #foreign SDL3 "SDL_GetAudioPlaybackDevices";
-audio_device_list :: (recording:bool)->[..]Audio_Device_Info {
-    count:s32; ids:=ifx recording then audio_sdl_get_audio_recording_devices(*count) else audio_sdl_get_audio_playback_devices(*count);
-    result:[..]Audio_Device_Info; if ids==null return result; defer F.SDL_free(ids);
-    for i:0..cast(int)count-1 { name:=F.SDL_GetAudioDeviceName(ids[i]); if name!=null array_add(*result,Audio_Device_Info.{ids[i],copy_string(to_string(name))}); }
+Audio_Device_Info :: struct {
+    id: u32;
+    name: string;
+}
+
+audio_sdl_get_audio_playback_devices :: (count: *s32) -> *u32 #foreign SDL3 "SDL_GetAudioPlaybackDevices";
+
+audio_device_list :: (recording: bool) -> [..] Audio_Device_Info {
+    count: s32;
+    ids := ifx recording then audio_sdl_get_audio_recording_devices(*count) else audio_sdl_get_audio_playback_devices(*count);
+    result: [..] Audio_Device_Info;
+    if ids == null return result;
+    defer F.SDL_free(ids);
+    for i: 0..cast(int) count - 1 {
+        name := F.SDL_GetAudioDeviceName(ids[i]);
+        if name != null array_add(*result, Audio_Device_Info.{ ids[i], copy_string(to_string(name)) });
+    }
     return result;
 }
-audio_device_list_free :: (list:*[..]Audio_Device_Info) { for it:list.* free(it.name.data); array_free(list.*); list.*=.{}; }
+
+audio_device_list_free :: (list: *[..] Audio_Device_Info) {
+    for it: list.* free(it.name.data);
+    array_free(list.*);
+    list.* = .{};
+}

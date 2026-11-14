@@ -10,8 +10,8 @@
 // 不具名导入会让本包的 Matrix4 遮蔽 Math 的名字（jacket: declaration-hides-import，
 // 官方 Jai 直接拒绝）。用具名导入 + `JM.` 前缀后没有这个遮蔽，olib 的公开名保持不变。
 #import "Basic";
-JM :: #import "Math";     // sqrt / tan / isnan / PI64 / Vector2 / Vector3
-F :: #import "foster";   // Point2 / Matrix3x2 的来源（olib 的 foster 对应物）
+JM :: #import "Math"; // sqrt / tan / isnan / PI64 / Vector2 / Vector3
+F :: #import "foster"; // Point2 / Matrix3x2 的来源（olib 的 foster 对应物）
 
 #load "matrix4.jai";
 #load "ray3d.jai";

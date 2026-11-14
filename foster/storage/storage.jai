@@ -2,8 +2,10 @@
 using Basic;
 using Math;
 using Hash_Table;
+
 File_Utilities :: #import "File_Utilities";
-using File_Utilities;   // file_exists / folder_* helpers
+
+using File_Utilities; // file_exists / folder_* helpers
 // `File` (namespace) is already exported at module scope by utility/json.jai.
 #scope_export
 
@@ -17,7 +19,7 @@ using File_Utilities;   // file_exists / folder_* helpers
 
 Storage_Container :: struct {
     Writable: bool = false;
-    Root:     string;      // base path for Read/Write implementations
+    Root: string; // base path for Read/Write implementations
 }
 
 storage_exists :: (s: *Storage_Container, path: string) -> bool {
@@ -221,7 +223,10 @@ directory_enum :: (path: string, search_pattern := "*.*", recursive := false) ->
 
 match_wildcard :: (pattern: string, name: string) -> bool {
     // simple * and ? glob
-    p := 0; n := 0; star := -1; match := 0;
+    p := 0;
+    n := 0;
+    star := -1;
+    match := 0;
     while n < name.count {
         if p < pattern.count && (pattern[p] == #char "?" || pattern[p] == name[n]) {
             p += 1;

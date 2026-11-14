@@ -10,13 +10,13 @@
 
 main :: () {
     App.startup = startup;
-    App.render  = render;
-    App.update  = update;
+    App.render = render;
+    App.update = update;
 
     app_run(.{
         application_name = "jfoster inputs sample",
-        window_title     = "jfoster inputs (ESC to quit)",
-        width  = 1280,
+        window_title = "jfoster inputs (ESC to quit)",
+        width = 1280,
         height = 720,
     });
 
@@ -82,14 +82,17 @@ render :: () {
     draw_key(b, kb, 320, 260, 90, 90, "D", .D);
 
     // modifier lamps
-    lamps: [6] struct { label: string; on: bool; } = .[
-        .{ "CTRL",  keyboard_ctrl(kb) },
-        .{ "ALT",   keyboard_alt(kb) },
-        .{ "SHIFT", keyboard_shift(kb) },
-        .{ "LEFT",  keyboard_down(kb, .LEFT) },
-        .{ "RIGHT", keyboard_down(kb, .RIGHT) },
-        .{ "UP",    keyboard_down(kb, .UP) },
-    ];
+    lamps: [6] struct {
+        label: string;
+        on: bool;
+    } = .[
+.{ "CTRL", keyboard_ctrl(kb) },
+.{ "ALT", keyboard_alt(kb) },
+.{ "SHIFT", keyboard_shift(kb) },
+.{ "LEFT", keyboard_down(kb, .LEFT) },
+.{ "RIGHT", keyboard_down(kb, .RIGHT) },
+.{ "UP", keyboard_down(kb, .UP) },
+];
     for lamp, i: lamps {
         col := ifx lamp.on then Color.{ 120, 255, 140, 255 } else Color.{ 60, 60, 75, 255 };
         batcher_rect_rounded(b, .{ 100 + cast(float) i * 80, 420, 70, 36 }, 6, col);
@@ -101,9 +104,12 @@ render :: () {
     batcher_line(b, ms.Position - .{ 0, 20 }, ms.Position + .{ 0, 20 }, 2, Color.{ 255, 255, 255, 120 });
 
     // mouse buttons
-    mbtns: [3] struct { label: string; btn: Mouse_Buttons; } = .[
-        .{ "L", .LEFT }, .{ "M", .MIDDLE }, .{ "R", .RIGHT },
-    ];
+    mbtns: [3] struct {
+        label: string;
+        btn: Mouse_Buttons;
+    } = .[
+.{ "L", .LEFT }, .{ "M", .MIDDLE }, .{ "R", .RIGHT },
+];
     for m, i: mbtns {
         col := Color.{ 70, 70, 90, 255 };
         if mouse_down(ms, m.btn) col = Color.{ 255, 160, 120, 255 };
@@ -153,7 +159,7 @@ render :: () {
 keys_to_string :: (key: Keys) -> string {
     n := cast(u32) key;
     if n >= 4 && n <= 29 {
-        letters: [26] string = .["A","B","C","D","E","F","G","H","I","J","K","L","M","N","O","P","Q","R","S","T","U","V","W","X","Y","Z"];
+        letters: [26] string = .["A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z"];
         return letters[n - 4];
     }
     if n == 44 return "SPACE";

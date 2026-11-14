@@ -47,7 +47,7 @@ DEBUG_LINE_VERTEX_STRIDE :: 28;
 
 Debug_Draw_3D :: struct {
     depth_test_enabled: bool; // 遮挡关系（默认开）；始终不写深度
-    thickness: float32;       // 线宽（世界单位）
+    thickness: float32; // 线宽（世界单位）
 
     vertices: [..] Debug_Line_Vertex; // 每线段 2 个端点
     indices: [..] u32;
@@ -139,7 +139,7 @@ debug_draw_frustum :: (d: *Debug_Draw_3D, view_projection: W.Matrix4, color: [4]
     inverse, ok := W.matrix4_inverse(view_projection);
     if !ok return;
 
-    corners: [8] [3] float32;
+    corners: [8][3] float32;
     for i: 0..7 {
         x := -1.0;
         if (i & 1) != 0 x = 1.0;
@@ -353,8 +353,8 @@ debug_line_format :: () -> F.Vertex_Format {
     return F.vertex_format_make(array_view(elements, 0, 2), DEBUG_LINE_VERTEX_STRIDE);
 }
 
-aabb_corners :: (bounds: DA.Dasset_Bounds) -> [8] [3] float32 {
-    corners: [8] [3] float32;
+aabb_corners :: (bounds: DA.Dasset_Bounds) -> [8][3] float32 {
+    corners: [8][3] float32;
     for i: 0..7 {
         // olib: (i & 1) == 0 ? bounds.min[0] : bounds.max[0]（Jai 没有三元，先声明再分支）
         x := bounds.min[0];
@@ -369,7 +369,7 @@ aabb_corners :: (bounds: DA.Dasset_Bounds) -> [8] [3] float32 {
 }
 
 // 8 角点的 12 条棱：bit 位相邻连接。
-debug_draw_box_edges :: (d: *Debug_Draw_3D, corners: [8] [3] float32, color: [4] float32) {
+debug_draw_box_edges :: (d: *Debug_Draw_3D, corners: [8][3] float32, color: [4] float32) {
     bits: [3] int = .[1, 2, 4];
     for i: 0..7 {
         for bit: bits {

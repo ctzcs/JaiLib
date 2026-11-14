@@ -53,7 +53,7 @@ operator == :: (a: Handle, b: Handle) -> bool {
 // T 是存进 Pool 的类型；HT 是句柄类型（业务里写作 My_Handle :: Handle）；
 // Max 是 Pool 最多能存的条目数——因为用预留内存，可以给一个很大的值，
 // 它只决定预留多少地址空间。
-Pool :: struct (T: Type, HT: Type, Max: int) {
+Pool :: struct(T: Type, HT: Type, Max: int) {
     // 每个条目都必须有类型为 HT 的 handle 字段。
     // 0 号永远是 dummy 条目，这样 idx == 0 的 Handle 表示"没有句柄"。
     items: [..] T;
@@ -66,8 +66,8 @@ Pool :: struct (T: Type, HT: Type, Max: int) {
 }
 
 // 遍历用。用 begin 创建。
-Iterator :: struct (T: Type, HT: Type, Max: int) {
-    m:     *Pool(T, HT, Max);
+Iterator :: struct(T: Type, HT: Type, Max: int) {
+    m: *Pool(T, HT, Max);
     index: int;
 }
 //@endregion
@@ -76,9 +76,9 @@ Iterator :: struct (T: Type, HT: Type, Max: int) {
 
 // 一次性预留的 arena：bump 分配，永不移动、不单独释放。
 Virtual_Arena :: struct {
-    base:           *u8;   // 预留区起点（结构体自身也在这里）
-    total_reserved: s64;   // 预留字节数
-    used:           s64;   // 已 bump 的字节数
+    base: *u8; // 预留区起点（结构体自身也在这里）
+    total_reserved: s64; // 预留字节数
+    used: s64; // 已 bump 的字节数
 }
 
 // arena 结构体占掉的头部大小（按 16 字节对齐）。olib 的 slot_cap 同样要扣掉 arena 结构体本身。
@@ -117,7 +117,7 @@ virtual_arena_allocator_proc :: (mode: Allocator_Mode, size: s64, old_size: s64,
         if offset + size > arena.used arena.used = offset + size;
         return old_memory;
     }
-    return null;   // 整块回收走 virtual_arena_destroy
+    return null; // 整块回收走 virtual_arena_destroy
 }
 
 virtual_arena_allocator :: (arena: *Virtual_Arena) -> Allocator {
@@ -132,9 +132,9 @@ virtual_arena_init :: (arena: *Virtual_Arena, total_reserved: s64) -> bool {
     allocator := context.allocator;
     memory := allocator.proc(.ALLOCATE, total_reserved, 0, null, allocator.data);
     if memory == null return false;
-    arena.base           = cast(*u8) memory;
+    arena.base = cast(*u8) memory;
     arena.total_reserved = total_reserved;
-    arena.used           = virtual_arena_header_size();   // 结构体自身占头部
+    arena.used = virtual_arena_header_size(); // 结构体自身占头部
     return true;
 }
 
@@ -287,12 +287,18 @@ add :: (m: *Pool($T, $HT, $Max), v: T) -> (HT, bool) {
 
     needed := max(m.items.count, 1) + 1;
     if m.unused_items.allocated < needed - 1 {
-        if !virtual_reserve(*m.unused_items, max(needed - 1, max(2 * m.unused_items.allocated, 8))) { zero: HT; return zero, false; }
+        if !virtual_reserve(*m.unused_items, max(needed - 1, max(2 * m.unused_items.allocated, 8))) {
+            zero: HT;
+            return zero, false;
+        }
     }
 
     if m.items.count == 0 {
         empty_item: T;
-        if !virtual_append(*m.items, empty_item) { zero: HT; return zero, false; }
+        if !virtual_append(*m.items, empty_item) {
+            zero: HT;
+            return zero, false;
+        }
     }
 
     new_item := v;
@@ -300,8 +306,14 @@ add :: (m: *Pool($T, $HT, $Max), v: T) -> (HT, bool) {
     new_item.handle.gen = 1;
     if !virtual_append(*m.items, new_item) {
         // 扩容失败了：多半是想长过预留区。按预留区能容纳的最大槽位数再长一次。
-        if !virtual_reserve(*m.items, virtual_slot_cap(m.*)) { zero: HT; return zero, false; }
-        if !virtual_append(*m.items, new_item) { zero: HT; return zero, false; }
+        if !virtual_reserve(*m.items, virtual_slot_cap(m.*)) {
+            zero: HT;
+            return zero, false;
+        }
+        if !virtual_append(*m.items, new_item) {
+            zero: HT;
+            return zero, false;
+        }
     }
 
     return new_item.handle, true;

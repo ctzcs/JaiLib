@@ -8,30 +8,36 @@ using Hash_Table;
 // + PNG atlas. Generation is external (msdf-atlas-gen), as upstream.
 
 Msdf_Font_Glyph :: struct {
-    Unicode:  s32;
-    Advance:  float;
-    PlaneBounds: Rect;      // l/t/r/b stored as x/y/w/h-ish rect fields below
-    AtlasBounds:  Rect;
-    pl: float; pt: float; pr: float; pb: float;   // plane l/t/r/b
-    al: float; at: float; ar: float; ab: float;   // atlas l/t/r/b
+    Unicode: s32;
+    Advance: float;
+    PlaneBounds: Rect; // l/t/r/b stored as x/y/w/h-ish rect fields below
+    AtlasBounds: Rect;
+    pl: float;
+    pt: float;
+    pr: float;
+    pb: float; // plane l/t/r/b
+    al: float;
+    at: float;
+    ar: float;
+    ab: float; // atlas l/t/r/b
 }
 
 Msdf_Font :: struct {
     Atlas: *Image = null;
     Glyphs: [..] Msdf_Font_Glyph;
-    lookup: Table(s32, s32);   // codepoint -> glyph index
+    lookup: Table(s32, s32); // codepoint -> glyph index
 
-    EmSize:             float;
-    LineHeight:         float;
-    Ascender:           float;
-    Descender:          float;
-    UnderlineY:         float;
+    EmSize: float;
+    LineHeight: float;
+    Ascender: float;
+    Descender: float;
+    UnderlineY: float;
     UnderlineThickness: float;
 
-    Size:        float;
-    Ascent:      float;
-    Descent:     float;
-    LineGap:     float;
+    Size: float;
+    Ascent: float;
+    Descent: float;
+    LineGap: float;
     DistanceRange: float;
     DistanceRangeMiddle: float;
 }
@@ -45,10 +51,16 @@ msdf_font_load :: (json_path: string) -> *Msdf_Font {
 
 msdf_font_load_paths :: (json_path: string, png_path: string) -> *Msdf_Font {
     json_bytes, json_ok := File.read_entire_file(json_path);
-    if !json_ok { log_warning(tprint("msdf font json not found: %", json_path)); return null; }
+    if !json_ok {
+        log_warning(tprint("msdf font json not found: %", json_path));
+        return null;
+    }
     defer free(json_bytes.data);
     png_bytes, png_ok := File.read_entire_file(png_path);
-    if !png_ok { log_warning(tprint("msdf font atlas png not found: %", png_path)); return null; }
+    if !png_ok {
+        log_warning(tprint("msdf font atlas png not found: %", png_path));
+        return null;
+    }
     defer free(png_bytes.data);
     return msdf_font_load_bytes(cast([] u8) json_bytes, cast([] u8) png_bytes);
 }
@@ -67,24 +79,24 @@ msdf_font_load_bytes :: (json_bytes: [] u8, png_bytes: [] u8) -> *Msdf_Font {
     atlas := json_get(root, "atlas");
     f.DistanceRange = cast(float) json_get_number(atlas, "distanceRange");
     f.DistanceRangeMiddle = cast(float) json_get_number(atlas, "distanceRangeMiddle");
-    f.Size           = cast(float) json_get_number(atlas, "size");
+    f.Size = cast(float) json_get_number(atlas, "size");
 
     metrics := json_get(root, "metrics");
-    f.EmSize             = cast(float) json_get_number(metrics, "emSize");
-    f.LineHeight         = cast(float) json_get_number(metrics, "lineHeight");
-    f.Ascender           = cast(float) json_get_number(metrics, "ascender");
-    f.Descender          = cast(float) json_get_number(metrics, "descender");
-    f.UnderlineY         = cast(float) json_get_number(metrics, "underlineY");
+    f.EmSize = cast(float) json_get_number(metrics, "emSize");
+    f.LineHeight = cast(float) json_get_number(metrics, "lineHeight");
+    f.Ascender = cast(float) json_get_number(metrics, "ascender");
+    f.Descender = cast(float) json_get_number(metrics, "descender");
+    f.UnderlineY = cast(float) json_get_number(metrics, "underlineY");
     f.UnderlineThickness = cast(float) json_get_number(metrics, "underlineThickness");
 
-    f.Ascent  = abs(f.Size * f.Ascender);
+    f.Ascent = abs(f.Size * f.Ascender);
     f.Descent = -abs(f.Size * f.Descender);
     f.LineGap = f.Size * f.LineHeight - (f.Ascent - f.Descent);
 
     glyphs := json_get(root, "glyphs");
     count := json_array_count(glyphs);
     array_reserve(*f.Glyphs, count);
-    for i: 0..count-1 {
+    for i: 0..count - 1 {
         g := json_array_at(glyphs, i);
         glyph: Msdf_Font_Glyph;
         glyph.Unicode = cast(s32) json_get_number(g, "unicode");
@@ -131,7 +143,7 @@ msdf_font_destroy :: (f: *Msdf_Font) {
 
 find_string_from_end :: (s: string, needle: string) -> s32 {
     // Both bounds are typed so the loop variable is s32 (`0` alone infers s64).
-    for i: (cast(s32) s.count - cast(s32) needle.count) .. cast(s32) 0 {
+    for i: (cast(s32) s.count - cast(s32) needle.count)..cast(s32) 0 {
         if sub_string(s, i, cast(s32) needle.count) == needle return i;
     }
     return -1;

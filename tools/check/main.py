@@ -62,7 +62,7 @@ def main():
     OUT.mkdir(parents=True, exist_ok=True)
     jaic = compiler()
     imports = ['-import_dir', ROOT, '-import_dir', ROOT / 'tests']
-    checks = []
+    checks = [('check format', [sys.executable, ROOT / 'tools/format/main.py', '--check'])]
     for parent in ['core', 'kit', 'thirdparty']:
         for module in sorted((ROOT / parent).rglob('module.jai')):
             if any(p in module.parts for p in ['tests', 'testdata']):

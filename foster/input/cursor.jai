@@ -18,10 +18,10 @@ using Math;
 // identical.
 SDL_Cursor :: void;
 
-SDL_CreateColorCursor  :: (surface: *SDL_Surface, hot_x: s32, hot_y: s32) -> *SDL_Cursor #foreign SDL3;
-SDL_CreateSystemCursor :: (id: u32) -> *SDL_Cursor                                #foreign SDL3;
-SDL_DestroyCursor      :: (cursor: *SDL_Cursor) -> bool                           #foreign SDL3;
-SDL_SetCursor          :: (cursor: *SDL_Cursor) -> bool                           #foreign SDL3;
+SDL_CreateColorCursor :: (surface: *SDL_Surface, hot_x: s32, hot_y: s32) -> *SDL_Cursor #foreign SDL3;
+SDL_CreateSystemCursor :: (id: u32) -> *SDL_Cursor #foreign SDL3;
+SDL_DestroyCursor :: (cursor: *SDL_Cursor) -> bool #foreign SDL3;
+SDL_SetCursor :: (cursor: *SDL_Cursor) -> bool #foreign SDL3;
 
 // Built-in system cursors, a one-to-one mapping of SDL_SystemCursor:
 // https://wiki.libsdl.org/SDL3/SDL_SystemCursor
@@ -63,7 +63,7 @@ Cursor :: struct {
     // The System Type used to create this cursor; only meaningful when
     // HasSystemType is true (C#: SystemTypes? SystemType, null if the cursor
     // was created from an Image).
-    SystemType:    Cursor_System_Types;
+    SystemType: Cursor_System_Types;
     HasSystemType: bool;
 }
 

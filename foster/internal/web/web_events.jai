@@ -46,17 +46,17 @@
 //
 // 事件种类。数值是和 host.js 的约定，不要改（改了要同时改 JS）。
 //
-WEB_EV_KEY_DOWN     :: 1;    // a=scancode  b=repeat(0/1)
-WEB_EV_KEY_UP       :: 2;    // a=scancode
-WEB_EV_POINTER_DOWN :: 3;    // a=button(1=左,2=中,3=右,4=X1,5=X2) b=x c=y
-WEB_EV_POINTER_UP   :: 4;    // a=button b=x c=y
-WEB_EV_POINTER_MOVE :: 5;    // a=x b=y c=movementX d=movementY（指针锁定时才有意义）
-WEB_EV_WHEEL        :: 6;    // a=deltaX*100 b=deltaY*100 c=x d=y
-WEB_EV_FOCUS        :: 7;
-WEB_EV_BLUR         :: 8;
-WEB_EV_VISIBILITY   :: 9;    // a=1 可见 / 0 隐藏
-WEB_EV_RESIZE       :: 10;   // a=css_w b=css_h c=device_w d=device_h
-WEB_EV_TEXT         :: 11;   // a=Unicode 码点
+WEB_EV_KEY_DOWN :: 1; // a=scancode  b=repeat(0/1)
+WEB_EV_KEY_UP :: 2; // a=scancode
+WEB_EV_POINTER_DOWN :: 3; // a=button(1=左,2=中,3=右,4=X1,5=X2) b=x c=y
+WEB_EV_POINTER_UP :: 4; // a=button b=x c=y
+WEB_EV_POINTER_MOVE :: 5; // a=x b=y c=movementX d=movementY（指针锁定时才有意义）
+WEB_EV_WHEEL :: 6; // a=deltaX*100 b=deltaY*100 c=x d=y
+WEB_EV_FOCUS :: 7;
+WEB_EV_BLUR :: 8;
+WEB_EV_VISIBILITY :: 9; // a=1 可见 / 0 隐藏
+WEB_EV_RESIZE :: 10; // a=css_w b=css_h c=device_w d=device_h
+WEB_EV_TEXT :: 11; // a=Unicode 码点
 
 Web_Dom_Event :: struct {
     kind: s32;
@@ -142,10 +142,10 @@ web_dispatch_dom_event :: (rec: Web_Dom_Event) {
     if kind == WEB_EV_KEY_DOWN || kind == WEB_EV_KEY_UP {
         ev: Web_Event;
         ev.window_id = web_main_window_id();
-        ev.scancode  = cast(u32) rec.a;
-        ev.repeat    = rec.b != 0;
+        ev.scancode = cast(u32) rec.a;
+        ev.repeat = rec.b != 0;
         if kind == WEB_EV_KEY_DOWN ev.type = .SDL_EVENT_KEY_DOWN;
-        else                       ev.type = .SDL_EVENT_KEY_UP;
+        else ev.type = .SDL_EVENT_KEY_UP;
         web_push_event(ev);
 
     } else if kind == WEB_EV_POINTER_DOWN || kind == WEB_EV_POINTER_UP {
@@ -155,11 +155,11 @@ web_dispatch_dom_event :: (rec: Web_Dom_Event) {
 
         ev: Web_Event;
         ev.window_id = web_main_window_id();
-        ev.button    = rec.a;                      // 已经是 SDL 编号（1=左）
-        ev.mouse_x   = cast(float) rec.b;
-        ev.mouse_y   = cast(float) rec.c;
+        ev.button = rec.a; // 已经是 SDL 编号（1=左）
+        ev.mouse_x = cast(float) rec.b;
+        ev.mouse_y = cast(float) rec.c;
         if kind == WEB_EV_POINTER_DOWN ev.type = .SDL_EVENT_MOUSE_BUTTON_DOWN;
-        else                           ev.type = .SDL_EVENT_MOUSE_BUTTON_UP;
+        else ev.type = .SDL_EVENT_MOUSE_BUTTON_UP;
         web_push_event(ev);
 
     } else if kind == WEB_EV_POINTER_MOVE {
@@ -175,11 +175,11 @@ web_dispatch_dom_event :: (rec: Web_Dom_Event) {
         // JS 侧乘了 100 再取整，这里还原成 SDL 的「行」单位（一格约 1.0）。
         ev: Web_Event;
         ev.window_id = web_main_window_id();
-        ev.type      = .SDL_EVENT_MOUSE_WHEEL;
-        ev.wheel_x   = cast(float) rec.a / 100.0;
-        ev.wheel_y   = cast(float) rec.b / 100.0;
-        ev.mouse_x   = cast(float) rec.c;
-        ev.mouse_y   = cast(float) rec.d;
+        ev.type = .SDL_EVENT_MOUSE_WHEEL;
+        ev.wheel_x = cast(float) rec.a / 100.0;
+        ev.wheel_y = cast(float) rec.b / 100.0;
+        ev.mouse_x = cast(float) rec.c;
+        ev.mouse_y = cast(float) rec.d;
         web_push_event(ev);
 
     } else if kind == WEB_EV_FOCUS || kind == WEB_EV_BLUR {
@@ -191,7 +191,7 @@ web_dispatch_dom_event :: (rec: Web_Dom_Event) {
         ev: Web_Event;
         ev.window_id = web_main_window_id();
         if kind == WEB_EV_FOCUS ev.type = .SDL_EVENT_WINDOW_FOCUS_GAINED;
-        else                   ev.type = .SDL_EVENT_WINDOW_FOCUS_LOST;
+        else ev.type = .SDL_EVENT_WINDOW_FOCUS_LOST;
         web_push_event(ev);
 
     } else if kind == WEB_EV_VISIBILITY {
@@ -205,7 +205,7 @@ web_dispatch_dom_event :: (rec: Web_Dom_Event) {
 
         ev: Web_Event;
         ev.window_id = web_main_window_id();
-        ev.type      = .SDL_EVENT_WINDOW_RESIZED;
+        ev.type = .SDL_EVENT_WINDOW_RESIZED;
         web_push_event(ev);
 
     } else if kind == WEB_EV_TEXT {
@@ -214,9 +214,9 @@ web_dispatch_dom_event :: (rec: Web_Dom_Event) {
             web_dom_text_total += 1;
             ev: Web_Event;
             ev.window_id = web_main_window_id();
-            ev.type      = .SDL_EVENT_TEXT_INPUT;
-            ev.text_ptr  = *web_text_pool[off];
-            ev.text_len  = web_text_pool_used - off - 1;   // 不含 NUL
+            ev.type = .SDL_EVENT_TEXT_INPUT;
+            ev.text_ptr = *web_text_pool[off];
+            ev.text_len = web_text_pool_used - off - 1; // 不含 NUL
             web_push_event(ev);
         }
     }
@@ -239,9 +239,9 @@ web_main_window_id :: () -> u32 {
 // 其余手柄靠 `id` 猜，接不上就退化成「只有轴」。桌面端的多手柄热插拔语义
 // 这里用「每帧 diff」近似：新出现的 index 视为连接，消失的视为断开。
 //
-WEB_GAMEPAD_MAX         :: 4;     // 同时接线的手柄上限（够用，且省内存）
-WEB_GAMEPAD_NAME_MAX    :: 64;
-WEB_GAMEPAD_AXES_MAX    :: 8;
+WEB_GAMEPAD_MAX :: 4; // 同时接线的手柄上限（够用，且省内存）
+WEB_GAMEPAD_NAME_MAX :: 64;
+WEB_GAMEPAD_AXES_MAX :: 8;
 WEB_GAMEPAD_BUTTONS_MAX :: 24;
 
 // 布局必须与 host.js 的 writeGamepad() 完全一致：
@@ -249,21 +249,21 @@ WEB_GAMEPAD_BUTTONS_MAX :: 24;
 //   20 vendor / 24 product / 28 id
 //   32 name[64] / 96 axes[8] float32 / 128 buttons[24] u8   → 152 字节
 Web_Gamepad_Rec :: struct {
-    connected:    s32;
-    index:        s32;
+    connected: s32;
+    index: s32;
     button_count: s32;
-    axis_count:   s32;
-    name_len:     s32;
-    vendor:       s32;
-    product:      s32;
-    id:           s32;
-    name:         [WEB_GAMEPAD_NAME_MAX] u8;
-    axes:         [WEB_GAMEPAD_AXES_MAX] float;
-    buttons:      [WEB_GAMEPAD_BUTTONS_MAX] u8;
+    axis_count: s32;
+    name_len: s32;
+    vendor: s32;
+    product: s32;
+    id: s32;
+    name: [WEB_GAMEPAD_NAME_MAX] u8;
+    axes: [WEB_GAMEPAD_AXES_MAX] float;
+    buttons: [WEB_GAMEPAD_BUTTONS_MAX] u8;
 }
 
 web_gamepad_recs: [WEB_GAMEPAD_MAX] Web_Gamepad_Rec;
-web_gamepad_connected: [WEB_GAMEPAD_MAX] bool;    // 上一帧的状态，用于 diff
+web_gamepad_connected: [WEB_GAMEPAD_MAX] bool; // 上一帧的状态，用于 diff
 web_gamepad_controller_id: [WEB_GAMEPAD_MAX] Controller_ID;
 web_gamepad_prev_buttons: [WEB_GAMEPAD_MAX][WEB_GAMEPAD_BUTTONS_MAX] bool;
 web_gamepads_seen: s32;
@@ -276,7 +276,7 @@ web_poll_gamepads :: () {
     if count > WEB_GAMEPAD_MAX count = WEB_GAMEPAD_MAX;
 
     // 反向遍历：把这一帧没出现的手柄标记为断开。
-    for slot: 0..WEB_GAMEPAD_MAX-1 {
+    for slot: 0..WEB_GAMEPAD_MAX - 1 {
         rec := *web_gamepad_recs[slot];
         now_connected := slot < count && rec.connected != 0;
 
@@ -313,7 +313,7 @@ web_poll_gamepads :: () {
         // 扳机由 JS 从 button 6/7 折算到 axis 4/5。
         axis_count := rec.axis_count;
         if axis_count > WEB_GAMEPAD_AXES_MAX axis_count = WEB_GAMEPAD_AXES_MAX;
-        for a: 0..axis_count-1 {
+        for a: 0..axis_count - 1 {
             input_controller_axis(App.input, web_gamepad_controller_id[slot], a,
                                   rec.axes[a], App.time.elapsed);
         }
@@ -322,7 +322,7 @@ web_poll_gamepads :: () {
         // 不会因为 120 Hz 的轮询被记成多次 pressed。
         button_count := rec.button_count;
         if button_count > WEB_GAMEPAD_BUTTONS_MAX button_count = WEB_GAMEPAD_BUTTONS_MAX;
-        for b: 0..button_count-1 {
+        for b: 0..button_count - 1 {
             pressed := rec.buttons[b] != 0;
             if pressed == web_gamepad_prev_buttons[slot][b] continue;
             web_gamepad_prev_buttons[slot][b] = pressed;

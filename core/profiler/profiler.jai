@@ -23,8 +23,8 @@
 //   - profile_dump 的 `%-20s` 在 Jai 的 print 里没有宽度说明符，改为手工补空格到 20 列
 //     （名字超长时不截断，同 printf 的 %-20s）；浮点仍是 3 位小数（formatFloat
 //     trailing_width=3）。
-#import "Basic";        // print / formatFloat / current_time_monotonic / to_nanoseconds
-#import "Hash_Table";   // Table(string, Profile_Stat)
+#import "Basic"; // print / formatFloat / current_time_monotonic / to_nanoseconds
+#import "Hash_Table"; // Table(string, Profile_Stat)
 
 //@region 数据 —— 统计表与 Guard 类型
 
@@ -34,11 +34,11 @@ Duration :: s64;
 Profile_Stat :: struct {
     count: s64;
     total: Duration;
-    max:   Duration;
+    max: Duration;
 }
 
 Profile_Guard :: struct {
-    name:  string;
+    name: string;
     start: Duration;
 }
 
@@ -52,8 +52,8 @@ profile_now :: () -> Duration {
 }
 
 profile_init :: () {
-    deinit(*profile_stats);       // 释放旧表（等价于 olib 丢弃旧 map）
-    profile_stats = .{};          // 分配器留空：首次增长时取 context.allocator
+    deinit(*profile_stats); // 释放旧表（等价于 olib 丢弃旧 map）
+    profile_stats = .{}; // 分配器留空：首次增长时取 context.allocator
 }
 //@endregion
 
@@ -63,7 +63,7 @@ profile_init :: () {
 // —— 作用域结束时自动累计耗时。
 profile_scope :: (name: string) -> Profile_Guard {
     return Profile_Guard.{
-        name  = name,
+        name = name,
         start = profile_now(),
     };
 }
@@ -99,7 +99,7 @@ profile_dump :: () {
 
         print("[PROFILE] %", name);
         if name.count < 20 {
-            for name.count..20 - 1 print(" ");   // %-20s
+            for name.count..20 - 1 print(" "); // %-20s
         }
         print(" count=% avg=%ms max=%ms total=%ms\n",
               stat.count,

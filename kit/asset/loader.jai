@@ -34,8 +34,8 @@ Asset_Read_Proc :: (storage: *Asset_Storage, guid: Guid, allocator: Allocator) -
 Asset_Exists_Proc :: (storage: *Asset_Storage, guid: Guid) -> bool;
 
 Asset_Storage :: struct {
-    read:     Asset_Read_Proc;
-    exists:   Asset_Exists_Proc;
+    read: Asset_Read_Proc;
+    exists: Asset_Exists_Proc;
     userdata: *void;
 }
 //@endregion
@@ -54,8 +54,8 @@ storage_directory_init :: (state: *Directory_State, library_root: string) {
 
 storage_directory :: (state: *Directory_State) -> Asset_Storage {
     return Asset_Storage.{
-        read     = directory_read,
-        exists   = directory_exists,
+        read = directory_read,
+        exists = directory_exists,
         userdata = state,
     };
 }
@@ -109,8 +109,8 @@ storage_map_dispose :: (state: *Map_State) {
 
 storage_map :: (state: *Map_State) -> Asset_Storage {
     return Asset_Storage.{
-        read     = map_read,
-        exists   = map_exists,
+        read = map_read,
+        exists = map_exists,
         userdata = state,
     };
 }

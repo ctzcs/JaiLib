@@ -10,13 +10,13 @@ AUTO_EXIT :: true;
 
 main :: () {
     App.startup = startup;
-    App.update  = update;
-    App.render  = render;
+    App.update = update;
+    App.render = render;
 
     app_run(.{
         application_name = "jfoster app sample",
-        window_title     = "jfoster app",
-        width  = 1280,
+        window_title = "jfoster app",
+        width = 1280,
         height = 720,
     });
 

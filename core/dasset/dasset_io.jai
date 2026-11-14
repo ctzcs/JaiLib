@@ -75,27 +75,43 @@ dasset_write :: (model: *Dasset_Model) -> ([..] u8, bool) {
     for 0..model.primitives.count - 1 {
         p := *model.primitives[it];
         skinned := dasset_primitive_is_skinned(p);
-        layout : Dasset_Vertex_Layout = .Position_Normal_Uv;
+        layout: Dasset_Vertex_Layout = .Position_Normal_Uv;
         if skinned layout = .Position_Normal_Uv_Skin;
         dasset_w_i32(*out, cast(s32) layout);
         dasset_w_i32(*out, p.skin_index);
         if skinned {
             dasset_w_i32(*out, cast(s32) p.skin_vertices.count);
             for v: p.skin_vertices {
-                dasset_w_f32(*out, v.position[0]); dasset_w_f32(*out, v.position[1]); dasset_w_f32(*out, v.position[2]);
-                dasset_w_f32(*out, v.normal[0]); dasset_w_f32(*out, v.normal[1]); dasset_w_f32(*out, v.normal[2]);
-                dasset_w_f32(*out, v.uv[0]); dasset_w_f32(*out, v.uv[1]);
-                for f: v.tangent { dasset_w_f32(*out, f); }
+                dasset_w_f32(*out, v.position[0]);
+                dasset_w_f32(*out, v.position[1]);
+                dasset_w_f32(*out, v.position[2]);
+                dasset_w_f32(*out, v.normal[0]);
+                dasset_w_f32(*out, v.normal[1]);
+                dasset_w_f32(*out, v.normal[2]);
+                dasset_w_f32(*out, v.uv[0]);
+                dasset_w_f32(*out, v.uv[1]);
+                for f: v.tangent {
+                    dasset_w_f32(*out, f);
+                }
                 dasset_w_u32(*out, v.joints);
-                for f: v.weights { dasset_w_f32(*out, f); }
+                for f: v.weights {
+                    dasset_w_f32(*out, f);
+                }
             }
         } else {
             dasset_w_i32(*out, cast(s32) p.vertices.count);
             for v: p.vertices {
-                dasset_w_f32(*out, v.position[0]); dasset_w_f32(*out, v.position[1]); dasset_w_f32(*out, v.position[2]);
-                dasset_w_f32(*out, v.normal[0]); dasset_w_f32(*out, v.normal[1]); dasset_w_f32(*out, v.normal[2]);
-                dasset_w_f32(*out, v.uv[0]); dasset_w_f32(*out, v.uv[1]);
-                for f: v.tangent { dasset_w_f32(*out, f); }
+                dasset_w_f32(*out, v.position[0]);
+                dasset_w_f32(*out, v.position[1]);
+                dasset_w_f32(*out, v.position[2]);
+                dasset_w_f32(*out, v.normal[0]);
+                dasset_w_f32(*out, v.normal[1]);
+                dasset_w_f32(*out, v.normal[2]);
+                dasset_w_f32(*out, v.uv[0]);
+                dasset_w_f32(*out, v.uv[1]);
+                for f: v.tangent {
+                    dasset_w_f32(*out, f);
+                }
             }
         }
 
@@ -122,11 +138,19 @@ dasset_write :: (model: *Dasset_Model) -> ([..] u8, bool) {
             dasset_w_i32(*out, cast(s32) ch.interpolation);
             n := ch.times.count;
             dasset_w_i32(*out, cast(s32) n);
-            for t: ch.times { dasset_w_f32(*out, t); }
-            for v: ch.values { dasset_w_vec4(*out, v); }
+            for t: ch.times {
+                dasset_w_f32(*out, t);
+            }
+            for v: ch.values {
+                dasset_w_vec4(*out, v);
+            }
             if ch.interpolation == Dasset_Interpolation.Cubic_Spline {
-                for v: ch.in_tangents { dasset_w_vec4(*out, v); }
-                for v: ch.out_tangents { dasset_w_vec4(*out, v); }
+                for v: ch.in_tangents {
+                    dasset_w_vec4(*out, v);
+                }
+                for v: ch.out_tangents {
+                    dasset_w_vec4(*out, v);
+                }
             }
         }
     }
@@ -214,14 +238,14 @@ dasset_read :: (data: [] u8) -> (Dasset_Model, Dasset_Error) {
             material = DASSET_MATERIAL_DEFAULT,
         });
         p := *model.primitives[model.primitives.count - 1];
-        layout : s32 = 0;
+        layout: s32 = 0;
         if version >= 2 {
             layout, _ = dasset_r_i32(data, *cur);
             p.skin_index, _ = dasset_r_i32(data, *cur);
             if layout < 0 || layout > 1 return dasset_dispose_partial(*model), .Bad_Value;
         }
         skinned := layout == 1;
-        stride : s64 = DASSET_VERTEX_STRIDE_STATIC;
+        stride: s64 = DASSET_VERTEX_STRIDE_STATIC;
         if skinned stride = DASSET_VERTEX_STRIDE_SKIN;
         vert_count, okv := dasset_r_count(data, *cur, stride);
         if !okv return dasset_dispose_partial(*model), .Truncated;
@@ -313,19 +337,27 @@ dasset_read :: (data: [] u8) -> (Dasset_Model, Dasset_Error) {
                     ch.interpolation = cast(Dasset_Interpolation) interp_v;
                 }
                 cubic := ch.interpolation == Dasset_Interpolation.Cubic_Spline;
-                key_stride : s64 = 20;
+                key_stride: s64 = 20;
                 if cubic key_stride = 52;
                 key_count, okk := dasset_r_count(data, *cur, key_stride);
                 if !okk return dasset_dispose_partial(*model), .Truncated;
                 ch.times = dasset_alloc_array(float32, key_count);
-                for 0..key_count - 1 { ch.times[it] = dasset_r_f32(data, *cur); }
+                for 0..key_count - 1 {
+                    ch.times[it] = dasset_r_f32(data, *cur);
+                }
                 ch.values = dasset_alloc_array([4] float32, key_count);
-                for 0..key_count - 1 { ch.values[it] = dasset_r_vec4(data, *cur); }
+                for 0..key_count - 1 {
+                    ch.values[it] = dasset_r_vec4(data, *cur);
+                }
                 if cubic {
                     ch.in_tangents = dasset_alloc_array([4] float32, key_count);
                     ch.out_tangents = dasset_alloc_array([4] float32, key_count);
-                    for 0..key_count - 1 { ch.in_tangents[it] = dasset_r_vec4(data, *cur); }
-                    for 0..key_count - 1 { ch.out_tangents[it] = dasset_r_vec4(data, *cur); }
+                    for 0..key_count - 1 {
+                        ch.in_tangents[it] = dasset_r_vec4(data, *cur);
+                    }
+                    for 0..key_count - 1 {
+                        ch.out_tangents[it] = dasset_r_vec4(data, *cur);
+                    }
                 }
                 array_add(*model.clips[clip_index].channels, ch);
             }
@@ -397,14 +429,20 @@ dasset_w_i32 :: (out: *[..] u8, v: s32) {
 
 // f32 -> u32 的比特重解释。Jai 没有 transmute，用 4 字节 union 取同一块内存的另一种读法。
 dasset_f32_bits :: (v: float32) -> u32 {
-    u: union { f: float32; i: u32; }
+    u: union {
+        f: float32;
+        i: u32;
+    }
     u.f = v;
     return u.i;
 }
 
 // u32 -> f32 的比特重解释（dasset_f32_bits 的逆）。
 dasset_bits_f32 :: (b: u32) -> float32 {
-    u: union { f: float32; i: u32; }
+    u: union {
+        f: float32;
+        i: u32;
+    }
     u.i = b;
     return u.f;
 }
@@ -414,11 +452,15 @@ dasset_w_f32 :: (out: *[..] u8, v: float32) {
 }
 
 dasset_w_vec3 :: (out: *[..] u8, v: [3] float32) {
-    for f: v { dasset_w_f32(out, f); }
+    for f: v {
+        dasset_w_f32(out, f);
+    }
 }
 
 dasset_w_vec4 :: (out: *[..] u8, v: [4] float32) {
-    for f: v { dasset_w_f32(out, f); }
+    for f: v {
+        dasset_w_f32(out, f);
+    }
 }
 
 dasset_w_bounds :: (out: *[..] u8, b: Dasset_Bounds) {
@@ -431,7 +473,7 @@ dasset_w_material :: (out: *[..] u8, m: Dasset_Material) {
     dasset_w_f32(out, m.metallic);
     dasset_w_f32(out, m.roughness);
     // Odin: m.double_sided ? 1 : 0；Jai 没有三目运算符，改成分支。
-    side : u8 = 0;
+    side: u8 = 0;
     if m.double_sided side = 1;
     dasset_w_u8(out, side);
     dasset_w_i32(out, cast(s32) m.alpha_mode);
@@ -456,7 +498,9 @@ dasset_w_string :: (out: *[..] u8, s: string) {
     }
     array_add(out, cast,trunc(u8) n);
     // Odin: append(out, ..transmute([]u8)s)
-    for 0..s.count - 1 { array_add(out, s[it]); }
+    for 0..s.count - 1 {
+        array_add(out, s[it]);
+    }
 }
 //@endregion
 
@@ -473,7 +517,10 @@ dasset_r_u8 :: (data: [] u8, cur: *s64) -> (u8, bool) {
 }
 
 dasset_r_u32 :: (data: [] u8, cur: *s64) -> (u32, bool) {
-    if cur.* + 4 > data.count { cur.* = data.count + 1; return 0, false; }
+    if cur.* + 4 > data.count {
+        cur.* = data.count + 1;
+        return 0, false;
+    }
     // 先加宽到 u32 再移位（Jai 会把 u8 的移位按 u8 算，高位会丢）。
     v := ((cast(u32) data[cur.*])) | ((cast(u32) data[cur.* + 1]) << 8) |
          ((cast(u32) data[cur.* + 2]) << 16) | ((cast(u32) data[cur.* + 3]) << 24);
@@ -532,7 +579,9 @@ dasset_r_string :: (data: [] u8, cur: *s64) -> (string, bool) {
         shift += 7;
         if shift > 28 return "", false;
     }
-    if n < 0 || cur.* + n > data.count { return "", false; }
+    if n < 0 || cur.* + n > data.count {
+        return "", false;
+    }
     // Odin: strings.clone(string(data[cur:cur+n]))；Jai 用 to_string 取视图再拷贝。
     s := dasset_clone_owned(to_string(data.data + cur.*, n));
     cur.* += n;
@@ -544,7 +593,9 @@ dasset_clone_owned :: (s: string) -> string {
 }
 
 dasset_clone_bytes :: (b: [] u8) -> [] u8 {
-    if b.data == null || b.count == 0 { return .{}; }
+    if b.data == null || b.count == 0 {
+        return .{};
+    }
     out := dasset_alloc_array(u8, b.count);
     memcpy(out.data, b.data, b.count);
     return out;

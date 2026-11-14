@@ -29,23 +29,23 @@
 //   - Jai 的 Allocator_Mode 比 Odin 多 STARTUP / SHUTDOWN / THREAD_* / CREATE_HEAP /
 //     DESTROY_HEAP / IS_THIS_YOURS / CAPS，这些模式原样转发给 backing，不参与记账。
 //   - Odin 的 rawptr / int 在这里是 *void / s64。
-#import "Basic";        // Allocator / array_add / array_free / print
-#import "Hash_Table";   // Table(*void, Tracking_Allocator_Entry) 对位 olib 的 map[rawptr]Entry
+#import "Basic"; // Allocator / array_add / array_free / print
+#import "Hash_Table"; // Table(*void, Tracking_Allocator_Entry) 对位 olib 的 map[rawptr]Entry
 
 //@region 位置 —— runtime.Source_Location 的对位
 
 Source_Location :: struct {
-    file:      string;
-    line:      s64;
-    column:    s64;
-    procedure: string;   // Jai 的 #caller_location 不带过程名，恒为空
+    file: string;
+    line: s64;
+    column: s64;
+    procedure: string; // Jai 的 #caller_location 不带过程名，恒为空
 }
 
 // Jai 的 #caller_location 只能作为参数默认值，类型是 Source_Code_Location。
 source_location :: (loc: Source_Code_Location = #caller_location) -> Source_Location {
     return Source_Location.{
-        file   = loc.fully_pathed_filename,
-        line   = loc.line_number,
+        file = loc.fully_pathed_filename,
+        line = loc.line_number,
         column = loc.character_number,
     };
 }
@@ -54,12 +54,12 @@ source_location :: (loc: Source_Code_Location = #caller_location) -> Source_Loca
 //@region Tracking Allocator —— 泄漏/非法释放追踪
 
 Tracking_Allocator_Entry :: struct {
-    size:     s64;
+    size: s64;
     location: Source_Location;
 }
 
 Tracking_Allocator_Bad_Free :: struct {
-    memory:   *void;
+    memory: *void;
     location: Source_Location;
 }
 
@@ -67,9 +67,9 @@ Tracking_Allocator_Bad_Free :: struct {
 Tracking_Allocator_Bad_Free_Callback :: #type (ta: *Tracking_Allocator, entry: Tracking_Allocator_Bad_Free) -> bool;
 
 Tracking_Allocator :: struct {
-    backing:           Allocator;
-    allocation_map:    Table(*void, Tracking_Allocator_Entry);
-    bad_free_array:    [..] Tracking_Allocator_Bad_Free;
+    backing: Allocator;
+    allocation_map: Table(*void, Tracking_Allocator_Entry);
+    bad_free_array: [..] Tracking_Allocator_Bad_Free;
     bad_free_callback: Tracking_Allocator_Bad_Free_Callback;
 }
 

@@ -249,7 +249,8 @@ pass_command :: (s: *Session, bank: *Parameter_Bank, index: int, draw: sh.Pass_D
     }
     command.DepthTestEnabled = preview3d;
     command.DepthWriteEnabled = preview3d;
-    if preview3d command.CullMode = .BACK; else command.CullMode = .NONE;
+    if preview3d command.CullMode = .BACK;
+    else command.CullMode = .NONE;
     if draw != .Preview_Model && draw != .Sprite command.BlendMode = mat.BLEND_MODE_DISABLED;
     return command;
 }

@@ -30,24 +30,24 @@ operator == :: (a: Handle, b: Handle) -> bool {
 }
 
 // 槽位：value 与其当前有效句柄一起存放，校验即比对 handle。
-Slot :: struct (T: Type, HT: Type) {
-    value:  T;
+Slot :: struct(T: Type, HT: Type) {
+    value: T;
     handle: HT;
 }
 
 // 可扩容句柄池。slots[0] 为 dummy（见 add）；freelist 回收已删槽位。
-Pool :: struct (T: Type, HT: Type) {
-    slots:    [..] Slot(T, HT);
+Pool :: struct(T: Type, HT: Type) {
+    slots: [..] Slot(T, HT);
     freelist: [..] HT;
-    num:      int;
+    num: int;
 }
 
-Iterator :: struct (T: Type, HT: Type) {
-    ha:    *Pool(T, HT);
+Iterator :: struct(T: Type, HT: Type) {
+    ha: *Pool(T, HT);
     index: int;
 }
 
-HANDLE_NONE :: Handle.{ };
+HANDLE_NONE :: Handle.{};
 //@endregion
 
 //@region 动态数组桥接（对应 Odin 的 builtin.append/pop/reserve/runtime.delete）
@@ -112,7 +112,7 @@ add :: (ha: *Pool($T, $HT), v: T) -> (HT, bool) {
     if ha.freelist.count > 0 {
         h := handle_array_pop(*ha.freelist);
         h.gen += 1;
-        ha.slots[cast(s64) h.idx].value  = v;
+        ha.slots[cast(s64) h.idx].value = v;
         ha.slots[cast(s64) h.idx].handle = h;
         ha.num += 1;
         return h, true;
@@ -121,14 +121,23 @@ add :: (ha: *Pool($T, $HT), v: T) -> (HT, bool) {
     needed := max(ha.slots.count, 1) + 1;
     // 先预留再发布槽位，remove 和 clear 因此不分配。
     if ha.freelist.allocated < needed - 1 {
-        if !handle_array_reserve(*ha.freelist, max(needed - 1, max(2 * ha.freelist.allocated, 8))) { zero: HT; return zero, false; }
+        if !handle_array_reserve(*ha.freelist, max(needed - 1, max(2 * ha.freelist.allocated, 8))) {
+            zero: HT;
+            return zero, false;
+        }
     }
     if ha.slots.allocated < needed {
-        if !handle_array_reserve(*ha.slots, max(needed, max(2 * ha.slots.allocated, 8))) { zero: HT; return zero, false; }
+        if !handle_array_reserve(*ha.slots, max(needed, max(2 * ha.slots.allocated, 8))) {
+            zero: HT;
+            return zero, false;
+        }
     }
     if ha.slots.count == 0 {
-        dummy: Slot(T, HT);              // 0 索引为 dummy
-        if !handle_array_append(*ha.slots, dummy) { zero: HT; return zero, false; }
+        dummy: Slot(T, HT); // 0 索引为 dummy
+        if !handle_array_append(*ha.slots, dummy) {
+            zero: HT;
+            return zero, false;
+        }
     }
 
     h: HT;
@@ -136,9 +145,12 @@ add :: (ha: *Pool($T, $HT), v: T) -> (HT, bool) {
     h.gen = 1;
 
     slot: Slot(T, HT);
-    slot.value  = v;
+    slot.value = v;
     slot.handle = h;
-    if !handle_array_append(*ha.slots, slot) { zero: HT; return zero, false; }
+    if !handle_array_append(*ha.slots, slot) {
+        zero: HT;
+        return zero, false;
+    }
     ha.num += 1;
     return h, true;
 }

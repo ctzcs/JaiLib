@@ -127,26 +127,26 @@ codegen_arena_proc :: (mode: Allocator_Mode, size: s64, old_size: s64, old_memor
     arena := cast(*Arena) data;
     if mode == {
         case .ALLOCATE;
-        return codegen_arena_alloc_raw(arena, size);
+            return codegen_arena_alloc_raw(arena, size);
         case .FREE;
-        // arena 不逐项释放，整块销毁时才还给 base。
-        return null;
+            // arena 不逐项释放，整块销毁时才还给 base。
+            return null;
         case .CAPS;
-        return null;
+            return null;
         case .RESIZE;
-        aligned_old := codegen_align_up(old_size);
-        aligned_new := codegen_align_up(size);
-        if old_memory && arena.head {
-            end := cast(*u8) old_memory + aligned_old;
-            head_end := cast(*u8) arena.head + size_of(Codegen_Arena_Block) + arena.head.used;
-            if end == head_end && arena.head.used - aligned_old + aligned_new <= arena.head.size {
-                arena.head.used = arena.head.used - aligned_old + aligned_new;
-                return old_memory;
+            aligned_old := codegen_align_up(old_size);
+            aligned_new := codegen_align_up(size);
+            if old_memory && arena.head {
+                end := cast(*u8) old_memory + aligned_old;
+                head_end := cast(*u8) arena.head + size_of(Codegen_Arena_Block) + arena.head.used;
+                if end == head_end && arena.head.used - aligned_old + aligned_new <= arena.head.size {
+                    arena.head.used = arena.head.used - aligned_old + aligned_new;
+                    return old_memory;
+                }
             }
-        }
-        memory := codegen_arena_alloc_raw(arena, size);
-        if memory && old_memory memcpy(memory, old_memory, min(size, old_size));
-        return memory;
+            memory := codegen_arena_alloc_raw(arena, size);
+            if memory && old_memory memcpy(memory, old_memory, min(size, old_size));
+            return memory;
     }
     return null;
 }
@@ -181,14 +181,14 @@ codegen_arena_destroy :: (arena: *Arena) {
 Pos :: struct {
     file: string;
     offset: int;
-    line: int;   // 1 起
+    line: int; // 1 起
     column: int; // 1 起
 }
 
 // 声明值的粗略分类（odin 侧是 ast 节点类型；Jai 没有语法树，只能给分类）。
 Decl_Kind :: enum u8 {
     Other; // 常量、变量、类型别名等
-    Proc;  // proc 字面量：值以 `(` 开头且带顶层花括号组
+    Proc; // proc 字面量：值以 `(` 开头且带顶层花括号组
     Struct;
     Enum;
     Union;
@@ -228,9 +228,9 @@ Package_Scan :: struct {
 
 // 地址须稳定。扫描结果和读入的文本都借用内部 arena，finish 后失效。
 Generator :: struct {
-    check: bool;          // -check：只比对，不写盘
-    prune: bool;          // 删除已扫描目录里本次没有产出的生成文件；begin 默认开启
-    strict_syntax: bool;  // 语法错误也算失败；默认交给随后的编译器报告
+    check: bool; // -check：只比对，不写盘
+    prune: bool; // 删除已扫描目录里本次没有产出的生成文件；begin 默认开启
+    strict_syntax: bool; // 语法错误也算失败；默认交给随后的编译器报告
     bad_argument: string;
     init_failed: bool;
     syntax_failed: bool;
@@ -353,12 +353,12 @@ emit :: (g: *Generator, s: *Package_Scan, out: string, generator: string, body: 
 
 // 词法单元分类：只保留「切分包级语句 + 读 tag」需要的部分。
 Codegen_Token_Kind :: enum u8 {
-    Ident;   // 标识符与关键字
-    Number;  // 数值字面量
-    String;  // "..."；raw 为 true 时是 #string here-string
-    Note;    // @name（text 只有名字，不含 @）
-    Hash;    // # 指令引导符
-    Punct;   // 其余符号
+    Ident; // 标识符与关键字
+    Number; // 数值字面量
+    String; // "..."；raw 为 true 时是 #string here-string
+    Note; // @name（text 只有名字，不含 @）
+    Hash; // # 指令引导符
+    Punct; // 其余符号
     Invalid; // 未终止的字符串/字符/块注释
 }
 
@@ -785,7 +785,9 @@ scan :: (g: *Generator, dir: string) -> *Package_Scan {
         if !ok full = copy_string(entry.full_name);
         array_add(*paths, full);
     }
-    SORT.quick_sort(paths, (a: string, b: string) -> s64 { return SORT.compare_strings(a, b); });
+    SORT.quick_sort(paths, (a: string, b: string) -> s64 {
+        return SORT.compare_strings(a, b);
+    });
     for path: paths {
         source, read_ok := FILE.read_entire_file(path);
         if !read_ok {
@@ -834,7 +836,9 @@ decls_tagged :: (g: *Generator, s: *Package_Scan, tag: string) -> [] Decl {
         }
         if !duplicate array_add(*result, decl);
     }
-    SORT.quick_sort(result, (a: Decl, b: Decl) -> s64 { return SORT.compare_strings(a.name, b.name); });
+    SORT.quick_sort(result, (a: Decl, b: Decl) -> s64 {
+        return SORT.compare_strings(a.name, b.name);
+    });
     return result;
 }
 

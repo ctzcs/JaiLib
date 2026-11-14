@@ -1,5 +1,5 @@
 #scope_module
-using Basic;   // module-private
+using Basic; // module-private
 using Math;
 #scope_export
 
@@ -34,20 +34,20 @@ using Math;
 // [olib L-024] The minimum result every backend can promise. A pre-flight
 // existence check is NOT a read result: success comes only from err == .NONE.
 Storage_Read_Error :: enum {
-    NONE;              // success, including a legitimately empty file
-    INVALID_ARGUMENT;  // null container, empty path, or a path/Root holding NUL
-    READ_FAILED;       // missing, refused, a directory, or IO/decoding/allocation
-                       // failure; nothing more specific can be claimed for
-                       // every backend, so this does not guess a cause
+    NONE; // success, including a legitimately empty file
+    INVALID_ARGUMENT; // null container, empty path, or a path/Root holding NUL
+    READ_FAILED; // missing, refused, a directory, or IO/decoding/allocation
+    // failure; nothing more specific can be claimed for
+    // every backend, so this does not guess a cause
 }
 
 // Human-readable name for logs and diagnostics (olib spells the members
 // InvalidArgument/ReadFailed, which is where the strings come from).
 storage_read_error_name :: (err: Storage_Read_Error) -> string {
     if err == {
-        case .NONE;             return "None";
+        case .NONE; return "None";
         case .INVALID_ARGUMENT; return "InvalidArgument";
-        case .READ_FAILED;      return "ReadFailed";
+        case .READ_FAILED; return "ReadFailed";
     }
     return "";
 }
@@ -87,7 +87,7 @@ storage_read_all_bytes_result :: (s: *Storage_Container, path: string) -> ([] u8
     text, ok := File.read_entire_file(full);
     if !ok return .[], .READ_FAILED;
     if text.count == 0 {
-        free(text);   // empty string from read_entire_file still owns a buffer
+        free(text); // empty string from read_entire_file still owns a buffer
         return .[], .NONE;
     }
     return cast([] u8) text, .NONE;
@@ -264,7 +264,7 @@ storage_write_all_bytes_atomic :: (s: *Storage_Container, path: string, data: []
     full := storage_full_path(s, path);
     parent := storage_ext_parent(full);
     if parent != "" && !storage_ext_make_directory_all(parent) return false;
-    if directory_exists(full) return false;   // replace a file, never a directory
+    if directory_exists(full) return false; // replace a file, never a directory
 
     temp := storage_ext_temp_path(parent);
     file, opened := File.file_open(temp, for_writing = true);

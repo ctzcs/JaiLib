@@ -22,23 +22,42 @@ Json :: struct {
     truthy: bool;
     number: float64;
     str: string;
-    array:  [] Json;
+    array: [] Json;
     object: [] Json_Field;
 }
 
 Json_Field :: struct {
-    name:  string;
+    name: string;
     value: Json;
 }
 
-json_null   :: () -> Json               { return .{ kind = .NULL_V }; }
-json_bool   :: (v: bool) -> Json        { return .{ kind = .BOOL_V, truthy = v }; }
-json_number :: (v: float64) -> Json     { return .{ kind = .NUMBER, number = v }; }
-json_string :: (v: string) -> Json      { return .{ kind = .STRING, str = v }; }
-json_array  :: (v: [] Json) -> Json     { return .{ kind = .ARRAY, array = v }; }
-json_object :: (v: [] Json_Field) -> Json { return .{ kind = .OBJECT, object = v }; }
+json_null :: () -> Json {
+    return .{ kind = .NULL_V };
+}
 
-json_is_null :: (v: Json) -> bool { return v.kind == .NULL_V; }
+json_bool :: (v: bool) -> Json {
+    return .{ kind = .BOOL_V, truthy = v };
+}
+
+json_number :: (v: float64) -> Json {
+    return .{ kind = .NUMBER, number = v };
+}
+
+json_string :: (v: string) -> Json {
+    return .{ kind = .STRING, str = v };
+}
+
+json_array :: (v: [] Json) -> Json {
+    return .{ kind = .ARRAY, array = v };
+}
+
+json_object :: (v: [] Json_Field) -> Json {
+    return .{ kind = .OBJECT, object = v };
+}
+
+json_is_null :: (v: Json) -> bool {
+    return v.kind == .NULL_V;
+}
 
 json_parse :: (text: string, allocator := context.allocator) -> Json, bool {
     p: Json_Parser;
@@ -82,7 +101,7 @@ json_destroy :: (value: Json) {
 
 Json_Parser :: struct {
     text: string;
-    pos:  s32 = 0;
+    pos: s32 = 0;
     allocator: Allocator;
 }
 
@@ -110,15 +129,21 @@ jp_parse_value :: (p: *Json_Parser) -> Json, bool {
     if p.pos >= p.text.count return json_null(), false;
     c := jp_peek(p);
 
-    if c == 0x7B { value, ok := jp_parse_object(p); return value, ok; }
-    if c == 0x5B { value, ok := jp_parse_array(p); return value, ok; }
+    if c == 0x7B {
+        value, ok := jp_parse_object(p);
+        return value, ok;
+    }
+    if c == 0x5B {
+        value, ok := jp_parse_array(p);
+        return value, ok;
+    }
     if c == 0x22 {
         s, ok := jp_parse_string(p);
         if !ok return json_null(), false;
         return json_string(s), true;
     }
     if c == #char "t" {
-        if jp_match(p, "true")  return json_bool(true), true;
+        if jp_match(p, "true") return json_bool(true), true;
         return json_null(), false;
     }
     if c == #char "f" {
@@ -126,7 +151,7 @@ jp_parse_value :: (p: *Json_Parser) -> Json, bool {
         return json_null(), false;
     }
     if c == #char "n" {
-        if jp_match(p, "null")  return json_null(), true;
+        if jp_match(p, "null") return json_null(), true;
         return json_null(), false;
     }
     value, ok := jp_parse_number(p);
@@ -145,7 +170,10 @@ jp_parse_object :: (p: *Json_Parser) -> Json, bool {
     fields: [..] Json_Field;
     array_reserve(*fields, 8);
     jp_skip_ws(p);
-    if jp_peek(p) == 0x7D { jp_advance(p); return json_object(fields), true; }
+    if jp_peek(p) == 0x7D {
+        jp_advance(p);
+        return json_object(fields), true;
+    }
 
     while true {
         jp_skip_ws(p);
@@ -171,7 +199,10 @@ jp_parse_array :: (p: *Json_Parser) -> Json, bool {
     items: [..] Json;
     array_reserve(*items, 8);
     jp_skip_ws(p);
-    if jp_peek(p) == 0x5D { jp_advance(p); return json_array(items), true; }
+    if jp_peek(p) == 0x5D {
+        jp_advance(p);
+        return json_array(items), true;
+    }
 
     while true {
         value, ok := jp_parse_value(p);
@@ -236,8 +267,7 @@ jp_parse_string :: (p: *Json_Parser) -> string, bool {
                     append(*buf, cast(u8) (0x80 | ((hex >> 6) & 0x3F)));
                     append(*buf, cast(u8) (0x80 | (hex & 0x3F)));
                 }
-            }
-            else return "", false;
+            } else return "", false;
         } else {
             append(*buf, c);
         }
@@ -272,7 +302,6 @@ copy_slice :: (s: [] $T, allocator: Allocator) -> [] T {
     if s.count > 0 memcpy(out.data, s.data, size_of(T) * s.count);
     return out;
 }
-
 
 json_get :: (v: Json, name: string) -> Json {
     if v.kind == .OBJECT {
@@ -313,7 +342,11 @@ json_write :: (v: Json, builder: *String_Builder) {
     if v.kind == .NULL_V {
         append(builder, "null");
     } else if v.kind == .BOOL_V {
-        if v.truthy { append(builder, "true"); } else { append(builder, "false"); }
+        if v.truthy {
+            append(builder, "true");
+        } else {
+            append(builder, "false");
+        }
     } else if v.kind == .NUMBER {
         is_integral := v.number == floor(v.number) && abs(v.number) < 1000000000000000.0;
         if is_integral print(builder, "%", cast(s64) v.number);

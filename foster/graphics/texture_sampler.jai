@@ -7,8 +7,8 @@ using Math;
 
 Texture_Sampler :: struct {
     Filter: Texture_Filter;
-    WrapX:  Texture_Wrap;
-    WrapY:  Texture_Wrap;
+    WrapX: Texture_Wrap;
+    WrapY: Texture_Wrap;
 }
 
 texture_sampler_make :: (filter: Texture_Filter, wrap: Texture_Wrap) -> Texture_Sampler {
@@ -24,7 +24,7 @@ operator != :: (a: Texture_Sampler, b: Texture_Sampler) -> bool {
 }
 
 Bound_Sampler :: struct {
-    Tex: *Texture;        // 'Texture' would shadow the type name
+    Tex: *Texture; // 'Texture' would shadow the type name
     Sampler: Texture_Sampler;
 }
 

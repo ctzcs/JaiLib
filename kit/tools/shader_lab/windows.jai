@@ -183,7 +183,7 @@ control_window :: (s: *Session) {
         imgui_text_colored_v(ERROR_COLOR, "编译失败 · 保留上次结果");
     } else {
         if s.pending_bank != null lab_dim("正在编译");
-        else                     lab_dim("LIVE · 保存源码即更新");
+        else lab_dim("LIVE · 保存源码即更新");
     }
     ImGui.Separator();
     if lab_button(s, "workspace:2d", "2D", s.workspace == 0, false, "media/image") select_workspace(s, 0);
@@ -229,8 +229,8 @@ preview_options :: (s: *Session) {
     if s.selected_shader >= 0 && s.selected_shader < s.bank.shaders.count {
         model3d = shader_has_3d(s, s.selected_shader);
     }
-    ids: [4] string = .[ "2D / Fullscreen", "2D / Sprite", "3D / Sphere", "3D / Cube" ];
-    names: [4] string = .[ "全屏", "精灵", "球体", "立方体" ];
+    ids: [4] string = .["2D / Fullscreen", "2D / Sprite", "3D / Sphere", "3D / Cube"];
+    names: [4] string = .["全屏", "精灵", "球体", "立方体"];
     first := true;
     for id, i: ids {
         if model3d != (i >= 2) continue;

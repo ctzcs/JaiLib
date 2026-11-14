@@ -1,6 +1,8 @@
 #scope_module
 using Basic;
+
 SB :: #import "Basic";
+
 using Math;
 using Hash_Table;
 #scope_export
@@ -9,54 +11,54 @@ using Hash_Table;
 // InputState}.cs — triple-buffered input states (Last/Current/Next) with
 // pressed/down/released semantics + timestamps, text, wheel, controllers.
 
-KEYBOARD_MAX_KEYS       :: 512;
-MOUSE_MAX_BUTTONS       :: 6;   // Mouse_Buttons values run 0(NONE)..5(X2); arrays must hold index 5
-CONTROLLER_MAX          :: 32;
-CONTROLLER_MAX_BUTTONS  :: 64;
-CONTROLLER_MAX_AXES     :: 64;
+KEYBOARD_MAX_KEYS :: 512;
+MOUSE_MAX_BUTTONS :: 6; // Mouse_Buttons values run 0(NONE)..5(X2); arrays must hold index 5
+CONTROLLER_MAX :: 32;
+CONTROLLER_MAX_BUTTONS :: 64;
+CONTROLLER_MAX_AXES :: 64;
 
 Input_Enabled_Flags :: enum_flags u32 {
-    NONE              :: 0;
-    KEYBOARD_KEYS     :: 1 << 0;
-    TEXT              :: 1 << 1;
+    NONE :: 0;
+    KEYBOARD_KEYS :: 1 << 0;
+    TEXT :: 1 << 1;
     CONTROLLER_BUTTONS :: 1 << 2;
-    CONTROLLER_AXIS   :: 1 << 3;
-    MOUSE_BUTTONS     :: 1 << 4;
-    MOUSE_MOTION      :: 1 << 5;
-    MOUSE_WHEEL       :: 1 << 6;
-    ALL               :: 0xFFFFFFFF;
+    CONTROLLER_AXIS :: 1 << 3;
+    MOUSE_BUTTONS :: 1 << 4;
+    MOUSE_MOTION :: 1 << 5;
+    MOUSE_WHEEL :: 1 << 6;
+    ALL :: 0xFFFFFFFF;
 }
 
 // global repeat settings (Foster: Input.RepeatDelay / RepeatInterval)
-Input_RepeatDelay    : float = 0.4;
-Input_RepeatInterval : float = 0.03;
+Input_RepeatDelay: float = 0.4;
+Input_RepeatInterval: float = 0.03;
 
 //
 // KeyboardState
 //
 
 Keyboard_State :: struct {
-    pressed:  [KEYBOARD_MAX_KEYS] bool;
-    down:     [KEYBOARD_MAX_KEYS] bool;
+    pressed: [KEYBOARD_MAX_KEYS] bool;
+    down: [KEYBOARD_MAX_KEYS] bool;
     released: [KEYBOARD_MAX_KEYS] bool;
-    timestamp: [KEYBOARD_MAX_KEYS] float64;   // elapsed seconds at press
+    timestamp: [KEYBOARD_MAX_KEYS] float64; // elapsed seconds at press
     time: Time;
 
-    Text: String_Builder;          // UTF-8 text this frame
-    InputTimestamp: float64;       // elapsed seconds of last key event
+    Text: String_Builder; // UTF-8 text this frame
+    InputTimestamp: float64; // elapsed seconds of last key event
 }
 
 keyboard_state_clear :: (k: *Keyboard_State) {
-    for *p, i: k.pressed   p.* = false;
-    for *d, i: k.down      d.* = false;
-    for *r, i: k.released  r.* = false;
+    for *p, i: k.pressed p.* = false;
+    for *d, i: k.down d.* = false;
+    for *r, i: k.released r.* = false;
     for *t, i: k.timestamp t.* = 0;
     SB.reset(*k.Text);
     k.InputTimestamp = 0;
 }
 
 keyboard_state_copy :: (from: *Keyboard_State, to: *Keyboard_State) {
-    for i: 0..KEYBOARD_MAX_KEYS-1 {
+    for i: 0..KEYBOARD_MAX_KEYS - 1 {
         to.pressed[i] = from.pressed[i];
         to.down[i] = from.down[i];
         to.released[i] = from.released[i];
@@ -69,7 +71,7 @@ keyboard_state_copy :: (from: *Keyboard_State, to: *Keyboard_State) {
 }
 
 keyboard_state_step :: (k: *Keyboard_State, time: Time) {
-    for *p, i: k.pressed  p.* = false;
+    for *p, i: k.pressed p.* = false;
     for *r, i: k.released r.* = false;
     SB.reset(*k.Text);
     k.time = time;
@@ -89,15 +91,41 @@ keyboard_state_on_key :: (k: *Keyboard_State, key_index: s32, key_pressed: bool,
     }
 }
 
-keyboard_pressed :: (k: *Keyboard_State, key: Keys) -> bool { return k.pressed[cast(s32) key]; }
-keyboard_pressed2 :: (k: *Keyboard_State, a: Keys, b: Keys) -> bool { return k.pressed[cast(s32) a] || k.pressed[cast(s32) b]; }
-keyboard_pressed3 :: (k: *Keyboard_State, a: Keys, b: Keys, c: Keys) -> bool { return k.pressed[cast(s32) a] || k.pressed[cast(s32) b] || k.pressed[cast(s32) c]; }
-keyboard_down :: (k: *Keyboard_State, key: Keys) -> bool { return k.down[cast(s32) key]; }
-keyboard_down2 :: (k: *Keyboard_State, a: Keys, b: Keys) -> bool { return k.down[cast(s32) a] || k.down[cast(s32) b]; }
-keyboard_down3 :: (k: *Keyboard_State, a: Keys, b: Keys, c: Keys) -> bool { return k.down[cast(s32) a] || k.down[cast(s32) b] || k.down[cast(s32) c]; }
-keyboard_released :: (k: *Keyboard_State, key: Keys) -> bool { return k.released[cast(s32) key]; }
-keyboard_released2 :: (k: *Keyboard_State, a: Keys, b: Keys) -> bool { return k.released[cast(s32) a] || k.released[cast(s32) b]; }
-keyboard_released3 :: (k: *Keyboard_State, a: Keys, b: Keys, c: Keys) -> bool { return k.released[cast(s32) a] || k.released[cast(s32) b] || k.released[cast(s32) c]; }
+keyboard_pressed :: (k: *Keyboard_State, key: Keys) -> bool {
+    return k.pressed[cast(s32) key];
+}
+
+keyboard_pressed2 :: (k: *Keyboard_State, a: Keys, b: Keys) -> bool {
+    return k.pressed[cast(s32) a] || k.pressed[cast(s32) b];
+}
+
+keyboard_pressed3 :: (k: *Keyboard_State, a: Keys, b: Keys, c: Keys) -> bool {
+    return k.pressed[cast(s32) a] || k.pressed[cast(s32) b] || k.pressed[cast(s32) c];
+}
+
+keyboard_down :: (k: *Keyboard_State, key: Keys) -> bool {
+    return k.down[cast(s32) key];
+}
+
+keyboard_down2 :: (k: *Keyboard_State, a: Keys, b: Keys) -> bool {
+    return k.down[cast(s32) a] || k.down[cast(s32) b];
+}
+
+keyboard_down3 :: (k: *Keyboard_State, a: Keys, b: Keys, c: Keys) -> bool {
+    return k.down[cast(s32) a] || k.down[cast(s32) b] || k.down[cast(s32) c];
+}
+
+keyboard_released :: (k: *Keyboard_State, key: Keys) -> bool {
+    return k.released[cast(s32) key];
+}
+
+keyboard_released2 :: (k: *Keyboard_State, a: Keys, b: Keys) -> bool {
+    return k.released[cast(s32) a] || k.released[cast(s32) b];
+}
+
+keyboard_released3 :: (k: *Keyboard_State, a: Keys, b: Keys, c: Keys) -> bool {
+    return k.released[cast(s32) a] || k.released[cast(s32) b] || k.released[cast(s32) c];
+}
 
 keyboard_repeated :: (k: *Keyboard_State, key: Keys, delay: float = -1, interval: float = -1) -> bool {
     if delay < 0 delay = Input_RepeatDelay;
@@ -120,24 +148,36 @@ keyboard_pressed_or_repeated :: (k: *Keyboard_State, key: Keys) -> bool {
     return keyboard_pressed(k, key) || keyboard_repeated(k, key);
 }
 
-keyboard_timestamp :: (k: *Keyboard_State, key: Keys) -> float64 { return k.timestamp[cast(s32) key]; }
+keyboard_timestamp :: (k: *Keyboard_State, key: Keys) -> float64 {
+    return k.timestamp[cast(s32) key];
+}
 
 keyboard_first_down :: (k: *Keyboard_State) -> s32 {
-    for i: 0..KEYBOARD_MAX_KEYS-1 if k.down[i] return cast(s32) i;
-    return -1;
-}
-keyboard_first_pressed :: (k: *Keyboard_State) -> s32 {
-    for i: 0..KEYBOARD_MAX_KEYS-1 if k.pressed[i] return cast(s32) i;
-    return -1;
-}
-keyboard_first_released :: (k: *Keyboard_State) -> s32 {
-    for i: 0..KEYBOARD_MAX_KEYS-1 if k.released[i] return cast(s32) i;
+    for i: 0..KEYBOARD_MAX_KEYS - 1 if k.down[i] return cast(s32) i;
     return -1;
 }
 
-keyboard_ctrl  :: (k: *Keyboard_State) -> bool { return keyboard_down2(k, .LEFT_CONTROL, .RIGHT_CONTROL); }
-keyboard_alt   :: (k: *Keyboard_State) -> bool { return keyboard_down2(k, .LEFT_ALT, .RIGHT_ALT); }
-keyboard_shift :: (k: *Keyboard_State) -> bool { return keyboard_down2(k, .LEFT_SHIFT, .RIGHT_SHIFT); }
+keyboard_first_pressed :: (k: *Keyboard_State) -> s32 {
+    for i: 0..KEYBOARD_MAX_KEYS - 1 if k.pressed[i] return cast(s32) i;
+    return -1;
+}
+
+keyboard_first_released :: (k: *Keyboard_State) -> s32 {
+    for i: 0..KEYBOARD_MAX_KEYS - 1 if k.released[i] return cast(s32) i;
+    return -1;
+}
+
+keyboard_ctrl :: (k: *Keyboard_State) -> bool {
+    return keyboard_down2(k, .LEFT_CONTROL, .RIGHT_CONTROL);
+}
+
+keyboard_alt :: (k: *Keyboard_State) -> bool {
+    return keyboard_down2(k, .LEFT_ALT, .RIGHT_ALT);
+}
+
+keyboard_shift :: (k: *Keyboard_State) -> bool {
+    return keyboard_down2(k, .LEFT_SHIFT, .RIGHT_SHIFT);
+}
 
 //
 // MouseState
@@ -148,9 +188,9 @@ Mouse_State :: struct {
     Delta: Vector2;
     WheelValue: Vector2;
 
-    pressed:   [MOUSE_MAX_BUTTONS] bool;
-    down:      [MOUSE_MAX_BUTTONS] bool;
-    released:  [MOUSE_MAX_BUTTONS] bool;
+    pressed: [MOUSE_MAX_BUTTONS] bool;
+    down: [MOUSE_MAX_BUTTONS] bool;
+    released: [MOUSE_MAX_BUTTONS] bool;
     timestamp: [MOUSE_MAX_BUTTONS] float64;
 
     motion_timestamp: float64;
@@ -159,8 +199,8 @@ Mouse_State :: struct {
 }
 
 mouse_state_clear :: (m: *Mouse_State) {
-    for *p, i: m.pressed  p.* = false;
-    for *d, i: m.down     d.* = false;
+    for *p, i: m.pressed p.* = false;
+    for *d, i: m.down d.* = false;
     for *r, i: m.released r.* = false;
     for *t, i: m.timestamp t.* = 0;
     m.Position = .{ 0, 0 };
@@ -171,7 +211,7 @@ mouse_state_clear :: (m: *Mouse_State) {
 }
 
 mouse_state_copy :: (from: *Mouse_State, to: *Mouse_State) {
-    for i: 0..MOUSE_MAX_BUTTONS-1 {
+    for i: 0..MOUSE_MAX_BUTTONS - 1 {
         to.pressed[i] = from.pressed[i];
         to.down[i] = from.down[i];
         to.released[i] = from.released[i];
@@ -186,7 +226,7 @@ mouse_state_copy :: (from: *Mouse_State, to: *Mouse_State) {
 }
 
 mouse_state_step :: (m: *Mouse_State, time: Time) {
-    for *p, i: m.pressed  p.* = false;
+    for *p, i: m.pressed p.* = false;
     for *r, i: m.released r.* = false;
     m.WheelValue = .{ 0, 0 };
     m.Delta = .{ 0, 0 };
@@ -218,18 +258,35 @@ mouse_state_on_wheel :: (m: *Mouse_State, value: Vector2) {
     m.WheelValue = value;
 }
 
-mouse_pressed  :: (m: *Mouse_State, button: Mouse_Buttons) -> bool { return m.pressed[cast(s32) button]; }
-mouse_down     :: (m: *Mouse_State, button: Mouse_Buttons) -> bool { return m.down[cast(s32) button]; }
-mouse_released :: (m: *Mouse_State, button: Mouse_Buttons) -> bool { return m.released[cast(s32) button]; }
-mouse_pressed_timestamp :: (m: *Mouse_State, button: Mouse_Buttons) -> float64 { return m.timestamp[cast(s32) button]; }
-mouse_motion_timestamp  :: (m: *Mouse_State) -> float64 { return m.motion_timestamp; }
-mouse_wheel :: (m: *Mouse_State) -> Vector2 { return m.WheelValue; }
+mouse_pressed :: (m: *Mouse_State, button: Mouse_Buttons) -> bool {
+    return m.pressed[cast(s32) button];
+}
+
+mouse_down :: (m: *Mouse_State, button: Mouse_Buttons) -> bool {
+    return m.down[cast(s32) button];
+}
+
+mouse_released :: (m: *Mouse_State, button: Mouse_Buttons) -> bool {
+    return m.released[cast(s32) button];
+}
+
+mouse_pressed_timestamp :: (m: *Mouse_State, button: Mouse_Buttons) -> float64 {
+    return m.timestamp[cast(s32) button];
+}
+
+mouse_motion_timestamp :: (m: *Mouse_State) -> float64 {
+    return m.motion_timestamp;
+}
+
+mouse_wheel :: (m: *Mouse_State) -> Vector2 {
+    return m.WheelValue;
+}
 
 //
 // ControllerState
 //
 
-Controller_ID :: u32;   // SDL joystick instance id
+Controller_ID :: u32; // SDL joystick instance id
 
 Gamepad_Types :: enum u32 {
     UNKNOWN :: 0;
@@ -244,10 +301,10 @@ Gamepad_Types :: enum u32 {
 }
 
 Controller_State :: struct {
-    Index: s32;           // slot 0..31
+    Index: s32; // slot 0..31
     Connected: bool;
 
-    ID:   Controller_ID;
+    ID: Controller_ID;
     Name: string;
     IsGamepad: bool;
     GamepadType: Gamepad_Types;
@@ -255,16 +312,16 @@ Controller_State :: struct {
     Product: u16;
     Version: u16;
 
-    pressed:   [CONTROLLER_MAX_BUTTONS] bool;
-    down:      [CONTROLLER_MAX_BUTTONS] bool;
-    released:  [CONTROLLER_MAX_BUTTONS] bool;
+    pressed: [CONTROLLER_MAX_BUTTONS] bool;
+    down: [CONTROLLER_MAX_BUTTONS] bool;
+    released: [CONTROLLER_MAX_BUTTONS] bool;
     timestamp: [CONTROLLER_MAX_BUTTONS] float64;
 
-    axis:          [CONTROLLER_MAX_AXES] float;
+    axis: [CONTROLLER_MAX_AXES] float;
     axis_timestamp: [CONTROLLER_MAX_AXES] float64;
 
-    Buttons: s32;   // count
-    Axes: s32;      // count
+    Buttons: s32; // count
+    Axes: s32; // count
     InputTimestamp: float64;
     time: Time;
 }
@@ -275,12 +332,14 @@ controller_state_clear :: (c: *Controller_State) {
     c.Name = "Unknown";
     c.IsGamepad = false;
     c.GamepadType = .UNKNOWN;
-    c.Vendor = 0; c.Product = 0; c.Version = 0;
-    for *p, i: c.pressed  p.* = false;
-    for *d, i: c.down     d.* = false;
+    c.Vendor = 0;
+    c.Product = 0;
+    c.Version = 0;
+    for *p, i: c.pressed p.* = false;
+    for *d, i: c.down d.* = false;
     for *r, i: c.released r.* = false;
     for *t, i: c.timestamp t.* = 0;
-    for *a, i: c.axis  a.* = 0;
+    for *a, i: c.axis a.* = 0;
     for *t, i: c.axis_timestamp t.* = 0;
     c.Buttons = 0;
     c.Axes = 0;
@@ -310,7 +369,7 @@ controller_state_copy :: (from: *Controller_State, to: *Controller_State) {
 }
 
 controller_state_step :: (c: *Controller_State, time: Time) {
-    for *p, i: c.pressed  p.* = false;
+    for *p, i: c.pressed p.* = false;
     for *r, i: c.released r.* = false;
     c.time = time;
 }
@@ -340,13 +399,24 @@ controller_state_on_axis :: (c: *Controller_State, axis_index: s32, value: float
     }
 }
 
-controller_pressed  :: (c: *Controller_State, button: Buttons) -> bool { return c.pressed[cast(s32) button]; }
-controller_down     :: (c: *Controller_State, button: Buttons) -> bool { return c.down[cast(s32) button]; }
-controller_released :: (c: *Controller_State, button: Buttons) -> bool { return c.released[cast(s32) button]; }
-controller_axis :: (c: *Controller_State, axis: Axes) -> float { return c.axis[cast(s32) axis]; }
+controller_pressed :: (c: *Controller_State, button: Buttons) -> bool {
+    return c.pressed[cast(s32) button];
+}
+
+controller_down :: (c: *Controller_State, button: Buttons) -> bool {
+    return c.down[cast(s32) button];
+}
+
+controller_released :: (c: *Controller_State, button: Buttons) -> bool {
+    return c.released[cast(s32) button];
+}
+
+controller_axis :: (c: *Controller_State, axis: Axes) -> float {
+    return c.axis[cast(s32) axis];
+}
 
 // normalized -1..1 with y-down, matching SDL gamepad axis orientation
-controller_left_stick  :: (c: *Controller_State, deadzone := 0.0) -> Vector2 {
+controller_left_stick :: (c: *Controller_State, deadzone := 0.0) -> Vector2 {
     x := controller_axis(c, .LEFT_X);
     y := controller_axis(c, .LEFT_Y);
     return .{ x, y };
@@ -381,7 +451,7 @@ input_state_clear :: (s: *Input_State) {
 input_state_copy :: (from: *Input_State, to: *Input_State) {
     keyboard_state_copy(*from.Keyboard, *to.Keyboard);
     mouse_state_copy(*from.Mouse, *to.Mouse);
-    for i: 0..CONTROLLER_MAX-1 controller_state_copy(*from.Controllers[i], *to.Controllers[i]);
+    for i: 0..CONTROLLER_MAX - 1 controller_state_copy(*from.Controllers[i], *to.Controllers[i]);
 }
 
 input_state_step :: (s: *Input_State, time: Time) {

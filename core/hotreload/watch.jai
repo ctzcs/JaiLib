@@ -46,7 +46,7 @@ Build_Status :: enum u8 {
 }
 
 Watch_Mode :: enum u8 {
-    Auto;   // 后台线程增量扫描 roots，保存后自动编译
+    Auto; // 后台线程增量扫描 roots，保存后自动编译
     Manual; // 不扫描源码：启动时编译一次，之后由 watch_retry 或 trigger_file 触发
 }
 

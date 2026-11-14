@@ -3,13 +3,13 @@ using Basic;
 using Math;
 using Hash_Table;
 using String_Mod;
-#scope_export   // note: kept module-visible; consumers reach it via graphics_device.jai wrappers
+#scope_export // note: kept module-visible; consumers reach it via graphics_device.jai wrappers
 
 // Port of Foster Framework/Internal/GraphicsDeviceSDL.cs (SDL_GPU backend).
 
-SDL_PROP_GPU_TEXTURE_CREATE_NAME_STRING         :: "SDL.gpu.texture.create.name";
-SDL_PROP_GPU_BUFFER_CREATE_NAME_STRING          :: "SDL.gpu.buffer.create.name";
-SDL_PROP_GPU_SHADER_CREATE_NAME_STRING          :: "SDL.gpu.shader.create.name";
+SDL_PROP_GPU_TEXTURE_CREATE_NAME_STRING :: "SDL.gpu.texture.create.name";
+SDL_PROP_GPU_BUFFER_CREATE_NAME_STRING :: "SDL.gpu.buffer.create.name";
+SDL_PROP_GPU_SHADER_CREATE_NAME_STRING :: "SDL.gpu.shader.create.name";
 SDL_PROP_GPU_COMPUTEPIPELINE_CREATE_NAME_STRING :: "SDL.gpu.computepipeline.create.name";
 
 Backbuffer_Name :: "Foster Backbuffer";
@@ -27,10 +27,10 @@ sdl_device_create :: (preferred: Graphics_Driver, flags: App_Flags) -> *Graphics
     requested_driver_name: *u8 = null;
     if preferred == {
         case .PRIVATE; requested_driver_name = "private";
-        case .VULKAN;   requested_driver_name = "vulkan";
-        case .D3D12;    requested_driver_name = "direct3d12";
-        case .METAL;    requested_driver_name = "metal";
-        case .NONE;     requested_driver_name = null;
+        case .VULKAN; requested_driver_name = "vulkan";
+        case .D3D12; requested_driver_name = "direct3d12";
+        case .METAL; requested_driver_name = "metal";
+        case .NONE; requested_driver_name = null;
     }
 
     d.device = SDL_CreateGPUDevice(
@@ -45,11 +45,11 @@ sdl_device_create :: (preferred: Graphics_Driver, flags: App_Flags) -> *Graphics
 
     driver_name := cstr_to_string(SDL_GetGPUDeviceDriver(d.device));
     // note: names can carry suffixes, e.g. "direct3d12s" (software D3D12)
-    if driver_name == "private"                    d.driver = .PRIVATE;
-    else if driver_name == "vulkan"                d.driver = .VULKAN;
+    if driver_name == "private" d.driver = .PRIVATE;
+    else if driver_name == "vulkan" d.driver = .VULKAN;
     else if begins_with(driver_name, "direct3d12") d.driver = .D3D12;
-    else if begins_with(driver_name, "metal")      d.driver = .METAL;
-    else                                           d.driver = .NONE;
+    else if begins_with(driver_name, "metal") d.driver = .METAL;
+    else d.driver = .NONE;
 
     if (flags & .MULTI_SAMPLED_BACK_BUFFER) != 0 {
         if graphics_device_is_texture_multi_sample_supported(d, .COLOR, .EIGHT) {
@@ -72,7 +72,7 @@ sdl_device_create :: (preferred: Graphics_Driver, flags: App_Flags) -> *Graphics
     {
         info: SDL_GPUTransferBufferCreateInfo;
         info.usage = .SDL_GPU_TRANSFERBUFFERUSAGE_UPLOAD;
-        info.size  = TRANSFER_BUFFER_SIZE;
+        info.size = TRANSFER_BUFFER_SIZE;
         info.props = 0;
         d.texture_upload_buffer = SDL_CreateGPUTransferBuffer(d.device, *info);
         d.texture_upload_buffer_offset = 0;
@@ -82,7 +82,7 @@ sdl_device_create :: (preferred: Graphics_Driver, flags: App_Flags) -> *Graphics
     {
         info: SDL_GPUTransferBufferCreateInfo;
         info.usage = .SDL_GPU_TRANSFERBUFFERUSAGE_UPLOAD;
-        info.size  = TRANSFER_BUFFER_SIZE;
+        info.size = TRANSFER_BUFFER_SIZE;
         info.props = 0;
         d.buffer_upload_buffer = SDL_CreateGPUTransferBuffer(d.device, *info);
         d.buffer_upload_buffer_offset = 0;
@@ -208,7 +208,7 @@ sdl_shutdown :: (d: *Graphics_Device) {
                 count += 1;
             }
         }
-        for i: 0..count-1 {
+        for i: 0..count - 1 {
             sdl_destroy_resource(d, destroying[i]);
         }
     }
@@ -303,7 +303,8 @@ sdl_present_window :: (d: *Graphics_Device, state: *GPU_Window_State) {
 
     // get the swapchain for this window
     sc_tex: *SDL_GPUTexture = null;
-    sc_w: u32; sc_h: u32;
+    sc_w: u32;
+    sc_h: u32;
     if !SDL_WaitAndAcquireGPUSwapchainTexture(d.cmd_render, state.handle, *sc_tex, *sc_w, *sc_h) {
         log_warning(app_sdl_error_message("SDL_WaitAndAcquireGPUSwapchainTexture"));
         return;
@@ -426,13 +427,14 @@ sdl_create_texture :: (d: *Graphics_Device, name: string, width: s32, height: s3
         prop_name := to_cstr(SDL_PROP_GPU_TEXTURE_CREATE_NAME_STRING);
         name_c := to_cstr(name);
         SDL_SetStringProperty(props, prop_name, name_c);
-        free(prop_name); free(name_c);
+        free(prop_name);
+        free(name_c);
     }
 
     info: SDL_GPUTextureCreateInfo;
     info.type = .SDL_GPU_TEXTURETYPE_2D;
     info.format = sdl_get_texture_format(format);
-    info.usage = 0;   // enum_flags zero
+    info.usage = 0; // enum_flags zero
     info.width = cast(u32) width;
     info.height = cast(u32) height;
     info.layer_count_or_depth = 1;
@@ -453,7 +455,7 @@ sdl_create_texture :: (d: *Graphics_Device, name: string, width: s32, height: s3
     }
 
     // compute flags
-    if (flags & .COMPUTE_READ)  != 0 info.usage |= .SDL_GPU_TEXTUREUSAGE_COMPUTE_STORAGE_READ;
+    if (flags & .COMPUTE_READ) != 0 info.usage |= .SDL_GPU_TEXTUREUSAGE_COMPUTE_STORAGE_READ;
     if (flags & .COMPUTE_WRITE) != 0 info.usage |= .SDL_GPU_TEXTUREUSAGE_COMPUTE_STORAGE_WRITE;
 
     // try to create texture on GPU
@@ -667,7 +669,7 @@ sdl_blit_texture :: (d: *Graphics_Device, source_texture: Graphics_Resource_Hand
     // validate texture regions; don't let them go out of bounds since we cast to uint
     // Jai 的过程参数是不可变的，夹取结果落到局部变量。
     src_region := rect_int_get_intersection(source_region, Rect_Int.{ 0, 0, src.width, src.height });
-    dst_region := rect_int_get_intersection(dest_region,   Rect_Int.{ 0, 0, dst.width, dst.height });
+    dst_region := rect_int_get_intersection(dest_region, Rect_Int.{ 0, 0, dst.width, dst.height });
 
     blit: SDL_GPUBlitInfo;
     blit.source.texture = sdl_sampler_texture(d, src);
@@ -703,9 +705,9 @@ sdl_create_target :: (d: *Graphics_Device, width: s32, height: s32) -> Graphics_
 sdl_create_buffer :: (d: *Graphics_Device, name: string, type: Buffer_Kind, format: Index_Format) -> Graphics_Resource_Handle {
     usage: SDL_GPUBufferUsageFlags;
     if type == {
-        case .VERTEX;          usage = .SDL_GPU_BUFFERUSAGE_VERTEX;
-        case .INDEX;           usage = .SDL_GPU_BUFFERUSAGE_INDEX;
-        case .STORAGE;         usage = .SDL_GPU_BUFFERUSAGE_GRAPHICS_STORAGE_READ;
+        case .VERTEX; usage = .SDL_GPU_BUFFERUSAGE_VERTEX;
+        case .INDEX; usage = .SDL_GPU_BUFFERUSAGE_INDEX;
+        case .STORAGE; usage = .SDL_GPU_BUFFERUSAGE_GRAPHICS_STORAGE_READ;
         case .COMPUTE_STORAGE;
             usage = .SDL_GPU_BUFFERUSAGE_COMPUTE_STORAGE_READ |
                     .SDL_GPU_BUFFERUSAGE_COMPUTE_STORAGE_WRITE |
@@ -753,7 +755,8 @@ sdl_upload_buffer_data :: (d: *Graphics_Device, handle: Graphics_Resource_Handle
             prop_name := to_cstr(SDL_PROP_GPU_BUFFER_CREATE_NAME_STRING);
             name_c := to_cstr(res.name);
             SDL_SetStringProperty(props, prop_name, name_c);
-            free(prop_name); free(name_c);
+            free(prop_name);
+            free(name_c);
         }
 
         info: SDL_GPUBufferCreateInfo;
@@ -854,7 +857,8 @@ sdl_create_shader :: (d: *Graphics_Device, shader: *Shader, code: [] u8, entry_p
             prop_name := to_cstr(SDL_PROP_GPU_COMPUTEPIPELINE_CREATE_NAME_STRING);
             name_c := to_cstr(shader.Name);
             SDL_SetStringProperty(props, prop_name, name_c);
-            free(prop_name); free(name_c);
+            free(prop_name);
+            free(name_c);
         }
 
         info: SDL_GPUComputePipelineCreateInfo;
@@ -889,7 +893,8 @@ sdl_create_shader :: (d: *Graphics_Device, shader: *Shader, code: [] u8, entry_p
             prop_name := to_cstr(SDL_PROP_GPU_SHADER_CREATE_NAME_STRING);
             name_c := to_cstr(shader.Name);
             SDL_SetStringProperty(props, prop_name, name_c);
-            free(prop_name); free(name_c);
+            free(prop_name);
+            free(name_c);
         }
 
         info: SDL_GPUShaderCreateInfo;

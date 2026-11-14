@@ -7,8 +7,8 @@ using Math;
 // utilities the framework and games build on (subsets that our ported
 // code actually exercises, plus the general-purpose helpers).
 
-CALC_PI    :: 3.1159265358979323846;   // placeholder; use Math's PI/TAU
-CALC_TAU   :: 6.28318530717958647692;
+CALC_PI :: 3.1159265358979323846; // placeholder; use Math's PI/TAU
+CALC_TAU :: 6.28318530717958647692;
 
 calc_clamp :: (v: $T, min_v: T, max_v: T) -> T {
     if v < min_v return min_v;
@@ -22,7 +22,7 @@ calc_clamp_f :: (v: float, min_v: float, max_v: float) -> float {
 
 calc_approach :: (v: *float, target: float, delta: float) {
     if v.* < target v.* = min(v.* + delta, target);
-    else        v.* = max(v.* - delta, target);
+    else v.* = max(v.* - delta, target);
 }
 
 calc_map :: (v: float, a1: float, a2: float, b1: float, b2: float) -> float {
@@ -98,7 +98,7 @@ calc_triangulate :: (points: [] Vector2) -> [..] s32 {
     next: [..] s32;
     array_resize(*prev, count);
     array_resize(*next, count);
-    for i: 0..count-1 {
+    for i: 0..count - 1 {
         if i == 0 {
             prev[i] = cast(s32) (count - 1);
         } else {
@@ -165,32 +165,60 @@ calc_orient :: (a: Vector2, b: Vector2, c: Vector2) -> float {
 // Ease (Foster Ease.cs — eases as float->float procs)
 //
 
-ease_linear :: (t: float) -> float { return t; }
+ease_linear :: (t: float) -> float {
+    return t;
+}
 
-ease_quad_in    :: (t: float) -> float { return t * t; }
-ease_quad_out   :: (t: float) -> float { return 1 - (1 - t) * (1 - t); }
+ease_quad_in :: (t: float) -> float {
+    return t * t;
+}
+
+ease_quad_out :: (t: float) -> float {
+    return 1 - (1 - t) * (1 - t);
+}
+
 ease_quad_inout :: (t: float) -> float {
     if t < 0.5 return 2 * t * t;
     m := -2 * t + 2;
     return 1 - m * m / 2;
 }
 
-ease_cube_in    :: (t: float) -> float { return t * t * t; }
-ease_cube_out   :: (t: float) -> float { m := 1 - t; return 1 - m * m * m; }
+ease_cube_in :: (t: float) -> float {
+    return t * t * t;
+}
+
+ease_cube_out :: (t: float) -> float {
+    m := 1 - t;
+    return 1 - m * m * m;
+}
+
 ease_cube_inout :: (t: float) -> float {
     if t < 0.5 return 4 * t * t * t;
     m := -2 * t + 2;
     return 1 - m * m * m / 2;
 }
 
-ease_quart_in  :: (t: float) -> float { return t * t * t * t; }
-ease_sine_in   :: (t: float) -> float { return 1 - cos(t * PI / 2); }
-ease_sine_out  :: (t: float) -> float { return sin(t * PI / 2); }
-ease_sine_inout :: (t: float) -> float { return -(cos(PI * t) - 1) / 2; }
-ease_expo_in   :: (t: float) -> float {
+ease_quart_in :: (t: float) -> float {
+    return t * t * t * t;
+}
+
+ease_sine_in :: (t: float) -> float {
+    return 1 - cos(t * PI / 2);
+}
+
+ease_sine_out :: (t: float) -> float {
+    return sin(t * PI / 2);
+}
+
+ease_sine_inout :: (t: float) -> float {
+    return -(cos(PI * t) - 1) / 2;
+}
+
+ease_expo_in :: (t: float) -> float {
     if t == 0 return 0;
     return cast(float) pow(2.0, cast(float64) (10 * t - 10));
 }
+
 ease_back_in :: (t: float) -> float {
     c1 := 1.70158;
     c3 := c1 + 1;

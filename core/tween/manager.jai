@@ -38,7 +38,7 @@ operator == :: (a: Tween_Handle, b: Tween_Handle) -> bool {
     return a.idx == b.idx && a.gen == b.gen;
 }
 
-TWEEN_HANDLE_NONE :: Tween_Handle.{ };
+TWEEN_HANDLE_NONE :: Tween_Handle.{};
 
 // 用于把节点分组，方便批量 Pause/Kill。
 Tween_Group_Id :: u32;
@@ -73,7 +73,7 @@ Sequence_Step_Kind :: enum u8 {
 // count = -1 表示无限循环，mode 复用已有 Repeat_Mode。
 Loop_Config :: struct {
     count: s32; // -1 表示无限循环
-    mode:  Repeat_Mode;
+    mode: Repeat_Mode;
 }
 
 // 生命周期回调签名。
@@ -83,109 +83,109 @@ Sequence_Callback_Proc :: #type ();
 
 // 节点生命周期回调集合。
 Tween_Callbacks :: struct {
-    on_start:         Tween_Callback_Proc;
-    on_update:        Tween_Callback_Proc;
+    on_start: Tween_Callback_Proc;
+    on_update: Tween_Callback_Proc;
     on_step_complete: Tween_Callback_Proc;
-    on_complete:      Tween_Callback_Proc;
-    on_kill:          Tween_Callback_Proc;
+    on_complete: Tween_Callback_Proc;
+    on_kill: Tween_Callback_Proc;
 }
 
 // 纯时间数据。
 // 把时间相关字段集中起来，后面 Sequence/Interval 也能复用。
 Tween_Timing :: struct {
     created_at: float32; // 创建时刻
-    start_at:   float32; // 真正开始播放的时刻（包含 delay 后）
-    delay:      float32; // 启动前等待时间
-    duration:   float32; // 单次播放时长
-    elapsed:    float32; // 当前已经推进的本地时间
+    start_at: float32; // 真正开始播放的时刻（包含 delay 后）
+    delay: float32; // 启动前等待时间
+    duration: float32; // 单次播放时长
+    elapsed: float32; // 当前已经推进的本地时间
     time_scale: float32; // 节点级时间缩放
 }
 
 // 运行控制信息。
 Tween_Control :: struct {
-    state:                 Playback_State; // 当前播放状态
-    started:               bool;           // on_start 是否已经触发过
-    loops_done:            s32;            // 已完成循环次数
-    auto_kill:             bool;           // 完成后是否自动销毁
-    use_manager_auto_kill: bool;           // 是否沿用 manager 的全局自动清理策略
-    is_relative:           bool;           // 目标值是否按相对量解释
-    independent_update:    bool;           // 是否忽略 manager 的全局时间缩放
+    state: Playback_State; // 当前播放状态
+    started: bool; // on_start 是否已经触发过
+    loops_done: s32; // 已完成循环次数
+    auto_kill: bool; // 完成后是否自动销毁
+    use_manager_auto_kill: bool; // 是否沿用 manager 的全局自动清理策略
+    is_relative: bool; // 目标值是否按相对量解释
+    independent_update: bool; // 是否忽略 manager 的全局时间缩放
 }
 
 // 类型擦除后的行为入口。
 // manager 不直接依赖具体 Tween(T) 类型，而是通过这些函数指针驱动节点。
-Tween_Node_Update_Proc    :: #type (node: *Tween_Node, dt: float32);
-Tween_Node_Reset_Proc     :: #type (node: *Tween_Node);
-Tween_Node_Kill_Proc      :: #type (node: *Tween_Node);
+Tween_Node_Update_Proc :: #type (node: *Tween_Node, dt: float32);
+Tween_Node_Reset_Proc :: #type (node: *Tween_Node);
+Tween_Node_Kill_Proc :: #type (node: *Tween_Node);
 Tween_Node_Set_Loops_Proc :: #type (node: *Tween_Node, count: s32, mode: Repeat_Mode);
 
 // 每种节点自己的“虚表”。
 Tween_Node_VTable :: struct {
-    update:    Tween_Node_Update_Proc;
-    reset:     Tween_Node_Reset_Proc;
-    kill:      Tween_Node_Kill_Proc;
+    update: Tween_Node_Update_Proc;
+    reset: Tween_Node_Reset_Proc;
+    kill: Tween_Node_Kill_Proc;
     set_loops: Tween_Node_Set_Loops_Proc;
 }
 
 // manager 内部统一管理的运行时节点。
 Tween_Node :: struct {
     handle: Tween_Handle; // 节点自己的稳定句柄
-    kind:   Node_Kind;
+    kind: Node_Kind;
 
     group: Tween_Group_Id;
-    tag:   string; // 便于按语义批量控制，如 "ui" / "camera"
+    tag: string; // 便于按语义批量控制，如 "ui" / "camera"
 
     active: bool;
     parent: Tween_Handle; // 如果属于某个 Sequence，则指向父节点
 
-    timing:    Tween_Timing;
-    loops:     Loop_Config;
-    control:   Tween_Control;
+    timing: Tween_Timing;
+    loops: Loop_Config;
+    control: Tween_Control;
     callbacks: Tween_Callbacks;
 
-    payload: *void;          // 指向真实 tween/sequence 数据
-    vtable:  Tween_Node_VTable;
+    payload: *void; // 指向真实 tween/sequence 数据
+    vtable: Tween_Node_VTable;
 }
 
 // Sequence 中的一条时间轴步骤。
 // Tween/Callback/Interval 都通过同一种 entry 排到 sequence 本地时间线上。
 Sequence_Entry :: struct {
-    kind:      Sequence_Step_Kind;
-    child:     Tween_Handle;
-    callback:  Sequence_Callback_Proc;
-    start_at:  float32; // 在 sequence 本地时间轴中的起始位置
-    duration:  float32; // 该步骤占用时长；callback 通常为 0
-    triggered: bool;    // callback 是否已经触发过
+    kind: Sequence_Step_Kind;
+    child: Tween_Handle;
+    callback: Sequence_Callback_Proc;
+    start_at: float32; // 在 sequence 本地时间轴中的起始位置
+    duration: float32; // 该步骤占用时长；callback 通常为 0
+    triggered: bool; // callback 是否已经触发过
 }
 
 // Sequence 的运行时数据。
 Sequence_Runtime :: struct {
-    cursor:   float32;
+    cursor: float32;
     duration: float32;
-    entries:  [..] Sequence_Entry;
+    entries: [..] Sequence_Entry;
 }
 
 // manager 的全局配置。
 Tween_Manager_Config :: struct {
     default_time_scale: float32;
     auto_kill_finished: bool;
-    auto_compact:       bool;
+    auto_compact: bool;
 }
 
 // 运行时统计信息，主要用于调试和观察系统状态。
 Tween_Manager_Stats :: struct {
-    total_nodes:     int;
-    active_nodes:    int;
-    playing_nodes:   int;
-    paused_nodes:    int;
+    total_nodes: int;
+    active_nodes: int;
+    playing_nodes: int;
+    paused_nodes: int;
     completed_nodes: int;
-    killed_nodes:    int;
+    killed_nodes: int;
 }
 
 // Tween 系统总入口。
 // 负责持有所有节点、推进时间、分发 update、清理已完成节点。
 Tween_Manager :: struct {
-    now:        float32;
+    now: float32;
     delta_time: float32;
     time_scale: float32;
 
@@ -193,7 +193,7 @@ Tween_Manager :: struct {
     _cleanup_scratch: [..] Tween_Handle;
 
     config: Tween_Manager_Config;
-    stats:  Tween_Manager_Stats;
+    stats: Tween_Manager_Stats;
 }
 //@endregion
 
@@ -205,7 +205,7 @@ manager_make :: () -> Tween_Manager {
     result.config = Tween_Manager_Config.{
         default_time_scale = 1,
         auto_kill_finished = true,
-        auto_compact       = true,
+        auto_compact = true,
     };
     return result;
 }
@@ -230,11 +230,11 @@ recount_stats :: (manager: *Tween_Manager) {
             stats.active_nodes += 1;
         }
         if node.control.state == {
-            case .Playing;   stats.playing_nodes += 1;
-            case .Paused;    stats.paused_nodes += 1;
+            case .Playing; stats.playing_nodes += 1;
+            case .Paused; stats.paused_nodes += 1;
             case .Completed; stats.completed_nodes += 1;
-            case .Killed;    stats.killed_nodes += 1;
-            case;            // .Idle / .Delayed 不计数（对应 olib 的空 case）
+            case .Killed; stats.killed_nodes += 1;
+            case; // .Idle / .Delayed 不计数（对应 olib 的空 case）
         }
     }
 
@@ -282,7 +282,7 @@ destroy_node :: (node: *Tween_Node) {
     if node.vtable.kill != null {
         node.vtable.kill(node);
     }
-    <<node = Tween_Node.{ };
+    <<node = Tween_Node.{};
 }
 
 manager_remove_node_internal :: (manager: *Tween_Manager, handle: Tween_Handle, refresh_stats: bool) -> bool {
@@ -307,13 +307,13 @@ manager_reset :: (manager: *Tween_Manager) {
     array_reset_keeping_memory(*manager._cleanup_scratch);
     manager.now = 0;
     manager.delta_time = 0;
-    manager.stats = Tween_Manager_Stats.{ };
+    manager.stats = Tween_Manager_Stats.{};
 }
 
 manager_delete :: (manager: *Tween_Manager) {
     HA.delete(*manager.nodes, destroy_node);
     array_free(manager._cleanup_scratch);
-    <<manager = Tween_Manager.{ };
+    <<manager = Tween_Manager.{};
 }
 //@endregion
 
@@ -419,7 +419,7 @@ manager_clear_callbacks :: (manager: *Tween_Manager, handle: Tween_Handle) -> bo
     if node == null {
         return false;
     }
-    node.callbacks = Tween_Callbacks.{ };
+    node.callbacks = Tween_Callbacks.{};
     return true;
 }
 //@endregion

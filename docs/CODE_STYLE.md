@@ -14,6 +14,9 @@
 
 ## Jai 约定
 
+- Jai 源码使用 jacket 0.35.1 的 `jaifmt`，配置见根目录 `jacket.toml`：四空格缩进、
+  目标行宽 120、连续空行至多一行。运行 `python tools/format/main.py --write` 整理，
+  `python tools/format/main.py --check` 检查；不对字符串或嵌入代码做文本替换。
 - 结构、枚举用 `Pascal_Case`，过程和变量用 `snake_case`，常量用大写；移植接口保持既有命名。
 - 引擎和 UI 模块优先具名导入，例如 `F :: #import "foster";`，不要把所有导出摊到全局。
 - `#scope_file` 用于文件私有实现，`#scope_module` 用于模块内部；明确需要的接口才导出。

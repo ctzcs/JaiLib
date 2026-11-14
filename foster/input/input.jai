@@ -6,27 +6,33 @@ using Hash_Table;
 // input polling into the state machines from states.jai.
 
 Input :: struct {
-    State: Input_State;      // current
-    LastState: Input_State;  // previous
-    NextState: Input_State;  // accumulating
+    State: Input_State; // current
+    LastState: Input_State; // previous
+    NextState: Input_State; // accumulating
 
     Enabled: Input_Enabled_Flags = .ALL;
 
     on_text_event: (text: string, window: *Window) = null;
-    on_controller_connected:    (id: Controller_ID) = null;
+    on_controller_connected: (id: Controller_ID) = null;
     on_controller_disconnected: (id: Controller_ID) = null;
 
     // provider internals
     last_mouse: Vector2;
-    open_joysticks: [..] struct { id: u32; ptr: *SDL_Joystick; };
-    open_gamepads:  [..] struct { id: u32; ptr: *SDL_Gamepad; };
+    open_joysticks: [..] struct {
+        id: u32;
+        ptr: *SDL_Joystick;
+    };
+    open_gamepads: [..] struct {
+        id: u32;
+        ptr: *SDL_Gamepad;
+    };
 }
 
 input_create :: () -> *Input {
     i := New(Input);
-    for *c, idx: i.State.Controllers      c.Index = cast(s32) idx;
-    for *c, idx: i.LastState.Controllers  c.Index = cast(s32) idx;
-    for *c, idx: i.NextState.Controllers  c.Index = cast(s32) idx;
+    for *c, idx: i.State.Controllers c.Index = cast(s32) idx;
+    for *c, idx: i.LastState.Controllers c.Index = cast(s32) idx;
+    for *c, idx: i.NextState.Controllers c.Index = cast(s32) idx;
     return i;
 }
 
@@ -35,10 +41,21 @@ input_destroy :: (i: *Input) {
 }
 
 // convenience accessors on the CURRENT state
-input_keyboard            :: (i: *Input) -> *Keyboard_State   { return *i.State.Keyboard; }
-input_mouse               :: (i: *Input) -> *Mouse_State      { return *i.State.Mouse; }
-input_controllers         :: (i: *Input) -> [] Controller_State { return i.State.Controllers; }
-input_get_controller      :: (i: *Input, id: Controller_ID) -> *Controller_State { return input_state_get_controller(*i.State, id); }
+input_keyboard :: (i: *Input) -> *Keyboard_State {
+    return *i.State.Keyboard;
+}
+
+input_mouse :: (i: *Input) -> *Mouse_State {
+    return *i.State.Mouse;
+}
+
+input_controllers :: (i: *Input) -> [] Controller_State {
+    return i.State.Controllers;
+}
+
+input_get_controller :: (i: *Input, id: Controller_ID) -> *Controller_State {
+    return input_state_get_controller(*i.State, id);
+}
 
 input_clear :: (i: *Input) {
     input_state_clear(*i.State);
@@ -60,8 +77,8 @@ input_rumble :: (i: *Input, id: Controller_ID, low_intensity: float, high_intens
     if it == null || !it.Connected return;
 
     high := cast(u16) (clamp(high_intensity, 0, 1) * 0xFFFF);
-    low  := cast(u16) (clamp(low_intensity, 0, 1) * 0xFFFF);
-    ms   := cast(u32) (duration * 1000);
+    low := cast(u16) (clamp(low_intensity, 0, 1) * 0xFFFF);
+    ms := cast(u32) (duration * 1000);
 
     if it.IsGamepad {
         ptr := SDL_GetGamepadFromID(id);
@@ -118,7 +135,7 @@ input_update :: (i: *Input, time: Time) {
 
 input_close_devices :: (i: *Input) {
     for it: i.open_joysticks SDL_CloseJoystick(it.ptr);
-    for it: i.open_gamepads  SDL_CloseGamepad(it.ptr);
+    for it: i.open_gamepads SDL_CloseGamepad(it.ptr);
     array_reset(*i.open_joysticks);
     array_reset(*i.open_gamepads);
 }

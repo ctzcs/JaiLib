@@ -41,22 +41,28 @@ using Hash_Table;
 // canvas backing store 的设备像素只在 W3 的 WebGL2 视口里用。
 
 Input :: struct {
-    State: Input_State;      // current
-    LastState: Input_State;  // previous
-    NextState: Input_State;  // accumulating
+    State: Input_State; // current
+    LastState: Input_State; // previous
+    NextState: Input_State; // accumulating
 
     Enabled: Input_Enabled_Flags = .ALL;
 
     on_text_event: (text: string, window: *Window) = null;
-    on_controller_connected:    (id: Controller_ID) = null;
+    on_controller_connected: (id: Controller_ID) = null;
     on_controller_disconnected: (id: Controller_ID) = null;
 
     // provider internals
     last_mouse: Vector2;
     // Same shape as desktop so nothing that walks these breaks; the web side has
     // no joystick backend yet (Gamepad API is W2), so both stay empty.
-    open_joysticks: [..] struct { id: u32; ptr: *SDL_Joystick; };
-    open_gamepads:  [..] struct { id: u32; ptr: *SDL_Gamepad; };
+    open_joysticks: [..] struct {
+        id: u32;
+        ptr: *SDL_Joystick;
+    };
+    open_gamepads: [..] struct {
+        id: u32;
+        ptr: *SDL_Gamepad;
+    };
 }
 
 //
@@ -68,23 +74,23 @@ Input :: struct {
 // working unchanged: DOM KeyboardEvent.code -> SDL scancode -> Keys.
 //
 Web_Event :: struct {
-    type:      SDL_EventType;
+    type: SDL_EventType;
     window_id: u32;
 
     // key
-    scancode:  u32;
-    repeat:    bool;
+    scancode: u32;
+    repeat: bool;
 
     // mouse
-    button:    s32;      // SDL_BUTTON_LEFT / ... (already in SDL numbering)
-    wheel_x:   float;
-    wheel_y:   float;
-    mouse_x:   float;    // device pixels, canvas-relative
-    mouse_y:   float;
+    button: s32; // SDL_BUTTON_LEFT / ... (already in SDL numbering)
+    wheel_x: float;
+    wheel_y: float;
+    mouse_x: float; // device pixels, canvas-relative
+    mouse_y: float;
 
     // text input (UTF-8, owned by the caller until the queue is drained)
-    text_ptr:  *u8;
-    text_len:  s32;
+    text_ptr: *u8;
+    text_len: s32;
 }
 
 web_pending_events: [..] Web_Event;
@@ -127,9 +133,9 @@ web_poll_events :: () -> [] Web_Event {
 
 input_create :: () -> *Input {
     i := New(Input);
-    for *c, idx: i.State.Controllers      c.Index = cast(s32) idx;
-    for *c, idx: i.LastState.Controllers  c.Index = cast(s32) idx;
-    for *c, idx: i.NextState.Controllers  c.Index = cast(s32) idx;
+    for *c, idx: i.State.Controllers c.Index = cast(s32) idx;
+    for *c, idx: i.LastState.Controllers c.Index = cast(s32) idx;
+    for *c, idx: i.NextState.Controllers c.Index = cast(s32) idx;
     return i;
 }
 
@@ -138,10 +144,21 @@ input_destroy :: (i: *Input) {
 }
 
 // convenience accessors on the CURRENT state
-input_keyboard            :: (i: *Input) -> *Keyboard_State   { return *i.State.Keyboard; }
-input_mouse               :: (i: *Input) -> *Mouse_State      { return *i.State.Mouse; }
-input_controllers         :: (i: *Input) -> [] Controller_State { return i.State.Controllers; }
-input_get_controller      :: (i: *Input, id: Controller_ID) -> *Controller_State { return input_state_get_controller(*i.State, id); }
+input_keyboard :: (i: *Input) -> *Keyboard_State {
+    return *i.State.Keyboard;
+}
+
+input_mouse :: (i: *Input) -> *Mouse_State {
+    return *i.State.Mouse;
+}
+
+input_controllers :: (i: *Input) -> [] Controller_State {
+    return i.State.Controllers;
+}
+
+input_get_controller :: (i: *Input, id: Controller_ID) -> *Controller_State {
+    return input_state_get_controller(*i.State, id);
+}
 
 input_clear :: (i: *Input) {
     input_state_clear(*i.State);
@@ -156,7 +173,7 @@ input_clear :: (i: *Input) {
 WEB_CLIPBOARD_BUF :: 4096;
 
 web_clipboard_buf: [WEB_CLIPBOARD_BUF] u8;
-web_clipboard_text: string;      // 本地镜像（write 之后就等于刚写进去的内容）
+web_clipboard_text: string; // 本地镜像（write 之后就等于刚写进去的内容）
 
 input_clipboard_set :: (i: *Input, value: string) {
     web_clipboard_text = copy_string(value);
@@ -198,14 +215,14 @@ input_rumble :: (i: *Input, id: Controller_ID, low_intensity: float, high_intens
 // 注意：只清 down/pressed/released 的当前值，不产生 released 事件 —— 否则
 // 一帧之内会给每个键都报一次 released（64 个假事件）。
 web_release_keyboard_state :: (k: *Keyboard_State) {
-    for *d: k.down     d.* = false;
-    for *p: k.pressed  p.* = false;
+    for *d: k.down d.* = false;
+    for *p: k.pressed p.* = false;
     for *r: k.released r.* = false;
 }
 
 web_release_mouse_state :: (m: *Mouse_State) {
-    for *d: m.down     d.* = false;
-    for *p: m.pressed  p.* = false;
+    for *d: m.down d.* = false;
+    for *p: m.pressed p.* = false;
     for *r: m.released r.* = false;
 }
 

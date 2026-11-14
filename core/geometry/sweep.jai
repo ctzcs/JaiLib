@@ -111,7 +111,7 @@ sweep_point_vs_triangle_slab :: (
     nlen := geom_length(raw_normal);
     if nlen == 0 || range < 0 return t, uv, ok;
     normal := geom_div(raw_normal, nlen);
-    sides : [2] float32 = .[-1, 1];
+    sides: [2] float32 = .[-1, 1];
     for side: sides {
         plane_dist := geom_dot(normal, tri[0]) + side * rad;
         candidate, hit := sweep_point_vs_plane(pos, move, normal, plane_dist, t);
@@ -152,7 +152,7 @@ sweep_point_vs_uncapped_cylinder :: (
     discr := b * b - a * c;
     if discr < 0 return t, ok;
     root := sqrt(discr);
-    candidates : [2] float32 = .[(-b - root) / a, (-b + root) / a];
+    candidates: [2] float32 = .[(-b - root) / a, (-b + root) / a];
     for candidate: candidates {
         height := md + candidate * nd;
         if candidate >= 0 && candidate <= t && height >= 0 && height <= 1 {
@@ -181,7 +181,7 @@ sweep_point_vs_cylinder :: (
     }
     t, ok = sweep_point_vs_uncapped_cylinder(pos, move, points, rad, range);
     if nd != 0 {
-        caps : [2] float32 = .[0, 1];
+        caps: [2] float32 = .[0, 1];
         for cap: caps {
             candidate := (cap - md) / nd;
             if candidate < 0 || candidate > t continue;
@@ -263,7 +263,7 @@ sweep_sphere_vs_aabb :: (
             b := a;
             b[axis] = aabb_max[axis];
             // Jai 的 .[a, b] 直接当实参会被展开成两个实参，先落成带类型的局部变量。
-            edge : [2] V3 = .[a, b];
+            edge: [2] V3 = .[a, b];
             candidate, hit := sweep_point_vs_capsule(pos, move, edge, rad, t);
             if hit {
                 t = candidate;
@@ -285,7 +285,7 @@ sweep_sphere_vs_triangle :: (
     t, _, ok := sweep_point_vs_triangle_slab(pos, move, tri, rad, range);
     for 0..2 {
         i := it;
-        edge : [2] V3 = .[tri[i], tri[(i + 1) % 3]];
+        edge: [2] V3 = .[tri[i], tri[(i + 1) % 3]];
         candidate, hit := sweep_point_vs_capsule(pos, move, edge, rad, t);
         if hit {
             t = candidate;

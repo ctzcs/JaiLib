@@ -29,19 +29,19 @@
 WIREFRAME_EDGE_KINDS :: 4;
 
 Wireframe_Style :: struct {
-    line_width:   float32; // 最终输出像素，再乘 UI scale
+    line_width: float32; // 最终输出像素，再乘 UI scale
     depth_offset: float32; // 沿视线朝相机推近的像素量，避免线与模型表面深度冲突
     hidden_alpha: float32; // 被场景深度遮挡的线的透明度：0 不画，1 即透视全部线
-    colors:       [WIREFRAME_EDGE_KINDS] F.Color; // A=0 的种类直接跳过，可只看边界或缝
+    colors: [WIREFRAME_EDGE_KINDS] F.Color; // A=0 的种类直接跳过，可只看边界或缝
 }
 
 DEFAULT_WIREFRAME_STYLE :: Wireframe_Style.{
     line_width = 1.25, depth_offset = 3, hidden_alpha = 0.15,
     colors = .[
-        F.Color.{205, 214, 222, 200}, // .Interior     普通共享边
-        F.Color.{108, 167, 255, 255}, // .Seam         UV/法线属性缝
-        F.Color.{255, 180, 97, 255}, // .Border        只属于一个三角形
-        F.Color.{255, 80, 96, 255}, // .Non_Manifold  三个以上三角形共用
+        F.Color.{ 205, 214, 222, 200 }, // .Interior     普通共享边
+        F.Color.{ 108, 167, 255, 255 }, // .Seam         UV/法线属性缝
+        F.Color.{ 255, 180, 97, 255 }, // .Border        只属于一个三角形
+        F.Color.{ 255, 80, 96, 255 }, // .Non_Manifold  三个以上三角形共用
     ],
 };
 //@endregion
@@ -52,7 +52,7 @@ DEFAULT_WIREFRAME_STYLE :: Wireframe_Style.{
 // 生成世界空间线框三角列表（每条边 6 个顶点，朝向相机的细四边形），不读取 GPU。
 // positions 与 edges 为模型局部数据，transform 为模型世界矩阵；越界边、近裁面后的部分被丢弃。
 // 相机 viewport_size 必须与 viewport 宽高一致。
-wireframe_mesh :: (vertices: *[..] Vertex3D, camera: *W.Camera3D, positions: [] [3] float32,
+wireframe_mesh :: (vertices: *[..] Vertex3D, camera: *W.Camera3D, positions: [][3] float32,
                    edges: [] MSH.Edge, transform: W.Matrix4, viewport: F.Rect,
                    scale: float32 = 1, style := DEFAULT_WIREFRAME_STYLE) {
     gizmo_array_clear(vertices);
@@ -106,12 +106,12 @@ wireframe_mesh :: (vertices: *[..] Vertex3D, camera: *W.Camera3D, positions: [] 
         b_high := gizmo_v3_add(b, wb);
         a_high := gizmo_v3_add(a, wa);
         array_add(vertices,
-                  Vertex3D.{position = a_low, color = c},
-                  Vertex3D.{position = b_low, color = c},
-                  Vertex3D.{position = b_high, color = c},
-                  Vertex3D.{position = a_low, color = c},
-                  Vertex3D.{position = b_high, color = c},
-                  Vertex3D.{position = a_high, color = c});
+                  Vertex3D.{ position = a_low, color = c },
+                  Vertex3D.{ position = b_low, color = c },
+                  Vertex3D.{ position = b_high, color = c },
+                  Vertex3D.{ position = a_low, color = c },
+                  Vertex3D.{ position = b_high, color = c },
+                  Vertex3D.{ position = a_high, color = c });
     }
 }
 
@@ -129,7 +129,7 @@ gizmo_toward :: (p: W.Vec3, eye: W.Vec3, distance: float32) -> W.Vec3 {
 // 一份网格的 GPU 线框，调用方持有：边端点和种类作为实例上传一次，网格变化后 destroy 再 init。
 // 零值可安全 destroy；GraphicsDevice 必须比它活得久。
 Wireframe :: struct {
-    mesh:  *F.Mesh;
+    mesh: *F.Mesh;
     edges: int; // 实际上传的边数（已剔除越界和非有限端点）
     ready: bool;
 }
@@ -147,14 +147,14 @@ WIREFRAME_UNIFORM_SIZE :: 240;
 
 // 每条边 6 个角点：x 沿边 0/1，y 侧向 ±1；顺序同 wireframe_mesh 的两个三角形。
 // （Jai 的 `::` 常量不能直接由数组字面量初始化，数组常量要写成 `名字 : 类型 : 字面量`。）
-WIREFRAME_CORNERS : [6][2] float32 : .[
+WIREFRAME_CORNERS: [6][2] float32 : .[
     .[0, -1], .[1, -1], .[1, 1], .[0, -1], .[1, 1], .[0, 1],
 ];
 
 WIREFRAME_CORNER_STRIDE :: 8;
 
 // 剔除越界索引和非有限端点后的实例数据；不读取 GPU。
-wireframe_edges :: (out: *[..] Wireframe_Edge, positions: [] [3] float32, edges: [] MSH.Edge) {
+wireframe_edges :: (out: *[..] Wireframe_Edge, positions: [][3] float32, edges: [] MSH.Edge) {
     gizmo_array_clear(out);
     array_reserve(out, edges.count);
     for e: edges {
@@ -165,7 +165,7 @@ wireframe_edges :: (out: *[..] Wireframe_Edge, positions: [] [3] float32, edges:
            !gizmo_finite(b[0]) || !gizmo_finite(b[1]) || !gizmo_finite(b[2]) {
             continue;
         }
-        array_add(out, Wireframe_Edge.{a = a, b = b, kind = cast(float32) cast(int) e.kind});
+        array_add(out, Wireframe_Edge.{ a = a, b = b, kind = cast(float32) cast(int) e.kind });
     }
 }
 
@@ -184,7 +184,7 @@ gizmo_wireframe_edge_format :: () -> F.Vertex_Format {
 }
 
 // 没有可画的边或设备为空时返回 false，w 保持零值。
-wireframe_init :: (w: *Wireframe, device: *F.Graphics_Device, positions: [] [3] float32,
+wireframe_init :: (w: *Wireframe, device: *F.Graphics_Device, positions: [][3] float32,
                    edges: [] MSH.Edge) -> bool {
     wireframe_destroy(w);
     if device == null return false;

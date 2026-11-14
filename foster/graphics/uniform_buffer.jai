@@ -8,8 +8,8 @@ using Math;
 // SDL_PushGPU*UniformData on each draw (there is no GPU-side object).
 
 Uniform_Buffer :: struct {
-    bytes: [] u8;   // capacity
-    count: s32;     // active bytes
+    bytes: [] u8; // capacity
+    count: s32; // active bytes
 }
 
 uniform_buffer_set :: (u: *Uniform_Buffer, data: [] u8) {

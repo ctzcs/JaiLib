@@ -1,5 +1,5 @@
 #scope_module
-using Basic;   // module-private
+using Basic; // module-private
 using Math;
 #scope_export
 
@@ -8,10 +8,10 @@ using Math;
 // semantics match Calc.OnInterval / IntervalCount / BetweenInterval exactly.
 
 Time :: struct {
-    elapsed:      float64;   // accumulation of delta time since the app started (seconds)
-    previous:     float64;   // the previous elapsed value
-    frame:        u64;   // total update frames since the app started
-    render_frame: u64;   // total render frames since the app started
+    elapsed: float64; // accumulation of delta time since the app started (seconds)
+    previous: float64; // the previous elapsed value
+    frame: u64; // total update frames since the app started
+    render_frame: u64; // total render frames since the app started
 }
 
 time_delta :: (t: Time) -> float {
@@ -73,7 +73,7 @@ time_cycle_interval :: (t: Time, interval: float64, options: [] $T) -> T {
 // Sine-wave a value between from/to with a period of `duration` seconds.
 time_sine_wave :: (t: Time, from: float, to: float, duration: float64, offset_percent := 0.0) -> float {
     input := mod_f64((t.elapsed + duration * offset_percent) / duration, 1.0);
-    sine  := sin(input * TAU64);
+    sine := sin(input * TAU64);
     // Calc.ClampedMap(sine, -1, 1, from, to)
     mapped := from + cast(float) (sine + 1) * 0.5 * (to - from);
     return max(from, min(to, mapped));
@@ -82,7 +82,7 @@ time_sine_wave :: (t: Time, from: float, to: float, duration: float64, offset_pe
 // Returns a Time whose delta is multiplied by `multiplier` (slow-motion etc).
 time_multiply_delta :: (t: Time, multiplier: float64) -> Time {
     return .{
-        elapsed  = t.previous + (t.elapsed - t.previous) * multiplier,
+        elapsed = t.previous + (t.elapsed - t.previous) * multiplier,
         previous = t.previous,
         frame = t.frame,
         render_frame = t.render_frame,

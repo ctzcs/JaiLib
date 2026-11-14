@@ -53,7 +53,7 @@ operator == :: (a: Handle, b: Handle) -> bool {
     return a.idx == b.idx && a.gen == b.gen;
 }
 
-Pool :: struct (T: Type, HT: Type) {
+Pool :: struct(T: Type, HT: Type) {
     // 数组本身用 allocator 分配（不用 items_arena），数组元素指向 arena 里的条目。
     //
     // 每个条目都必须有类型为 HT 的 handle 字段。
@@ -68,8 +68,8 @@ Pool :: struct (T: Type, HT: Type) {
 }
 
 // 遍历用。用 begin 创建。
-Iterator :: struct (T: Type, HT: Type) {
-    m:     *Pool(T, HT);
+Iterator :: struct(T: Type, HT: Type) {
+    m: *Pool(T, HT);
     index: int;
 }
 //@endregion
@@ -81,17 +81,17 @@ ARENA_DEFAULT_BLOCK_SIZE :: 4096;
 
 Arena_Block :: struct {
     memory: *u8;
-    size:   s64;
-    used:   s64;
-    next:   *Arena_Block;
+    size: s64;
+    used: s64;
+    next: *Arena_Block;
 }
 
 // 分块线性 arena：块只追加、从不移动，所以指向块内的指针稳定。
 Arena :: struct {
-    curr_block:  *Arena_Block;
-    all_blocks:  *Arena_Block;
-    block_size:   s64;
-    allocator:    Allocator;   // 块头和块内存的来源
+    curr_block: *Arena_Block;
+    all_blocks: *Arena_Block;
+    block_size: s64;
+    allocator: Allocator; // 块头和块内存的来源
     // olib 用 curr_block != nil 判断"已初始化"；vmem 的 arena 一 init 就有块。
     // Jai 侧为了不在 init 时消耗一次分配（make 之后才第一次真正分配），改用显式标记。
     initialized: bool;
@@ -103,10 +103,10 @@ arena_initialized :: (arena: Arena) -> bool {
 
 // 与 vmem.arena_init_growing 一致：块大小被抬到至少一页。
 arena_init :: (arena: *Arena, block_size: s64 = ARENA_DEFAULT_BLOCK_SIZE) -> bool {
-    arena.block_size  = max(block_size, ARENA_DEFAULT_BLOCK_SIZE);
-    arena.curr_block  = null;
-    arena.all_blocks  = null;
-    arena.allocator   = context.allocator;
+    arena.block_size = max(block_size, ARENA_DEFAULT_BLOCK_SIZE);
+    arena.curr_block = null;
+    arena.all_blocks = null;
+    arena.allocator = context.allocator;
     arena.initialized = true;
     return true;
 }
@@ -137,9 +137,9 @@ growing_arena_allocate :: (arena: *Arena, size: s64, alignment: s64) -> *void {
 
     new_block := cast(*Arena_Block) header;
     new_block.memory = cast(*u8) memory;
-    new_block.size   = block_size;
-    new_block.used   = size;
-    new_block.next   = arena.all_blocks;
+    new_block.size = block_size;
+    new_block.used = size;
+    new_block.next = arena.all_blocks;
     arena.all_blocks = new_block;
     arena.curr_block = new_block;
     return memory;
@@ -358,24 +358,39 @@ add :: (m: *Pool($T, $HT), v: T) -> (HT, bool) {
 
     needed := max(m.items.count, 1) + 1;
     if m.unused_items.allocated < needed - 1 {
-        if !growing_reserve(*m.unused_items, max(needed - 1, max(2 * m.unused_items.allocated, 8))) { zero: HT; return zero, false; }
+        if !growing_reserve(*m.unused_items, max(needed - 1, max(2 * m.unused_items.allocated, 8))) {
+            zero: HT;
+            return zero, false;
+        }
     }
     if m.items.allocated < needed {
-        if !growing_reserve(*m.items, max(needed, max(2 * m.items.allocated, 8))) { zero: HT; return zero, false; }
+        if !growing_reserve(*m.items, max(needed, max(2 * m.items.allocated, 8))) {
+            zero: HT;
+            return zero, false;
+        }
     }
 
     items_allocator := arena_allocator(*m.items_arena);
 
     if m.items.count == 0 {
-        if !growing_append(*m.items, null) { zero: HT; return zero, false; }
+        if !growing_append(*m.items, null) {
+            zero: HT;
+            return zero, false;
+        }
     }
 
     new_item := cast(*T) items_allocator.proc(.ALLOCATE, size_of(T), 0, null, items_allocator.data);
-    if new_item == null { zero: HT; return zero, false; }
+    if new_item == null {
+        zero: HT;
+        return zero, false;
+    }
     new_item.* = v;
     new_item.handle.idx = cast(u32) m.items.count;
     new_item.handle.gen = 1;
-    if !growing_append(*m.items, new_item) { zero: HT; return zero, false; }
+    if !growing_append(*m.items, new_item) {
+        zero: HT;
+        return zero, false;
+    }
     return new_item.handle, true;
 }
 

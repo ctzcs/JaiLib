@@ -23,13 +23,13 @@ graphics_driver_shader_extension :: (driver: Graphics_Driver) -> string {
     return "spv";
 }
 
-Graphics_Resource_Handle :: u64;   // 0 = null handle
+Graphics_Resource_Handle :: u64; // 0 = null handle
 
 // Constants shared with the backend (Foster GraphicsDeviceSDL).
-MAX_FRAMES_IN_FLIGHT   :: 3;
-TRANSFER_BUFFER_SIZE   :: 16 * 1024 * 1024;   // 16MB
+MAX_FRAMES_IN_FLIGHT :: 3;
+TRANSFER_BUFFER_SIZE :: 16 * 1024 * 1024; // 16MB
 MAX_UPLOAD_CYCLE_COUNT :: 4;
-MAX_COLOR_ATTACHMENTS  :: 8;
+MAX_COLOR_ATTACHMENTS :: 8;
 
 GPU_Resource_Kind :: enum {
     TEXTURE;
@@ -46,22 +46,22 @@ GPU_Resource :: struct {
     handle: Graphics_Resource_Handle;
 
     // TEXTURE
-    texture:              *SDL_GPUTexture;
-    width, height:        s32;
-    format:               SDL_GPUTextureFormat;
-    sample_count:         SDL_GPUSampleCount;
-    multi_sample_resolve: Graphics_Resource_Handle;   // set when multisampled
+    texture: *SDL_GPUTexture;
+    width, height: s32;
+    format: SDL_GPUTextureFormat;
+    sample_count: SDL_GPUSampleCount;
+    multi_sample_resolve: Graphics_Resource_Handle; // set when multisampled
 
     // TARGET
     attachments: [..] Graphics_Resource_Handle;
 
     // BUFFER
-    name:         string;
-    usage:        SDL_GPUBufferUsageFlags;
+    name: string;
+    usage: SDL_GPUBufferUsageFlags;
     index_format: Index_Format;
-    buffer:       *SDL_GPUBuffer;
-    capacity:     s32;
-    dirty:        bool;
+    buffer: *SDL_GPUBuffer;
+    capacity: s32;
+    dirty: bool;
 
     // SHADER (pipelines: hashes of dependent graphics pipelines)
     shader: *SDL_GPUShader;
@@ -72,7 +72,7 @@ GPU_Resource :: struct {
 }
 
 GPU_Window_State :: struct {
-    id:     u32;
+    id: u32;
     handle: *SDL_Window;
     reclaim_pending: bool;
     claimed: bool;
@@ -86,7 +86,7 @@ GPU_Window_State :: struct {
 
 Graphics_Device :: struct {
     driver: Graphics_Driver = .NONE;
-    disposed: bool = true;   // true until created (device == null)
+    disposed: bool = true; // true until created (device == null)
 
     // object pointers
     device: *SDL_GPUDevice = null;
@@ -99,10 +99,13 @@ Graphics_Device :: struct {
     render_pass_target: Drawable_Target;
     render_pass_target_size: Point2;
     render_pass_pipeline: *SDL_GPUGraphicsPipeline = null;
-    render_pass_vertex_buffers: [4] Graphics_Resource_Handle;  render_pass_vertex_buffer_count: s32 = 0;
+    render_pass_vertex_buffers: [4] Graphics_Resource_Handle;
+    render_pass_vertex_buffer_count: s32 = 0;
     render_pass_index_buffer: Graphics_Resource_Handle = 0;
-    render_pass_scissor: Rect_Int;  has_render_pass_scissor: bool = false;
-    render_pass_viewport: Rect_Int; has_render_pass_viewport: bool = false;
+    render_pass_scissor: Rect_Int;
+    has_render_pass_scissor: bool = false;
+    render_pass_viewport: Rect_Int;
+    has_render_pass_viewport: bool = false;
 
     // state
     vsync_enabled: bool = false;
@@ -112,7 +115,7 @@ Graphics_Device :: struct {
     windows: Table(u32, *GPU_Window_State);
 
     // tracked / allocated resources
-    samplers: Table(u32, *SDL_GPUSampler);        // key: packed Texture_Sampler
+    samplers: Table(u32, *SDL_GPUSampler); // key: packed Texture_Sampler
     pipelines: Table(u64, *SDL_GPUGraphicsPipeline);
     resources: Table(Graphics_Resource_Handle, *GPU_Resource);
     empty_default_texture: Graphics_Resource_Handle = 0;
@@ -144,7 +147,7 @@ Graphics_Device :: struct {
 graphics_device_set_vsync :: (d: *Graphics_Device, enabled: bool) {
     assert(d.device != null, "GPU Device has not been created");
     d.vsync_enabled = enabled;
-    for state: d.windows {   // 值已是 *GPU_Window_State（本地补丁 #4：原为 for *state 双重指针）
+    for state: d.windows { // 值已是 *GPU_Window_State（本地补丁 #4：原为 for *state 双重指针）
         sdl_update_window_present_mode(d, state, enabled);
     }
 }
@@ -214,7 +217,7 @@ graphics_device_draw :: (d: *Graphics_Device, command: Draw_Command) {
     }
 
     // validate vertex buffers
-    for i: 0..command.VertexBufferCount-1 {
+    for i: 0..command.VertexBufferCount - 1 {
         it := command.VertexBuffers[i].Buffer;
         assert(it != null && !buffer_is_disposed(it), "Attempting to render a null or disposed Vertex Buffer");
         if it.handle == 0 || it.Count <= 0 {
@@ -224,11 +227,11 @@ graphics_device_draw :: (d: *Graphics_Device, command: Draw_Command) {
     }
 
     // validate storage buffers
-    for i: 0..command.VertexStorageBufferCount-1 {
+    for i: 0..command.VertexStorageBufferCount - 1 {
         assert(command.VertexStorageBuffers[i] != null && !buffer_is_disposed(command.VertexStorageBuffers[i]),
                "Attempting to render a null or disposed Vertex Storage Buffer");
     }
-    for i: 0..command.FragmentStorageBufferCount-1 {
+    for i: 0..command.FragmentStorageBufferCount - 1 {
         assert(command.FragmentStorageBuffers[i] != null && !buffer_is_disposed(command.FragmentStorageBuffers[i]),
                "Attempting to render a null or disposed Fragment Storage Buffer");
     }
@@ -273,11 +276,11 @@ graphics_device_dispatch :: (d: *Graphics_Device, command: Compute_Command) {
         return;
     }
 
-    for i: 0..command.ReadOnlyStorageBufferCount-1 {
+    for i: 0..command.ReadOnlyStorageBufferCount - 1 {
         assert(command.ReadOnlyStorageBuffers[i] != null && !buffer_is_disposed(command.ReadOnlyStorageBuffers[i]),
                "Attempting to dispatch with a null or disposed read-only Storage Buffer");
     }
-    for i: 0..command.ReadWriteStorageBufferCount-1 {
+    for i: 0..command.ReadWriteStorageBufferCount - 1 {
         assert(command.ReadWriteStorageBuffers[i] != null && !buffer_is_disposed(command.ReadWriteStorageBuffers[i]),
                "Attempting to dispatch with a null or disposed read-write Storage Buffer");
     }
@@ -293,7 +296,8 @@ graphics_device_clear :: (d: *Graphics_Device, target: Drawable_Target, color: [
 }
 
 graphics_device_clear_color :: (d: *Graphics_Device, target: Drawable_Target, color: Color) {
-    colors: [1] Color; colors[0] = color;
+    colors: [1] Color;
+    colors[0] = color;
     graphics_device_clear(d, target, colors, 1, 0, .COLOR);
 }
 
@@ -303,23 +307,67 @@ graphics_device_clear_color :: (d: *Graphics_Device, target: Drawable_Target, co
 // (and our samples) can drive the device directly.
 //
 
-graphics_device_create           :: (preferred: Graphics_Driver, flags: App_Flags) -> *Graphics_Device { return sdl_device_create(preferred, flags); }
-graphics_device_shutdown         :: (device: *Graphics_Device) { sdl_shutdown(device); }
-graphics_device_destroy_device   :: (device: *Graphics_Device) { sdl_destroy_device(device); }
-graphics_device_present          :: (device: *Graphics_Device) {
+graphics_device_create :: (preferred: Graphics_Driver, flags: App_Flags) -> *Graphics_Device {
+    return sdl_device_create(preferred, flags);
+}
+
+graphics_device_shutdown :: (device: *Graphics_Device) {
+    sdl_shutdown(device);
+}
+
+graphics_device_destroy_device :: (device: *Graphics_Device) {
+    sdl_destroy_device(device);
+}
+
+graphics_device_present :: (device: *Graphics_Device) {
     sdl_present(device);
     device.present_serial += 1;
 }
-graphics_device_window_created   :: (device: *Graphics_Device, window: *Window) { sdl_window_created(device, window); }
-graphics_device_window_destroyed :: (device: *Graphics_Device, window: *Window) { sdl_window_destroyed(device, window); }
-graphics_device_on_event         :: (device: *Graphics_Device, ev: SDL_EventType) { sdl_on_event(device, ev); }
 
-graphics_device_create_texture     :: (device: *Graphics_Device, name: string, width: s32, height: s32, format: Texture_Format, flags: Texture_Flags, sample_count: Sample_Count, target_binding: Graphics_Resource_Handle) -> Graphics_Resource_Handle { return sdl_create_texture(device, name, width, height, format, flags, sample_count, target_binding); }
-graphics_device_set_texture_data   :: (device: *Graphics_Device, texture: Graphics_Resource_Handle, data: *void, length: s32, dest_region: Rect_Int) { sdl_set_texture_data(device, texture, data, length, dest_region); }
-graphics_device_get_texture_data   :: (device: *Graphics_Device, texture: Graphics_Resource_Handle, data: *void, length: s32, source_region: Rect_Int) { sdl_get_texture_data(device, texture, data, length, source_region); }
-graphics_device_blit_texture       :: (device: *Graphics_Device, source: Graphics_Resource_Handle, source_region: Rect_Int, dest: Graphics_Resource_Handle, dest_region: Rect_Int, filter: Texture_Filter) { sdl_blit_texture(device, source, source_region, dest, dest_region, filter); }
-graphics_device_create_target      :: (device: *Graphics_Device, width: s32, height: s32) -> Graphics_Resource_Handle { return sdl_create_target(device, width, height); }
-graphics_device_create_shader      :: (device: *Graphics_Device, shader: *Shader, code: [] u8, entry_point: string) -> Graphics_Resource_Handle { return sdl_create_shader(device, shader, code, entry_point); }
-graphics_device_create_buffer      :: (device: *Graphics_Device, name: string, type: Buffer_Kind, format: Index_Format) -> Graphics_Resource_Handle { return sdl_create_buffer(device, name, type, format); }
-graphics_device_upload_buffer_data :: (device: *Graphics_Device, buffer: Graphics_Resource_Handle, data: *void, data_size: s32, data_dest_offset: s32) { sdl_upload_buffer_data(device, buffer, data, data_size, data_dest_offset); }
-graphics_device_destroy_resource   :: (device: *Graphics_Device, resource: Graphics_Resource_Handle) { sdl_destroy_resource(device, resource); }
+graphics_device_window_created :: (device: *Graphics_Device, window: *Window) {
+    sdl_window_created(device, window);
+}
+
+graphics_device_window_destroyed :: (device: *Graphics_Device, window: *Window) {
+    sdl_window_destroyed(device, window);
+}
+
+graphics_device_on_event :: (device: *Graphics_Device, ev: SDL_EventType) {
+    sdl_on_event(device, ev);
+}
+
+graphics_device_create_texture :: (device: *Graphics_Device, name: string, width: s32, height: s32, format: Texture_Format, flags: Texture_Flags, sample_count: Sample_Count, target_binding: Graphics_Resource_Handle) -> Graphics_Resource_Handle {
+    return sdl_create_texture(device, name, width, height, format, flags, sample_count, target_binding);
+}
+
+graphics_device_set_texture_data :: (device: *Graphics_Device, texture: Graphics_Resource_Handle, data: *void, length: s32, dest_region: Rect_Int) {
+    sdl_set_texture_data(device, texture, data, length, dest_region);
+}
+
+graphics_device_get_texture_data :: (device: *Graphics_Device, texture: Graphics_Resource_Handle, data: *void, length: s32, source_region: Rect_Int) {
+    sdl_get_texture_data(device, texture, data, length, source_region);
+}
+
+graphics_device_blit_texture :: (device: *Graphics_Device, source: Graphics_Resource_Handle, source_region: Rect_Int, dest: Graphics_Resource_Handle, dest_region: Rect_Int, filter: Texture_Filter) {
+    sdl_blit_texture(device, source, source_region, dest, dest_region, filter);
+}
+
+graphics_device_create_target :: (device: *Graphics_Device, width: s32, height: s32) -> Graphics_Resource_Handle {
+    return sdl_create_target(device, width, height);
+}
+
+graphics_device_create_shader :: (device: *Graphics_Device, shader: *Shader, code: [] u8, entry_point: string) -> Graphics_Resource_Handle {
+    return sdl_create_shader(device, shader, code, entry_point);
+}
+
+graphics_device_create_buffer :: (device: *Graphics_Device, name: string, type: Buffer_Kind, format: Index_Format) -> Graphics_Resource_Handle {
+    return sdl_create_buffer(device, name, type, format);
+}
+
+graphics_device_upload_buffer_data :: (device: *Graphics_Device, buffer: Graphics_Resource_Handle, data: *void, data_size: s32, data_dest_offset: s32) {
+    sdl_upload_buffer_data(device, buffer, data, data_size, data_dest_offset);
+}
+
+graphics_device_destroy_resource :: (device: *Graphics_Device, resource: Graphics_Resource_Handle) {
+    sdl_destroy_resource(device, resource);
+}

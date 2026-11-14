@@ -1,10 +1,9 @@
-#load "driver.jai" ;
-#load "memory.jai" ;
+#load "driver.jai";
+#load "memory.jai";
 #scope_module
-#import "Basic" ;
-Math :: #import "Math" ;
-#load "../../support.jai" ;
+#import "Basic";
+Math :: #import "Math";
+#load "../../support.jai";
 
- // Cast semantics adapted. 
-
- // Loop scopes adapted. 
+// Cast semantics adapted.
+// Loop scopes adapted.

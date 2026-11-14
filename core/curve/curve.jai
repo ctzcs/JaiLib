@@ -13,7 +13,7 @@
 // 只在 T 为定长数组时实例化；标量由 curve_scale / curve_add 直接处理。
 _curve_array_scale :: (a: $T, s: float32) -> T {
     result: T;
-    for x, i : a {
+    for x, i: a {
         result[i] = x * s;
     }
     return result;
@@ -21,7 +21,7 @@ _curve_array_scale :: (a: $T, s: float32) -> T {
 
 _curve_array_add :: (a: $T, b: T) -> T {
     result: T;
-    for x, i : a {
+    for x, i: a {
         result[i] = x + b[i];
     }
     return result;
@@ -60,10 +60,10 @@ sample :: (curve: Kind, points: [4] $T, t: float32) -> T {
     if curve == {
         case .Linear;
             return curve_add(curve_scale(points[0], cast(float32) 1 - t), curve_scale(points[3], t));
-        case .Bezier;      return sample_bezier(points, t);
-        case .Hermite;     return sample_hermite_points(points, t);
+        case .Bezier; return sample_bezier(points, t);
+        case .Hermite; return sample_hermite_points(points, t);
         case .Catmull_Rom; return sample_catmull_rom(points, t);
-        case .B_Spline;    return sample_b_spline(points, t);
+        case .B_Spline; return sample_b_spline(points, t);
     }
     return points[0];
 }
@@ -88,7 +88,7 @@ sample_cubic :: (points: [4] $T, t: float32, m: [4][4] float32) -> T {
 // C0/C1 continuity.
 // Manual tangents.
 sample_bezier :: (points: [4] $T, t: float32) -> T {
-    M : [4][4] float32 = .[
+    M: [4][4] float32 = .[
         .[+1, +0, +0, +0],
         .[-3, +3, +0, +0],
         .[+3, -6, +3, +0],
@@ -114,7 +114,7 @@ sample_hermite_points :: (points: [4] $T, t: float32) -> T {
 // Explicit tangents.
 // Values are [p0, v0, p1, v1]
 sample_hermite_tangents :: (values: [4] $T, t: float32) -> T {
-    M : [4][4] float32 = .[
+    M: [4][4] float32 = .[
         .[+1, +0, +0, +0],
         .[+0, +1, +0, +0],
         .[-3, -2, +3, -1],
@@ -132,7 +132,7 @@ sample_hermite :: (pos0, vel0, pos1, vel1: $T, t: float32) -> T {
 // C1 continuity.
 // Automatic tangents.
 sample_catmull_rom :: (points: [4] $T, t: float32) -> T {
-    M : [4][4] float32 = .[
+    M: [4][4] float32 = .[
         .[+0, +2, +0, +0],
         .[-1, +0, +1, +0],
         .[+2, -5, +4, -1],
@@ -160,7 +160,7 @@ sample_cardinal :: (points: [4] $T, t: float32, scale: float32) -> T {
 // C2 continuity.
 // Automatic tangents.
 sample_b_spline :: (points: [4] $T, t: float32) -> T {
-    M : [4][4] float32 = .[
+    M: [4][4] float32 = .[
         .[+1, +4, +1, +0],
         .[-3, +0, +3, +0],
         .[+3, -6, +3, +0],

@@ -1,5 +1,5 @@
 #scope_module
-using Basic;   // module-private
+using Basic; // module-private
 using Math;
 #scope_export
 
@@ -15,8 +15,8 @@ using Math;
 // want unit-length steps.
 
 Ray :: struct {
-    Position:  Vector2;   // origin of the Ray
-    Direction: Vector2;   // direction of the Ray
+    Position: Vector2; // origin of the Ray
+    Direction: Vector2; // direction of the Ray
 }
 
 // A ray at the origin pointing along +X (port addition: handy default value).

@@ -7,8 +7,8 @@ UI_Input_Capture :: struct {
 // 由游戏输入映射生成的单帧动作，ui_end 消费并清空。
 // next: Tab/Shift+Tab 或方向导航；adjust: 滑条左右步数；activate: 确认边沿。
 UI_Navigation :: struct {
-    next:     int;
-    adjust:   float32;
+    next: int;
+    adjust: float32;
     activate, cancel: bool;
 }
 
@@ -22,8 +22,8 @@ UI_Trigger :: enum {
 }
 
 UI_Widget_Options :: struct {
-    disabled:      bool;
-    trigger:       UI_Trigger;
+    disabled: bool;
+    trigger: UI_Trigger;
     no_focus_ring: bool; // 控件自己表示焦点（如高亮底色），不画焦点框
 }
 

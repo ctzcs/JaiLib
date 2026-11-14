@@ -30,10 +30,10 @@
 // max_error 与返回的 error 都是相对网格包围盒最长边的距离（0.01 ≈ 1%）。
 // 结果引用原顶点数组，常配合 compact 去掉不再使用的顶点；返回切片使用 allocator。
 // 输入索引越界或长度不是 3 的倍数时返回 nil, 0, false（odin 的 nil 切片对应 Jai 的空切片）。
-simplify :: (positions: [] [3] float32, indices: [] u32, target_index_count: int,
+simplify :: (positions: [][3] float32, indices: [] u32, target_index_count: int,
              max_error: float32 = 0.01, allocator: Allocator = context.allocator) -> ([] u32, float32, bool) {
     if !meshutil_indices_valid(positions, indices) {
-        empty : [] u32;
+        empty: [] u32;
         return empty, 0, false;
     }
     push_allocator(allocator);
@@ -47,10 +47,10 @@ simplify :: (positions: [] [3] float32, indices: [] u32, target_index_count: int
     // ---- 归一化：误差相对包围盒最长边，与模型尺寸无关 ----
     used := meshutil_alloc_zeroed(bool, n);
     defer meshutil_free(used);
-    for i: 0..indices.count-1 used[cast(int) indices[i]] = true;
-    low : [3] float32 = .[FLOAT32_INFINITY, FLOAT32_INFINITY, FLOAT32_INFINITY];
-    high : [3] float32 = .[-FLOAT32_INFINITY, -FLOAT32_INFINITY, -FLOAT32_INFINITY];
-    for i: 0..n-1 {
+    for i: 0..indices.count - 1 used[cast(int) indices[i]] = true;
+    low: [3] float32 = .[FLOAT32_INFINITY, FLOAT32_INFINITY, FLOAT32_INFINITY];
+    high: [3] float32 = .[-FLOAT32_INFINITY, -FLOAT32_INFINITY, -FLOAT32_INFINITY];
+    for i: 0..n - 1 {
         if !used[i] continue;
         for axis: 0..2 {
             low[axis] = min(low[axis], positions[i][axis]);
@@ -61,7 +61,7 @@ simplify :: (positions: [] [3] float32, indices: [] u32, target_index_count: int
     if !(extent > 0) extent = 1.0;
     scaled := meshutil_alloc_zeroed([3] float32, n);
     defer meshutil_free(scaled);
-    for i: 0..n-1 {
+    for i: 0..n - 1 {
         if used[i] scaled[i] = meshutil_position_scaled(positions[i], low, extent);
     }
 
@@ -70,8 +70,8 @@ simplify :: (positions: [] [3] float32, indices: [] u32, target_index_count: int
     defer meshutil_free(remap);
     wedge := meshutil_alloc(u32, n);
     defer meshutil_free(wedge);
-    for i: 0..n-1 wedge[i] = cast(u32) i;
-    for i: 0..n-1 {
+    for i: 0..n - 1 wedge[i] = cast(u32) i;
+    for i: 0..n - 1 {
         r := remap[i];
         if r == cast(u32) i continue;
         wedge[i] = wedge[cast(int) r];
@@ -93,13 +93,13 @@ simplify :: (positions: [] [3] float32, indices: [] u32, target_index_count: int
     for tri: 0..count / 3 - 1 {
         t := tri * 3;
         p0 := scaled[cast(int) work[t]];
-        normal := meshutil_cross(meshutil_sub(scaled[cast(int) work[t+1]], p0),
-                                 meshutil_sub(scaled[cast(int) work[t+2]], p0));
+        normal := meshutil_cross(meshutil_sub(scaled[cast(int) work[t + 1]], p0),
+                                 meshutil_sub(scaled[cast(int) work[t + 2]], p0));
         area := meshutil_length(normal);
         if area <= 0 continue;
         normal = meshutil_div(normal, area);
         q := meshutil_quadric_plane(normal, -meshutil_dot(normal, p0), area);
-        for k: 0..2 meshutil_quadric_add(*quadrics[cast(int) remap[cast(int) work[t+k]]], q);
+        for k: 0..2 meshutil_quadric_add(*quadrics[cast(int) remap[cast(int) work[t + k]]], q);
     }
     for tri: 0..count / 3 - 1 {
         t := tri * 3;
@@ -121,7 +121,7 @@ simplify :: (positions: [] [3] float32, indices: [] u32, target_index_count: int
             side_length := meshutil_length(side);
             if side_length <= 0 continue;
             normal := meshutil_div(side, side_length);
-            weight : float32 = 1.0;
+            weight: float32 = 1.0;
             if kind == Vertex_Kind.Border weight = 10.0;
             q := meshutil_quadric_plane(normal, -meshutil_dot(normal, p0), edge_length * edge_length * weight);
             meshutil_quadric_add(*quadrics[cast(int) remap[cast(int) i0]], q);
@@ -131,7 +131,7 @@ simplify :: (positions: [] [3] float32, indices: [] u32, target_index_count: int
 
     // ---- 逐轮折叠 ----
     error_limit := max_error * max_error;
-    result_error : float32;
+    result_error: float32;
     collapse_remap := meshutil_alloc(u32, n);
     defer meshutil_free(collapse_remap);
     group_target := meshutil_alloc(u32, n);
@@ -142,21 +142,21 @@ simplify :: (positions: [] [3] float32, indices: [] u32, target_index_count: int
     defer meshutil_free(triangle_offsets);
     triangle_list := meshutil_alloc(u32, indices.count);
     defer meshutil_free(triangle_list);
-    candidates : [..] Collapse;
+    candidates: [..] Collapse;
     array_reserve(*candidates, indices.count);
     defer array_free(candidates);
 
     while count > target {
         // 位置分组 → 所在三角形，用于翻转检查。
         meshutil_zero_array(triangle_offsets);
-        for k: 0..count-1 triangle_offsets[cast(int) remap[cast(int) work[k]] + 1] += 1;
-        for i: 0..n-1 triangle_offsets[i + 1] += triangle_offsets[i];
-        for k: 0..count-1 {
+        for k: 0..count - 1 triangle_offsets[cast(int) remap[cast(int) work[k]] + 1] += 1;
+        for i: 0..n - 1 triangle_offsets[i + 1] += triangle_offsets[i];
+        for k: 0..count - 1 {
             r := remap[cast(int) work[k]];
             triangle_list[cast(int) triangle_offsets[cast(int) r]] = cast(u32) (k - k % 3);
             triangle_offsets[cast(int) r] += 1;
         }
-        for i: 0..n-1 triangle_offsets[n - i] = triangle_offsets[n - i - 1];
+        for i: 0..n - 1 triangle_offsets[n - i] = triangle_offsets[n - i - 1];
         triangle_offsets[0] = 0;
 
         candidates.count = 0;
@@ -171,9 +171,9 @@ simplify :: (positions: [] [3] float32, indices: [] u32, target_index_count: int
                 forward := meshutil_can_collapse(kinds, open_out, open_in, i0, i1);
                 backward := meshutil_can_collapse(kinds, open_out, open_in, i1, i0);
                 if !forward && !backward continue;
-                forward_error : float32 = FLOAT32_INFINITY;
+                forward_error: float32 = FLOAT32_INFINITY;
                 if forward forward_error = meshutil_quadric_error(quadrics[cast(int) r0], scaled[cast(int) i1]);
-                backward_error : float32 = FLOAT32_INFINITY;
+                backward_error: float32 = FLOAT32_INFINITY;
                 if backward backward_error = meshutil_quadric_error(quadrics[cast(int) r1], scaled[cast(int) i0]);
                 if forward_error <= backward_error {
                     array_add(*candidates, Collapse.{ from = i0, to = i1, error = forward_error });
@@ -185,7 +185,7 @@ simplify :: (positions: [] [3] float32, indices: [] u32, target_index_count: int
         if candidates.count == 0 break;
         meshutil_smooth_sort(candidates);
 
-        for i: 0..n-1 {
+        for i: 0..n - 1 {
             collapse_remap[i] = cast(u32) i;
             group_target[i] = cast(u32) i;
         }
@@ -193,11 +193,11 @@ simplify :: (positions: [] [3] float32, indices: [] u32, target_index_count: int
         triangle_goal := (count - target) / 3;
         // 很多候选会因共享顶点被锁住，按目标位置候选误差的 1.5 倍限制本轮。
         edge_goal := triangle_goal / 2;
-        error_goal : float32 = FLOAT32_INFINITY;
+        error_goal: float32 = FLOAT32_INFINITY;
         if edge_goal < candidates.count error_goal = 1.5 * candidates[edge_goal].error;
         collapsed_triangles := 0;
         collapses := 0;
-        for ci: 0..candidates.count-1 {
+        for ci: 0..candidates.count - 1 {
             c := candidates[ci];
             if c.error > error_limit || collapsed_triangles >= triangle_goal break;
             if c.error > error_goal && collapsed_triangles > triangle_goal / 6 break;
@@ -220,7 +220,7 @@ simplify :: (positions: [] [3] float32, indices: [] u32, target_index_count: int
             locked[cast(int) r0] = true;
             locked[cast(int) r1] = true;
             if kind == Vertex_Kind.Border collapsed_triangles += 1;
-            else                             collapsed_triangles += 2;
+            else collapsed_triangles += 2;
             collapses += 1;
             result_error = max(result_error, c.error);
         }
@@ -232,14 +232,14 @@ simplify :: (positions: [] [3] float32, indices: [] u32, target_index_count: int
         for tri: 0..count / 3 - 1 {
             t := tri * 3;
             a := collapse_remap[cast(int) work[t]];
-            b := collapse_remap[cast(int) work[t+1]];
-            c := collapse_remap[cast(int) work[t+2]];
+            b := collapse_remap[cast(int) work[t + 1]];
+            c := collapse_remap[cast(int) work[t + 2]];
             if remap[cast(int) a] == remap[cast(int) b] ||
                remap[cast(int) b] == remap[cast(int) c] ||
                remap[cast(int) a] == remap[cast(int) c] continue;
             work[write] = a;
-            work[write+1] = b;
-            work[write+2] = c;
+            work[write + 1] = b;
+            work[write + 2] = c;
             write += 3;
         }
         count = write;
@@ -254,10 +254,10 @@ simplify :: (positions: [] [3] float32, indices: [] u32, target_index_count: int
 //@region 顶点分类
 
 Vertex_Kind :: enum u8 {
-    Locked;   // 未使用、非流形或多重属性拆分：保持不动
+    Locked; // 未使用、非流形或多重属性拆分：保持不动
     Manifold; // 内部顶点：可折向任意相邻顶点
-    Border;   // 位于开放边界：只能沿边界折向边界顶点
-    Seam;     // 两份属性拆分的缝：只能沿缝折叠，另一侧同步
+    Border; // 位于开放边界：只能沿边界折向边界顶点
+    Seam; // 两份属性拆分的缝：只能沿缝折叠，另一侧同步
 }
 
 Collapse :: struct {
@@ -265,8 +265,8 @@ Collapse :: struct {
     error: float32;
 }
 
-NO_EDGE : u32 : 0xFFFFFFFF;
-MANY_EDGES : u32 : 0xFFFFFFFE;
+NO_EDGE: u32 : 0xFFFFFFFF;
+MANY_EDGES: u32 : 0xFFFFFFFE;
 
 //@region 排序 —— odin core:slice 的 sort_by（smoothsort）逐行移植
 
@@ -280,9 +280,9 @@ MANY_EDGES : u32 : 0xFFFFFFFE;
 // 两者等价（lp 的递推与 `lp[i] >= size` 判据同时除以 width 仍成立）。
 // 原版 cycle 用 256 字节缓冲轮换，这里直接轮换元素值。
 
-ORDERING_LESS : s32 : -1;
-ORDERING_EQUAL : s32 : 0;
-ORDERING_GREATER : s32 : 1;
+ORDERING_LESS: s32 : -1;
+ORDERING_EQUAL: s32 : 0;
+ORDERING_GREATER: s32 : 1;
 
 // 与 sort_by 的比较器同义：less(a,b) → Less，less(b,a) → Greater，否则 Equal。
 meshutil_compare_collapse :: (a: Collapse, b: Collapse) -> s32 {
@@ -300,12 +300,12 @@ meshutil_collapse_at :: (items: [] Collapse, a: int, b: int) -> s32 {
 meshutil_sort_cycle :: (items: [] Collapse, path: [] int, n: int) {
     if n < 1 return;
     held := items[path[0]];
-    for i: 0..n-2 items[path[i]] = items[path[i + 1]];
+    for i: 0..n - 2 items[path[i]] = items[path[i + 1]];
     items[path[n - 1]] = held;
 }
 
 meshutil_sort_sift :: (items: [] Collapse, head_in: int, width: int, pshift_in: int, lp: [] int) {
-    path : [128] int; // odin 的 buf: [14*size_of(uint)+1][^]byte
+    path: [128] int; // odin 的 buf: [14*size_of(uint)+1][^]byte
     head := head_in;
     pshift := pshift_in;
     path[0] = head;
@@ -384,7 +384,7 @@ meshutil_sort_trinkle :: (items: [] Collapse, head_in: int, width: int, pp: Sort
                           trusty_in: bool, lp: [] int) {
     head := head_in;
     p := pp; // 按值复制：调用方的位集不受影响（与 odin 的 [2]uint 形参同义）
-    path : [128] int;
+    path: [128] int;
     path[0] = head;
     i := 1;
     trail := 0;
@@ -416,7 +416,7 @@ meshutil_smooth_sort :: (items: [] Collapse) {
     size := items.count;
     if size <= 1 return;
     width := 1;
-    lp : [128] int;
+    lp: [128] int;
     lp[1] = width;
     lp[0] = lp[1];
     li := 2;
@@ -428,7 +428,7 @@ meshutil_smooth_sort :: (items: [] Collapse) {
 
     head := 0;
     high := size - width;
-    p : Sort_Bits = .{ w0 = 1, w1 = 0 };
+    p: Sort_Bits = .{ w0 = 1, w1 = 0 };
     pshift := 1;
     while head < high {
         if (p.w0 & 3) == 3 {
@@ -480,11 +480,11 @@ meshutil_open_edges :: (indices: [] u32, open_out: [] u32, open_in: [] u32) {
     defer meshutil_free(offsets);
     targets := meshutil_alloc(u32, indices.count);
     defer meshutil_free(targets);
-    for i: 0..indices.count-1 offsets[cast(int) indices[i] + 1] += 1;
-    for i: 0..n-1 offsets[i + 1] += offsets[i];
+    for i: 0..indices.count - 1 offsets[cast(int) indices[i] + 1] += 1;
+    for i: 0..n - 1 offsets[i + 1] += offsets[i];
     cursor := meshutil_alloc(u32, n);
     defer meshutil_free(cursor);
-    for i: 0..n-1 cursor[i] = offsets[i];
+    for i: 0..n - 1 cursor[i] = offsets[i];
     for tri: 0..indices.count / 3 - 1 {
         t := tri * 3;
         for e: 0..2 {
@@ -493,19 +493,19 @@ meshutil_open_edges :: (indices: [] u32, open_out: [] u32, open_in: [] u32) {
             cursor[cast(int) a] += 1;
         }
     }
-    for i: 0..n-1 {
+    for i: 0..n - 1 {
         open_out[i] = NO_EDGE;
         open_in[i] = NO_EDGE;
     }
-    for a: 0..n-1 {
+    for a: 0..n - 1 {
         start := cast(int) offsets[a];
         end := cast(int) offsets[a + 1];
-        for k: start..end-1 {
+        for k: start..end - 1 {
             b := targets[k];
             reverse := false;
             b_start := cast(int) offsets[cast(int) b];
             b_end := cast(int) offsets[cast(int) b + 1];
-            for j: b_start..b_end-1 {
+            for j: b_start..b_end - 1 {
                 if targets[j] == cast(u32) a {
                     reverse = true;
                     break;
@@ -528,7 +528,7 @@ meshutil_set_loop :: (slot: *u32, value: u32) {
 
 meshutil_classify :: (kinds: [] Vertex_Kind, used: [] bool, remap: [] u32, wedge: [] u32,
                       open_out: [] u32, open_in: [] u32) {
-    for i: 0..kinds.count-1 {
+    for i: 0..kinds.count - 1 {
         kinds[i] = Vertex_Kind.Locked;
         if !used[i] continue;
         w := wedge[i];
@@ -570,7 +570,7 @@ Quadric :: struct {
 }
 
 meshutil_quadric_plane :: (n: [3] float32, d: float32, weight: float32) -> Quadric {
-    q : Quadric;
+    q: Quadric;
     q.a00 = n[0] * n[0] * weight;
     q.a11 = n[1] * n[1] * weight;
     q.a22 = n[2] * n[2] * weight;
@@ -616,13 +616,13 @@ meshutil_quadric_error :: (q: Quadric, p: [3] float32) -> float32 {
 
 // r0 移到 r1 后，r0 周围不含 r1 的三角形法线不能反向或退化。
 // 本轮已折叠的邻居按目标位置计算。
-meshutil_has_flips :: (work: [] u32, remap: [] u32, scaled: [] [3] float32, group_target: [] u32,
+meshutil_has_flips :: (work: [] u32, remap: [] u32, scaled: [][3] float32, group_target: [] u32,
                        offsets: [] u32, list: [] u32, r0: u32, r1: u32) -> bool {
     p0 := scaled[cast(int) r0];
     p1 := scaled[cast(int) r1];
     start := cast(int) offsets[cast(int) r0];
     end := cast(int) offsets[cast(int) r0 + 1];
-    for k: start..end-1 {
+    for k: start..end - 1 {
         t := list[k];
         a := remap[cast(int) work[cast(int) t]];
         b := remap[cast(int) work[cast(int) t + 1]];
@@ -651,12 +651,12 @@ meshutil_has_flips :: (work: [] u32, remap: [] u32, scaled: [] [3] float32, grou
 // 公共邻居超过 64 个时保守拒绝。
 meshutil_breaks_link :: (work: [] u32, remap: [] u32, group_target: [] u32, offsets: [] u32,
                          list: [] u32, r0: u32, r1: u32) -> bool {
-    common : [64] u32;
+    common: [64] u32;
     common_count := 0;
     shared := 0;
     start := cast(int) offsets[cast(int) r0];
     end := cast(int) offsets[cast(int) r0 + 1];
-    for k: start..end-1 {
+    for k: start..end - 1 {
         t := list[k];
         contains_r1 := false;
         for j: 0..2 {
@@ -668,7 +668,7 @@ meshutil_breaks_link :: (work: [] u32, remap: [] u32, group_target: [] u32, offs
             if x == r0 || x == r1 continue;
             if !meshutil_is_neighbor(work, remap, group_target, offsets, list, r1, x) continue;
             seen := false;
-            for ci: 0..common_count-1 {
+            for ci: 0..common_count - 1 {
                 if common[ci] == x seen = true;
             }
             if seen continue;
@@ -684,7 +684,7 @@ meshutil_is_neighbor :: (work: [] u32, remap: [] u32, group_target: [] u32, offs
                          list: [] u32, r: u32, x: u32) -> bool {
     start := cast(int) offsets[cast(int) r];
     end := cast(int) offsets[cast(int) r + 1];
-    for k: start..end-1 {
+    for k: start..end - 1 {
         t := list[k];
         for j: 0..2 {
             if group_target[cast(int) remap[cast(int) work[cast(int) t + j]]] == x return true;
@@ -695,12 +695,12 @@ meshutil_is_neighbor :: (work: [] u32, remap: [] u32, group_target: [] u32, offs
 
 // 折叠后更新开放边环：邻居被折叠时改指向折叠目标；折向自身时跳过被吞并的顶点。
 meshutil_remap_loops :: (loop: [] u32, collapse_remap: [] u32) {
-    for i: 0..loop.count-1 {
+    for i: 0..loop.count - 1 {
         l := loop[i];
         if l >= MANY_EDGES continue;
         r := collapse_remap[cast(int) l];
         if r == cast(u32) i loop[i] = loop[cast(int) l];
-        else                loop[i] = r;
+        else loop[i] = r;
     }
 }
 
@@ -740,7 +740,7 @@ meshutil_length :: (v: [3] float32) -> float32 {
 // 复制索引（odin 的 copy(work, indices)）。
 meshutil_copy_indices :: (dest: [] u32, source: [] u32) {
     count := min(dest.count, source.count);
-    for i: 0..count-1 dest[i] = source[i];
+    for i: 0..count - 1 dest[i] = source[i];
 }
 //@endregion
 

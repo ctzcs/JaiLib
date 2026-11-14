@@ -10,11 +10,11 @@
 //@region 视觉属性 —— 不改变布局占位；零值不可见，请从 UI_VISUAL_DEFAULT 开始。
 
 UI_Visual :: struct {
-    offset:   F.Vector2;
-    scale:    F.Vector2;
+    offset: F.Vector2;
+    scale: F.Vector2;
     rotation: float32; // 弧度；屏幕坐标中正值顺时针。
-    pivot:    F.Vector2; // 相对布局矩形的归一化支点，允许在 0..1 之外。
-    opacity:  float32;
+    pivot: F.Vector2; // 相对布局矩形的归一化支点，允许在 0..1 之外。
+    opacity: float32;
 }
 
 UI_VISUAL_DEFAULT :: UI_Visual.{ scale = .{ 1, 1 }, pivot = .{ 0.5, 0.5 }, opacity = 1 };
@@ -29,19 +29,19 @@ ui_set_visual :: (ctx: *UI_Context, id: string, visual: UI_Visual) {
 // 可直接传给 core/tween 的 spring；不限制过冲，透明度在绘制时钳制。
 ui_visual_lerp :: (a: UI_Visual, b: UI_Visual, t: float32) -> UI_Visual {
     return .{
-        offset   = a.offset + (b.offset - a.offset) * t,
-        scale    = a.scale + (b.scale - a.scale) * t,
+        offset = a.offset + (b.offset - a.offset) * t,
+        scale = a.scale + (b.scale - a.scale) * t,
         rotation = a.rotation + (b.rotation - a.rotation) * t,
-        pivot    = a.pivot + (b.pivot - a.pivot) * t,
-        opacity  = a.opacity + (b.opacity - a.opacity) * t,
+        pivot = a.pivot + (b.pivot - a.pivot) * t,
+        opacity = a.opacity + (b.opacity - a.opacity) * t,
     };
 }
 
 UI_Visual_Element :: struct {
-    info:      clay.LayoutElementInfo; // id / parentId / clipId / boundingBox
+    info: clay.LayoutElementInfo; // id / parentId / clipId / boundingBox
     transform: F.Matrix3x2;
-    opacity:   float32;
-    inert:     bool; // 位于退场中的 presence 子树：不命中、不参与导航
+    opacity: float32;
+    inert: bool; // 位于退场中的 presence 子树：不命中、不参与导航
     resolved, resolving: bool;
 }
 
@@ -63,7 +63,10 @@ ui_visual_snapshot :: (ctx: *UI_Context) {
     if ctx.visuals.count == 0 && ctx.inert.count == 0 return;
     // 先问长度再取内容：GetLayoutElementInfo 在缓冲区不够时只返回所需长度。
     count := clay.GetLayoutElementInfo(.[]);
-    if count <= 0 { ctx.visual_layout.count = 0; return; }
+    if count <= 0 {
+        ctx.visual_layout.count = 0;
+        return;
+    }
     array_resize(*ctx.visual_layout, count);
     clay.GetLayoutElementInfo(ui_layout_info_view(ctx.visual_layout));
     for info: ctx.visual_layout {
@@ -126,11 +129,11 @@ ui_visual_point :: (m: F.Matrix3x2, p: F.Vector2) -> F.Vector2 {
 
 // 第一版裁剪仍为屏幕轴对齐矩形；旋转裁剪容器时使用变换后包围盒。
 ui_visual_clip :: (m: F.Matrix3x2, bb: clay.BoundingBox) -> clay.BoundingBox {
-    points: [4] F.Vector2 = .[ .{ bb.x, bb.y }, .{ bb.x + bb.width, bb.y },
-                               .{ bb.x + bb.width, bb.y + bb.height }, .{ bb.x, bb.y + bb.height } ];
+    points: [4] F.Vector2 = .[.{ bb.x, bb.y }, .{ bb.x + bb.width, bb.y },
+                               .{ bb.x + bb.width, bb.y + bb.height }, .{ bb.x, bb.y + bb.height }];
     lo := ui_visual_point(m, points[0]);
     hi := lo;
-    for i: 1 .. 3 {
+    for i: 1..3 {
         p := ui_visual_point(m, points[i]);
         lo = .{ min(lo.x, p.x), min(lo.y, p.y) };
         hi = .{ max(hi.x, p.x), max(hi.y, p.y) };
@@ -175,7 +178,7 @@ ui_visual_inside :: (p: F.Vector2, bb: clay.BoundingBox) -> bool {
 ui_visual_apply_ops :: (ctx: *UI_Context, id: u32, ops: *[..] UI_Op, start: int) {
     found, e := table_find(*ctx.visual_elements, id);
     if !found return;
-    for i: start .. ops.count - 1 {
+    for i: start..ops.count - 1 {
         op := *ops.*[i];
         if op.kind == .Quad {
             op.transformed = !ui_matrix_identity(e.transform);
@@ -203,10 +206,10 @@ ui_matrix_identity :: (m: F.Matrix3x2) -> bool {
 
 ui_visual_pixel_matrix :: (ctx: *UI_Context, m: F.Matrix3x2) -> [16] float32 {
     s := ctx.scale;
-    return .[ m.m11 * s, m.m12 * s, 0, 0,
+    return .[m.m11 * s, m.m12 * s, 0, 0,
               m.m21 * s, m.m22 * s, 0, 0,
               0, 0, 1, 0,
-              m.m31 * s + ctx.viewport_origin.x, m.m32 * s + ctx.viewport_origin.y, 0, 1 ];
+              m.m31 * s + ctx.viewport_origin.x, m.m32 * s + ctx.viewport_origin.y, 0, 1];
 }
 //@endregion
 
@@ -221,18 +224,18 @@ ui_visual_pixel_matrix :: (ctx: *UI_Context, m: F.Matrix3x2) -> [16] float32 {
 // time 约为到位所需秒数，0 为立即到位；bounce 0 为不过冲，越接近 1 越弹（见 core/tween.spring）。
 // 游戏把参数写成具名常量集中放置，配合热重载调手感。
 UI_Motion :: struct {
-    time:   float32;
+    time: float32;
     bounce: float32;
 }
 
 UI_Motion_State :: struct {
     value, velocity: UI_Visual;
-    seen:            bool;
+    seen: bool;
 }
 
 UI_Presence_State :: struct {
     t, velocity: float32;
-    seen:        bool;
+    seen: bool;
 }
 //@endregion
 
@@ -332,7 +335,7 @@ ui_presence :: (ctx: *UI_Context, id: string, open: bool, enter: UI_Motion, exit
     return true, state.t;
 }
 
-UI_PRESENCE_EPSILON : float32 : 0.001;
+UI_PRESENCE_EPSILON: float32 : 0.001;
 
 // 上一帧布局中该元素位于退场子树内。
 ui_visual_inert :: (ctx: *UI_Context, id: u32) -> bool {

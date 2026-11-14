@@ -8,9 +8,8 @@ using Hash_Table;
 // buffers, render passes and the graphics-pipeline cache.
 // (Lifecyle + resources live in graphics_device_sdl.jai.)
 
-
 Clear_Info :: struct {
-    Colors: [] Color;          // empty (count 0) = no color clear
+    Colors: [] Color; // empty (count 0) = no color clear
     Depth: float = 0;
     HasDepth: bool = false;
     Stencil: s32 = 0;
@@ -80,7 +79,7 @@ sdl_perform_draw :: (d: *Graphics_Device, command: Draw_Command) {
     // check if we need to rebind vertex buffers
     rebind_vertex_buffers := d.render_pass_vertex_buffer_count != command.VertexBufferCount;
     if !rebind_vertex_buffers {
-        for i: 0..command.VertexBufferCount-1 {
+        for i: 0..command.VertexBufferCount - 1 {
             vb := sdl_require_resource(d, command.VertexBuffers[i].Buffer.handle);
             if d.render_pass_vertex_buffers[i] != vb.handle || vb.dirty {
                 rebind_vertex_buffers = true;
@@ -98,7 +97,7 @@ sdl_perform_draw :: (d: *Graphics_Device, command: Draw_Command) {
         } else {
             vertex_bindings: [MAX_VERTEX_BUFFERS] SDL_GPUBufferBinding;
 
-            for i: 0..command.VertexBufferCount-1 {
+            for i: 0..command.VertexBufferCount - 1 {
                 res := sdl_require_resource(d, command.VertexBuffers[i].Buffer.handle);
                 res.dirty = false;
 
@@ -116,7 +115,7 @@ sdl_perform_draw :: (d: *Graphics_Device, command: Draw_Command) {
     // bind vertex samplers
     if vertex_shader.SamplerCount > 0 {
         samplers: [MAX_BOUND_SAMPLERS] SDL_GPUTextureSamplerBinding;
-        for i: 0..vertex_shader.SamplerCount-1 {
+        for i: 0..vertex_shader.SamplerCount - 1 {
             value := ifx i < command.VertexSamplerCount then command.VertexSamplers[i] else Bound_Sampler.{};
             tex := ifx value.Tex != null then sdl_find_resource(d, value.Tex.handle) else null;
             if tex != null {
@@ -132,7 +131,7 @@ sdl_perform_draw :: (d: *Graphics_Device, command: Draw_Command) {
     // bind fragment samplers
     if fragment_shader.SamplerCount > 0 {
         samplers: [MAX_BOUND_SAMPLERS] SDL_GPUTextureSamplerBinding;
-        for i: 0..fragment_shader.SamplerCount-1 {
+        for i: 0..fragment_shader.SamplerCount - 1 {
             value := ifx i < command.FragmentSamplerCount then command.FragmentSamplers[i] else Bound_Sampler.{};
             tex := ifx value.Tex != null then sdl_find_resource(d, value.Tex.handle) else null;
             if tex != null {
@@ -146,7 +145,7 @@ sdl_perform_draw :: (d: *Graphics_Device, command: Draw_Command) {
     }
 
     // upload vertex uniforms
-    for i: 0..vertex_shader.UniformBufferCount-1 {
+    for i: 0..vertex_shader.UniformBufferCount - 1 {
         if i >= command.VertexUniformBufferCount continue;
         unibuf := command.VertexUniformBuffers[i];
         if unibuf == null continue;
@@ -157,7 +156,7 @@ sdl_perform_draw :: (d: *Graphics_Device, command: Draw_Command) {
     }
 
     // upload fragment uniforms
-    for i: 0..fragment_shader.UniformBufferCount-1 {
+    for i: 0..fragment_shader.UniformBufferCount - 1 {
         if i >= command.FragmentUniformBufferCount continue;
         unibuf := command.FragmentUniformBuffers[i];
         if unibuf == null continue;
@@ -170,7 +169,7 @@ sdl_perform_draw :: (d: *Graphics_Device, command: Draw_Command) {
     // bind vertex storage buffers
     if vertex_shader.StorageBufferCount > 0 {
         buffers: [MAX_STORAGE_BUFFERS] *SDL_GPUBuffer;
-        for i: 0..vertex_shader.StorageBufferCount-1 {
+        for i: 0..vertex_shader.StorageBufferCount - 1 {
             if i < command.VertexStorageBufferCount && command.VertexStorageBuffers[i] != null {
                 buffers[i] = sdl_require_resource(d, command.VertexStorageBuffers[i].handle).buffer;
             } else {
@@ -183,7 +182,7 @@ sdl_perform_draw :: (d: *Graphics_Device, command: Draw_Command) {
     // bind fragment storage buffers
     if fragment_shader.StorageBufferCount > 0 {
         buffers: [MAX_STORAGE_BUFFERS] *SDL_GPUBuffer;
-        for i: 0..fragment_shader.StorageBufferCount-1 {
+        for i: 0..fragment_shader.StorageBufferCount - 1 {
             if i < command.FragmentStorageBufferCount && command.FragmentStorageBuffers[i] != null {
                 buffers[i] = sdl_require_resource(d, command.FragmentStorageBuffers[i].handle).buffer;
             } else {
@@ -231,9 +230,9 @@ sdl_perform_dispatch :: (d: *Graphics_Device, command: Compute_Command) {
     // begin compute pass with read-write storage bindings
     {
         rw_texture_bindings: [MAX_STORAGE_BUFFERS] SDL_GPUStorageTextureReadWriteBinding;
-        rw_buffer_bindings:  [MAX_STORAGE_BUFFERS] SDL_GPUStorageBufferReadWriteBinding;
+        rw_buffer_bindings: [MAX_STORAGE_BUFFERS] SDL_GPUStorageBufferReadWriteBinding;
 
-        for i: 0..shader.ReadWriteStorageTextureCount-1 {
+        for i: 0..shader.ReadWriteStorageTextureCount - 1 {
             if i >= command.ReadWriteStorageTextureCount || command.ReadWriteStorageTextures[i] == null {
                 rw_texture_bindings[i].texture = null;
                 continue;
@@ -243,7 +242,7 @@ sdl_perform_dispatch :: (d: *Graphics_Device, command: Compute_Command) {
             rw_texture_bindings[i].cycle = true;
         }
 
-        for i: 0..shader.ReadWriteStorageBufferCount-1 {
+        for i: 0..shader.ReadWriteStorageBufferCount - 1 {
             if i >= command.ReadWriteStorageBufferCount || command.ReadWriteStorageBuffers[i] == null {
                 rw_buffer_bindings[i].buffer = null;
                 continue;
@@ -256,7 +255,7 @@ sdl_perform_dispatch :: (d: *Graphics_Device, command: Compute_Command) {
         compute_pass = SDL_BeginGPUComputePass(
             d.cmd_render,
             rw_texture_bindings.data, cast(u32) shader.ReadWriteStorageTextureCount,
-            rw_buffer_bindings.data,  cast(u32) shader.ReadWriteStorageBufferCount);
+            rw_buffer_bindings.data, cast(u32) shader.ReadWriteStorageBufferCount);
 
         if compute_pass == null {
             log_warning("Failed to begin GPU compute pass");
@@ -270,7 +269,7 @@ sdl_perform_dispatch :: (d: *Graphics_Device, command: Compute_Command) {
     // bind samplers
     if shader.SamplerCount > 0 {
         samplers: [MAX_BOUND_SAMPLERS] SDL_GPUTextureSamplerBinding;
-        for i: 0..shader.SamplerCount-1 {
+        for i: 0..shader.SamplerCount - 1 {
             value := ifx i < command.SamplerCount then command.Samplers[i] else Bound_Sampler.{};
             tex := ifx value.Tex != null then sdl_find_resource(d, value.Tex.handle) else null;
             if tex != null {
@@ -284,7 +283,7 @@ sdl_perform_dispatch :: (d: *Graphics_Device, command: Compute_Command) {
     }
 
     // push uniform data
-    for i: 0..shader.UniformBufferCount-1 {
+    for i: 0..shader.UniformBufferCount - 1 {
         if i >= command.UniformBufferCount continue;
         unibuf := command.UniformBuffers[i];
         if unibuf == null continue;
@@ -297,7 +296,7 @@ sdl_perform_dispatch :: (d: *Graphics_Device, command: Compute_Command) {
     // bind read-only storage textures
     if shader.ReadOnlyStorageTextureCount > 0 {
         textures: [MAX_STORAGE_BUFFERS] *SDL_GPUTexture;
-        for i: 0..shader.ReadOnlyStorageTextureCount-1 {
+        for i: 0..shader.ReadOnlyStorageTextureCount - 1 {
             if i < command.ReadOnlyStorageTextureCount && command.ReadOnlyStorageTextures[i] != null {
                 tex := sdl_require_resource(d, command.ReadOnlyStorageTextures[i].handle);
                 textures[i] = sdl_sampler_texture(d, tex);
@@ -311,7 +310,7 @@ sdl_perform_dispatch :: (d: *Graphics_Device, command: Compute_Command) {
     // bind read-only storage buffers
     if shader.ReadOnlyStorageBufferCount > 0 {
         buffers: [MAX_STORAGE_BUFFERS] *SDL_GPUBuffer;
-        for i: 0..shader.ReadOnlyStorageBufferCount-1 {
+        for i: 0..shader.ReadOnlyStorageBufferCount - 1 {
             if i < command.ReadOnlyStorageBufferCount && command.ReadOnlyStorageBuffers[i] != null {
                 buffers[i] = sdl_require_resource(d, command.ReadOnlyStorageBuffers[i].handle).buffer;
             } else {
@@ -369,14 +368,16 @@ sdl_flush_commands :: (d: *Graphics_Device, stall: bool) {
     if stall {
         upload_fence := SDL_SubmitGPUCommandBufferAndAcquireFence(d.cmd_upload);
         if upload_fence != null {
-            fences[fence_count] = upload_fence; fence_count += 1;
+            fences[fence_count] = upload_fence;
+            fence_count += 1;
         } else {
             log_warning(tprint("Failed to acquire upload fence: %", cstr_to_string(SDL_GetError())));
         }
 
         render_fence := SDL_SubmitGPUCommandBufferAndAcquireFence(d.cmd_render);
         if render_fence != null {
-            fences[fence_count] = render_fence; fence_count += 1;
+            fences[fence_count] = render_fence;
+            fence_count += 1;
         } else {
             log_warning(tprint("Failed to acquire render fence: %", cstr_to_string(SDL_GetError())));
         }
@@ -396,7 +397,7 @@ sdl_flush_commands :: (d: *Graphics_Device, stall: bool) {
     }
 
     // release gpu fences
-    for i: 0..fence_count-1 {
+    for i: 0..fence_count - 1 {
         SDL_ReleaseGPUFence(d.device, fences[i]);
     }
 }
@@ -448,7 +449,7 @@ sdl_begin_render_pass :: (d: *Graphics_Device, drawable_target: Drawable_Target,
     d.render_pass_target = drawable_target;
 
     color_attachments: [MAX_COLOR_ATTACHMENTS] *SDL_GPUTexture;
-    color_resolves:    [MAX_COLOR_ATTACHMENTS] *SDL_GPUTexture;
+    color_resolves: [MAX_COLOR_ATTACHMENTS] *SDL_GPUTexture;
     color_target_count := 0;
     depth_stencil_target: *SDL_GPUTexture = null;
 
@@ -466,7 +467,7 @@ sdl_begin_render_pass :: (d: *Graphics_Device, drawable_target: Drawable_Target,
 
     color_info: [MAX_COLOR_ATTACHMENTS] SDL_GPUColorTargetInfo;
 
-    for i: 0..color_target_count-1 {
+    for i: 0..color_target_count - 1 {
         col := ifx i < clear.Colors.count then clear.Colors[i] else Color_Transparent;
         color_info[i].texture = color_attachments[i];
         color_info[i].mip_level = 0;
@@ -475,8 +476,8 @@ sdl_begin_render_pass :: (d: *Graphics_Device, drawable_target: Drawable_Target,
         color_info[i].load_op = ifx clear.Colors.count > 0 then .SDL_GPU_LOADOP_CLEAR else .SDL_GPU_LOADOP_LOAD;
         color_info[i].store_op = ifx color_resolves[i] == null
             then .SDL_GPU_STOREOP_STORE else .SDL_GPU_STOREOP_RESOLVE;
-        color_info[i].cycle = false;   // NOTE: Foster sets cycle=has-clear; kept false because
-                                       // SDL 3.4.12 cycling hid contents from readback (see git history)
+        color_info[i].cycle = false; // NOTE: Foster sets cycle=has-clear; kept false because
+        // SDL 3.4.12 cycling hid contents from readback (see git history)
         color_info[i].resolve_texture = color_resolves[i];
     }
 
@@ -523,8 +524,10 @@ sdl_end_render_pass :: (d: *Graphics_Device) {
 
 gpu_hash_mix :: (h: u64) -> u64 {
     x := h;
-    x ^= x >> 30; x *= 0xbf58476d1ce4e5b9;
-    x ^= x >> 27; x *= 0x94d049bb133111eb;
+    x ^= x >> 30;
+    x *= 0xbf58476d1ce4e5b9;
+    x ^= x >> 27;
+    x *= 0x94d049bb133111eb;
     x ^= x >> 31;
     return x;
 }
@@ -575,11 +578,11 @@ sdl_get_graphics_pipeline :: (d: *Graphics_Device, command: Draw_Command) -> *SD
         hash = gpu_hash_combine(hash, cast(u64) command.IndexBuffer.IndexFormat);
     }
 
-    for i: 0..command.VertexBufferCount-1 {
+    for i: 0..command.VertexBufferCount - 1 {
         vb := command.VertexBuffers[i].Buffer;
         hash = gpu_hash_combine(hash, cast(u64) vb.Format.Stride);
         hash = gpu_hash_combine(hash, cast(u64) vb.Format.ElementCount);
-        for j: 0..vb.Format.ElementCount-1 {
+        for j: 0..vb.Format.ElementCount - 1 {
             el := vb.Format.Elements[j];
             hash = gpu_hash_combine(hash, cast(u64) el.Index);
             hash = gpu_hash_combine(hash, cast(u64) el.Type);
@@ -592,7 +595,7 @@ sdl_get_graphics_pipeline :: (d: *Graphics_Device, command: Draw_Command) -> *SD
     formats: [32] Target_Format_Sample;
     format_count: s32 = 0;
     sdl_get_draw_target_formats(d, command.Target, formats, *format_count);
-    for i: 0..format_count-1 {
+    for i: 0..format_count - 1 {
         hash = gpu_hash_combine(hash, cast(u64) formats[i].format);
         hash = gpu_hash_combine(hash, cast(u64) formats[i].sample_count);
     }
@@ -607,7 +610,7 @@ sdl_get_graphics_pipeline :: (d: *Graphics_Device, command: Draw_Command) -> *SD
     assert(vert_res.kind == .SHADER && frag_res.kind == .SHADER);
 
     vertex_attribute_count := 0;
-    for i: 0..command.VertexBufferCount-1 {
+    for i: 0..command.VertexBufferCount - 1 {
         vertex_attribute_count += command.VertexBuffers[i].Buffer.Format.ElementCount;
     }
 
@@ -621,7 +624,7 @@ sdl_get_graphics_pipeline :: (d: *Graphics_Device, command: Draw_Command) -> *SD
     // get highest sample count
     sample_count: SDL_GPUSampleCount = .SDL_GPU_SAMPLECOUNT_1;
 
-    for i: 0..format_count-1 {
+    for i: 0..format_count - 1 {
         if sdl_is_depth_texture_format(formats[i].format) {
             depth_stencil_attachment = formats[i].format;
         } else {
@@ -635,7 +638,7 @@ sdl_get_graphics_pipeline :: (d: *Graphics_Device, command: Draw_Command) -> *SD
     }
 
     attrb_index := 0;
-    for slot: 0..command.VertexBufferCount-1 {
+    for slot: 0..command.VertexBufferCount - 1 {
         it := command.VertexBuffers[slot].Buffer;
         instance_rate := command.VertexBuffers[slot].InstanceInputRate;
         vertex_offset := 0;
@@ -646,7 +649,7 @@ sdl_get_graphics_pipeline :: (d: *Graphics_Device, command: Draw_Command) -> *SD
             then .SDL_GPU_VERTEXINPUTRATE_INSTANCE else .SDL_GPU_VERTEXINPUTRATE_VERTEX;
         vertex_bindings[slot].instance_step_rate = 0;
 
-        for j: 0..it.Format.ElementCount-1 {
+        for j: 0..it.Format.ElementCount - 1 {
             el := it.Format.Elements[j];
             vertex_attributes[attrb_index].location = cast(u32) el.Index;
             vertex_attributes[attrb_index].buffer_slot = cast(u32) slot;
@@ -668,29 +671,29 @@ sdl_get_graphics_pipeline :: (d: *Graphics_Device, command: Draw_Command) -> *SD
     info.primitive_type = .SDL_GPU_PRIMITIVETYPE_TRIANGLELIST;
 
     info.rasterizer_state.fill_mode = ifx command.FillMode == .FILL then .SDL_GPU_FILLMODE_FILL else .SDL_GPU_FILLMODE_LINE;
-    if command.CullMode == .NONE  info.rasterizer_state.cull_mode = .SDL_GPU_CULLMODE_NONE;
+    if command.CullMode == .NONE info.rasterizer_state.cull_mode = .SDL_GPU_CULLMODE_NONE;
     if command.CullMode == .FRONT info.rasterizer_state.cull_mode = .SDL_GPU_CULLMODE_FRONT;
-    if command.CullMode == .BACK  info.rasterizer_state.cull_mode = .SDL_GPU_CULLMODE_BACK;
+    if command.CullMode == .BACK info.rasterizer_state.cull_mode = .SDL_GPU_CULLMODE_BACK;
     info.rasterizer_state.front_face = .SDL_GPU_FRONTFACE_CLOCKWISE;
     info.rasterizer_state.enable_depth_bias = false;
 
     info.multisample_state.sample_count = sample_count;
-    info.multisample_state.sample_mask = 0;         // not used per SDL docs
-    info.multisample_state.enable_mask = false;     // not used per SDL docs
+    info.multisample_state.sample_mask = 0; // not used per SDL docs
+    info.multisample_state.enable_mask = false; // not used per SDL docs
     info.multisample_state.enable_alpha_to_coverage = false;
 
     info.depth_stencil_state.compare_op = sdl_get_compare_op(command.DepthCompare);
-    info.depth_stencil_state.back_stencil_state.fail_op       = sdl_get_stencil_op(command.BackStencilState.FailOp);
-    info.depth_stencil_state.back_stencil_state.pass_op       = sdl_get_stencil_op(command.BackStencilState.PassOp);
+    info.depth_stencil_state.back_stencil_state.fail_op = sdl_get_stencil_op(command.BackStencilState.FailOp);
+    info.depth_stencil_state.back_stencil_state.pass_op = sdl_get_stencil_op(command.BackStencilState.PassOp);
     info.depth_stencil_state.back_stencil_state.depth_fail_op = sdl_get_stencil_op(command.BackStencilState.DepthFailOp);
-    info.depth_stencil_state.back_stencil_state.compare_op    = sdl_get_compare_op(command.BackStencilState.CompareOp);
-    info.depth_stencil_state.front_stencil_state.fail_op       = sdl_get_stencil_op(command.FrontStencilState.FailOp);
-    info.depth_stencil_state.front_stencil_state.pass_op       = sdl_get_stencil_op(command.FrontStencilState.PassOp);
+    info.depth_stencil_state.back_stencil_state.compare_op = sdl_get_compare_op(command.BackStencilState.CompareOp);
+    info.depth_stencil_state.front_stencil_state.fail_op = sdl_get_stencil_op(command.FrontStencilState.FailOp);
+    info.depth_stencil_state.front_stencil_state.pass_op = sdl_get_stencil_op(command.FrontStencilState.PassOp);
     info.depth_stencil_state.front_stencil_state.depth_fail_op = sdl_get_stencil_op(command.FrontStencilState.DepthFailOp);
-    info.depth_stencil_state.front_stencil_state.compare_op    = sdl_get_compare_op(command.FrontStencilState.CompareOp);
+    info.depth_stencil_state.front_stencil_state.compare_op = sdl_get_compare_op(command.FrontStencilState.CompareOp);
     info.depth_stencil_state.compare_mask = command.StencilCompareMask;
-    info.depth_stencil_state.write_mask  = command.StencilWriteMask;
-    info.depth_stencil_state.enable_depth_test  = command.DepthTestEnabled;
+    info.depth_stencil_state.write_mask = command.StencilWriteMask;
+    info.depth_stencil_state.enable_depth_test = command.DepthTestEnabled;
     info.depth_stencil_state.enable_depth_write = command.DepthWriteEnabled;
     info.depth_stencil_state.enable_stencil_test = command.StencilTestEnabled;
 
@@ -751,39 +754,39 @@ sdl_get_draw_target_formats :: (d: *Graphics_Device, drawable: Drawable_Target, 
 sdl_get_blend_state :: (blend: Blend_Mode) -> SDL_GPUColorTargetBlendState {
     get_factor :: (factor: Blend_Factor) -> SDL_GPUBlendFactor {
         if factor == {
-            case .ZERO;                     return .SDL_GPU_BLENDFACTOR_ZERO;
-            case .ONE;                      return .SDL_GPU_BLENDFACTOR_ONE;
-            case .SRC_COLOR;                return .SDL_GPU_BLENDFACTOR_SRC_COLOR;
-            case .ONE_MINUS_SRC_COLOR;      return .SDL_GPU_BLENDFACTOR_ONE_MINUS_SRC_COLOR;
-            case .DST_COLOR;                return .SDL_GPU_BLENDFACTOR_DST_COLOR;
-            case .ONE_MINUS_DST_COLOR;      return .SDL_GPU_BLENDFACTOR_ONE_MINUS_DST_COLOR;
-            case .SRC_ALPHA;                return .SDL_GPU_BLENDFACTOR_SRC_ALPHA;
-            case .ONE_MINUS_SRC_ALPHA;      return .SDL_GPU_BLENDFACTOR_ONE_MINUS_SRC_ALPHA;
-            case .DST_ALPHA;                return .SDL_GPU_BLENDFACTOR_DST_ALPHA;
-            case .ONE_MINUS_DST_ALPHA;      return .SDL_GPU_BLENDFACTOR_ONE_MINUS_DST_ALPHA;
-            case .CONSTANT_COLOR;           return .SDL_GPU_BLENDFACTOR_CONSTANT_COLOR;
+            case .ZERO; return .SDL_GPU_BLENDFACTOR_ZERO;
+            case .ONE; return .SDL_GPU_BLENDFACTOR_ONE;
+            case .SRC_COLOR; return .SDL_GPU_BLENDFACTOR_SRC_COLOR;
+            case .ONE_MINUS_SRC_COLOR; return .SDL_GPU_BLENDFACTOR_ONE_MINUS_SRC_COLOR;
+            case .DST_COLOR; return .SDL_GPU_BLENDFACTOR_DST_COLOR;
+            case .ONE_MINUS_DST_COLOR; return .SDL_GPU_BLENDFACTOR_ONE_MINUS_DST_COLOR;
+            case .SRC_ALPHA; return .SDL_GPU_BLENDFACTOR_SRC_ALPHA;
+            case .ONE_MINUS_SRC_ALPHA; return .SDL_GPU_BLENDFACTOR_ONE_MINUS_SRC_ALPHA;
+            case .DST_ALPHA; return .SDL_GPU_BLENDFACTOR_DST_ALPHA;
+            case .ONE_MINUS_DST_ALPHA; return .SDL_GPU_BLENDFACTOR_ONE_MINUS_DST_ALPHA;
+            case .CONSTANT_COLOR; return .SDL_GPU_BLENDFACTOR_CONSTANT_COLOR;
             case .ONE_MINUS_CONSTANT_COLOR; return .SDL_GPU_BLENDFACTOR_ONE_MINUS_CONSTANT_COLOR;
-            case .SRC_ALPHA_SATURATE;       return .SDL_GPU_BLENDFACTOR_SRC_ALPHA_SATURATE;
+            case .SRC_ALPHA_SATURATE; return .SDL_GPU_BLENDFACTOR_SRC_ALPHA_SATURATE;
         }
         return .SDL_GPU_BLENDFACTOR_ZERO;
     }
 
     get_op :: (op: Blend_Op) -> SDL_GPUBlendOp {
         if op == {
-            case .ADD;              return .SDL_GPU_BLENDOP_ADD;
-            case .SUBTRACT;         return .SDL_GPU_BLENDOP_SUBTRACT;
+            case .ADD; return .SDL_GPU_BLENDOP_ADD;
+            case .SUBTRACT; return .SDL_GPU_BLENDOP_SUBTRACT;
             case .REVERSE_SUBTRACT; return .SDL_GPU_BLENDOP_REVERSE_SUBTRACT;
-            case .MIN;              return .SDL_GPU_BLENDOP_MIN;
-            case .MAX;              return .SDL_GPU_BLENDOP_MAX;
+            case .MIN; return .SDL_GPU_BLENDOP_MIN;
+            case .MAX; return .SDL_GPU_BLENDOP_MAX;
         }
         return .SDL_GPU_BLENDOP_ADD;
     }
 
     get_flags :: (mask: Blend_Mask) -> SDL_GPUColorComponentFlags {
         flags: SDL_GPUColorComponentFlags = 0;
-        if (mask & .RED)   != 0 flags |= .SDL_GPU_COLORCOMPONENT_R;
+        if (mask & .RED) != 0 flags |= .SDL_GPU_COLORCOMPONENT_R;
         if (mask & .GREEN) != 0 flags |= .SDL_GPU_COLORCOMPONENT_G;
-        if (mask & .BLUE)  != 0 flags |= .SDL_GPU_COLORCOMPONENT_B;
+        if (mask & .BLUE) != 0 flags |= .SDL_GPU_COLORCOMPONENT_B;
         if (mask & .ALPHA) != 0 flags |= .SDL_GPU_COLORCOMPONENT_A;
         return flags;
     }
@@ -810,9 +813,9 @@ texture_sampler_key :: (sampler: Texture_Sampler) -> u32 {
 sdl_get_sampler :: (d: *Graphics_Device, sampler: Texture_Sampler) -> *SDL_GPUSampler {
     get_wrap_mode :: (wrap: Texture_Wrap) -> SDL_GPUSamplerAddressMode {
         if wrap == {
-            case .REPEAT;          return .SDL_GPU_SAMPLERADDRESSMODE_REPEAT;
+            case .REPEAT; return .SDL_GPU_SAMPLERADDRESSMODE_REPEAT;
             case .MIRRORED_REPEAT; return .SDL_GPU_SAMPLERADDRESSMODE_MIRRORED_REPEAT;
-            case .CLAMP;           return .SDL_GPU_SAMPLERADDRESSMODE_CLAMP_TO_EDGE;
+            case .CLAMP; return .SDL_GPU_SAMPLERADDRESSMODE_CLAMP_TO_EDGE;
         }
         return .SDL_GPU_SAMPLERADDRESSMODE_REPEAT;
     }
@@ -847,17 +850,17 @@ sdl_get_filter :: (filter: Texture_Filter) -> SDL_GPUFilter {
 
 sdl_get_vertex_format :: (type: Vertex_Type, normalized: bool) -> SDL_GPUVertexElementFormat {
     if type == {
-        case .FLOAT;   return .SDL_GPU_VERTEXELEMENTFORMAT_FLOAT;
-        case .FLOAT2;  return .SDL_GPU_VERTEXELEMENTFORMAT_FLOAT2;
-        case .FLOAT3;  return .SDL_GPU_VERTEXELEMENTFORMAT_FLOAT3;
-        case .FLOAT4;  return .SDL_GPU_VERTEXELEMENTFORMAT_FLOAT4;
-        case .BYTE4;   return ifx normalized then .SDL_GPU_VERTEXELEMENTFORMAT_BYTE4_NORM  else .SDL_GPU_VERTEXELEMENTFORMAT_BYTE4;
-        case .UBYTE4;  return ifx normalized then .SDL_GPU_VERTEXELEMENTFORMAT_UBYTE4_NORM else .SDL_GPU_VERTEXELEMENTFORMAT_UBYTE4;
-        case .SHORT2;  return ifx normalized then .SDL_GPU_VERTEXELEMENTFORMAT_SHORT2_NORM else .SDL_GPU_VERTEXELEMENTFORMAT_SHORT2;
+        case .FLOAT; return .SDL_GPU_VERTEXELEMENTFORMAT_FLOAT;
+        case .FLOAT2; return .SDL_GPU_VERTEXELEMENTFORMAT_FLOAT2;
+        case .FLOAT3; return .SDL_GPU_VERTEXELEMENTFORMAT_FLOAT3;
+        case .FLOAT4; return .SDL_GPU_VERTEXELEMENTFORMAT_FLOAT4;
+        case .BYTE4; return ifx normalized then .SDL_GPU_VERTEXELEMENTFORMAT_BYTE4_NORM else .SDL_GPU_VERTEXELEMENTFORMAT_BYTE4;
+        case .UBYTE4; return ifx normalized then .SDL_GPU_VERTEXELEMENTFORMAT_UBYTE4_NORM else .SDL_GPU_VERTEXELEMENTFORMAT_UBYTE4;
+        case .SHORT2; return ifx normalized then .SDL_GPU_VERTEXELEMENTFORMAT_SHORT2_NORM else .SDL_GPU_VERTEXELEMENTFORMAT_SHORT2;
         case .USHORT2; return ifx normalized then .SDL_GPU_VERTEXELEMENTFORMAT_USHORT2_NORM else .SDL_GPU_VERTEXELEMENTFORMAT_USHORT2;
-        case .SHORT4;  return ifx normalized then .SDL_GPU_VERTEXELEMENTFORMAT_SHORT4_NORM else .SDL_GPU_VERTEXELEMENTFORMAT_SHORT4;
+        case .SHORT4; return ifx normalized then .SDL_GPU_VERTEXELEMENTFORMAT_SHORT4_NORM else .SDL_GPU_VERTEXELEMENTFORMAT_SHORT4;
         case .USHORT4; return ifx normalized then .SDL_GPU_VERTEXELEMENTFORMAT_USHORT4_NORM else .SDL_GPU_VERTEXELEMENTFORMAT_USHORT4;
-        case .NONE;    return .SDL_GPU_VERTEXELEMENTFORMAT_FLOAT;
+        case .NONE; return .SDL_GPU_VERTEXELEMENTFORMAT_FLOAT;
     }
     return .SDL_GPU_VERTEXELEMENTFORMAT_FLOAT;
 }
@@ -867,22 +870,22 @@ sdl_get_texture_format :: (format: Texture_Format) -> SDL_GPUTextureFormat {
         case .R8G8B8A8; return .SDL_GPU_TEXTUREFORMAT_R8G8B8A8_UNORM;
         case .R16G16B16A16_FLOAT; return .SDL_GPU_TEXTUREFORMAT_R16G16B16A16_FLOAT;
         case .R32G32B32A32_FLOAT; return .SDL_GPU_TEXTUREFORMAT_R32G32B32A32_FLOAT;
-        case .R8;              return .SDL_GPU_TEXTUREFORMAT_R8_UNORM;
-        case .R8G8;            return .SDL_GPU_TEXTUREFORMAT_R8G8_UNORM;
+        case .R8; return .SDL_GPU_TEXTUREFORMAT_R8_UNORM;
+        case .R8G8; return .SDL_GPU_TEXTUREFORMAT_R8G8_UNORM;
         case .DEPTH24STENCIL8; return .SDL_GPU_TEXTUREFORMAT_D24_UNORM_S8_UINT;
         case .DEPTH32STENCIL8; return .SDL_GPU_TEXTUREFORMAT_D32_FLOAT_S8_UINT;
-        case .DEPTH16;         return .SDL_GPU_TEXTUREFORMAT_D16_UNORM;
-        case .DEPTH24;         return .SDL_GPU_TEXTUREFORMAT_D24_UNORM;
-        case .DEPTH32;         return .SDL_GPU_TEXTUREFORMAT_D32_FLOAT;
+        case .DEPTH16; return .SDL_GPU_TEXTUREFORMAT_D16_UNORM;
+        case .DEPTH24; return .SDL_GPU_TEXTUREFORMAT_D24_UNORM;
+        case .DEPTH32; return .SDL_GPU_TEXTUREFORMAT_D32_FLOAT;
     }
     return .SDL_GPU_TEXTUREFORMAT_INVALID;
 }
 
 sdl_get_sample_count :: (sample_count: Sample_Count) -> SDL_GPUSampleCount {
     if sample_count == {
-        case .ONE;   return .SDL_GPU_SAMPLECOUNT_1;
-        case .TWO;   return .SDL_GPU_SAMPLECOUNT_2;
-        case .FOUR;  return .SDL_GPU_SAMPLECOUNT_4;
+        case .ONE; return .SDL_GPU_SAMPLECOUNT_1;
+        case .TWO; return .SDL_GPU_SAMPLECOUNT_2;
+        case .FOUR; return .SDL_GPU_SAMPLECOUNT_4;
         case .EIGHT; return .SDL_GPU_SAMPLECOUNT_8;
     }
     return .SDL_GPU_SAMPLECOUNT_1;
@@ -902,28 +905,28 @@ sdl_is_depth_texture_format :: (format: SDL_GPUTextureFormat) -> bool {
 
 sdl_get_stencil_op :: (op: Stencil_Op) -> SDL_GPUStencilOp {
     if op == {
-        case .INVALID;             return .SDL_GPU_STENCILOP_INVALID;
-        case .KEEP;                return .SDL_GPU_STENCILOP_KEEP;
-        case .ZERO;                return .SDL_GPU_STENCILOP_ZERO;
-        case .REPLACE;             return .SDL_GPU_STENCILOP_REPLACE;
+        case .INVALID; return .SDL_GPU_STENCILOP_INVALID;
+        case .KEEP; return .SDL_GPU_STENCILOP_KEEP;
+        case .ZERO; return .SDL_GPU_STENCILOP_ZERO;
+        case .REPLACE; return .SDL_GPU_STENCILOP_REPLACE;
         case .INCREMENT_AND_CLAMP; return .SDL_GPU_STENCILOP_INCREMENT_AND_CLAMP;
         case .DECREMENT_AND_CLAMP; return .SDL_GPU_STENCILOP_DECREMENT_AND_CLAMP;
-        case .INVERT;              return .SDL_GPU_STENCILOP_INVERT;
-        case .INCREMENT_AND_WRAP;  return .SDL_GPU_STENCILOP_INCREMENT_AND_WRAP;
-        case .DECREMENT_AND_WRAP;  return .SDL_GPU_STENCILOP_DECREMENT_AND_WRAP;
+        case .INVERT; return .SDL_GPU_STENCILOP_INVERT;
+        case .INCREMENT_AND_WRAP; return .SDL_GPU_STENCILOP_INCREMENT_AND_WRAP;
+        case .DECREMENT_AND_WRAP; return .SDL_GPU_STENCILOP_DECREMENT_AND_WRAP;
     }
     return .SDL_GPU_STENCILOP_KEEP;
 }
 
 sdl_get_compare_op :: (op: Depth_Compare) -> SDL_GPUCompareOp {
     if op == {
-        case .ALWAYS;           return .SDL_GPU_COMPAREOP_ALWAYS;
-        case .NEVER;            return .SDL_GPU_COMPAREOP_NEVER;
-        case .LESS;             return .SDL_GPU_COMPAREOP_LESS;
-        case .EQUAL;            return .SDL_GPU_COMPAREOP_EQUAL;
-        case .LESS_OR_EQUAL;    return .SDL_GPU_COMPAREOP_LESS_OR_EQUAL;
-        case .GREATER;          return .SDL_GPU_COMPAREOP_GREATER;
-        case .NOT_EQUAL;        return .SDL_GPU_COMPAREOP_NOT_EQUAL;
+        case .ALWAYS; return .SDL_GPU_COMPAREOP_ALWAYS;
+        case .NEVER; return .SDL_GPU_COMPAREOP_NEVER;
+        case .LESS; return .SDL_GPU_COMPAREOP_LESS;
+        case .EQUAL; return .SDL_GPU_COMPAREOP_EQUAL;
+        case .LESS_OR_EQUAL; return .SDL_GPU_COMPAREOP_LESS_OR_EQUAL;
+        case .GREATER; return .SDL_GPU_COMPAREOP_GREATER;
+        case .NOT_EQUAL; return .SDL_GPU_COMPAREOP_NOT_EQUAL;
         case .GREATER_OR_EQUAL; return .SDL_GPU_COMPAREOP_GREATER_OR_EQUAL;
     }
     return .SDL_GPU_COMPAREOP_NEVER;

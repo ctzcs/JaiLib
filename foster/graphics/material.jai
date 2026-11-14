@@ -6,8 +6,8 @@ using Math;
 // Port of Foster Framework/Graphics/Material.cs.
 
 Material_Stage :: struct {
-    Stage:  Shader_Stage;
-    shader: *Shader = null;   // 'Shader' would shadow the type name; must match Stage
+    Stage: Shader_Stage;
+    shader: *Shader = null; // 'Shader' would shadow the type name; must match Stage
 
     Samplers: [16] Bound_Sampler;
     UniformBuffers: [8] Uniform_Buffer;
@@ -25,7 +25,7 @@ material_stage_set_uniform :: (s: *Material_Stage, slot: s32, data: [] u8) {
 }
 
 material_stage_set_uniform_value :: (s: *Material_Stage, slot: s32, value: $T) {
-    local := value;   // stable stack copy — & of a by-value param is unsafe past 32 bytes
+    local := value; // stable stack copy — & of a by-value param is unsafe past 32 bytes
     uniform_buffer_set_value(*s.UniformBuffers[slot], *local);
 }
 
@@ -53,13 +53,13 @@ material_stage_equal_to :: (a: *Material_Stage, b: *Material_Stage) -> bool {
 }
 
 Material :: struct {
-    Vertex:   Material_Stage;
+    Vertex: Material_Stage;
     Fragment: Material_Stage;
 }
 
 material_create :: (vertex_shader: *Shader = null, fragment_shader: *Shader = null) -> *Material {
     m := New(Material);
-    m.Vertex.Stage   = .VERTEX;
+    m.Vertex.Stage = .VERTEX;
     m.Fragment.Stage = .FRAGMENT;
     material_stage_set_shader(*m.Vertex, vertex_shader);
     material_stage_set_shader(*m.Fragment, fragment_shader);

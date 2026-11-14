@@ -1,5 +1,5 @@
 #scope_module
-using Basic;   // module-private
+using Basic; // module-private
 using Math;
 #scope_export
 
@@ -23,14 +23,14 @@ Point3 :: struct {
     x, y, z: s32;
 }
 
-Point3_Zero     :: Point3.{  0,  0,  0 };
-Point3_One      :: Point3.{  1,  1,  1 };
-Point3_Left     :: Point3.{ -1,  0,  0 };
-Point3_Right    :: Point3.{  1,  0,  0 };
-Point3_Up       :: Point3.{  0, -1,  0 };   // +Y points down, as in Foster's 2D space
-Point3_Down     :: Point3.{  0,  1,  0 };
-Point3_Forward  :: Point3.{  0,  0,  1 };
-Point3_Backward :: Point3.{  0,  0, -1 };
+Point3_Zero :: Point3.{ 0, 0, 0 };
+Point3_One :: Point3.{ 1, 1, 1 };
+Point3_Left :: Point3.{ -1, 0, 0 };
+Point3_Right :: Point3.{ 1, 0, 0 };
+Point3_Up :: Point3.{ 0, -1, 0 }; // +Y points down, as in Foster's 2D space
+Point3_Down :: Point3.{ 0, 1, 0 };
+Point3_Forward :: Point3.{ 0, 0, 1 };
+Point3_Backward :: Point3.{ 0, 0, -1 };
 
 // C# `new Point3(int xyz)` — every component gets the same value.
 point3_splat :: (xyz: s32) -> Point3 {
@@ -108,15 +108,30 @@ point3_fmod_f32 :: (a: float, b: float) -> float {
 // Operators (one-to-one with the C# operator overloads)
 //
 
-operator - :: (p: Point3) -> Point3 { return .{ -p.x, -p.y, -p.z }; }
+operator - :: (p: Point3) -> Point3 {
+    return .{ -p.x, -p.y, -p.z };
+}
 
-operator + :: (a: Point3, b: Point3) -> Point3 { return .{ a.x + b.x, a.y + b.y, a.z + b.z }; }
-operator - :: (a: Point3, b: Point3) -> Point3 { return .{ a.x - b.x, a.y - b.y, a.z - b.z }; }
+operator + :: (a: Point3, b: Point3) -> Point3 {
+    return .{ a.x + b.x, a.y + b.y, a.z + b.z };
+}
+
+operator - :: (a: Point3, b: Point3) -> Point3 {
+    return .{ a.x - b.x, a.y - b.y, a.z - b.z };
+}
 
 // Point3 op int -> Point3
-operator * :: (p: Point3, scaler: s32) -> Point3 { return .{ p.x * scaler, p.y * scaler, p.z * scaler }; }
-operator / :: (p: Point3, scaler: s32) -> Point3 { return .{ p.x / scaler, p.y / scaler, p.z / scaler }; }
-operator % :: (p: Point3, scaler: s32) -> Point3 { return .{ p.x % scaler, p.y % scaler, p.z % scaler }; }
+operator * :: (p: Point3, scaler: s32) -> Point3 {
+    return .{ p.x * scaler, p.y * scaler, p.z * scaler };
+}
+
+operator / :: (p: Point3, scaler: s32) -> Point3 {
+    return .{ p.x / scaler, p.y / scaler, p.z / scaler };
+}
+
+operator % :: (p: Point3, scaler: s32) -> Point3 {
+    return .{ p.x % scaler, p.y % scaler, p.z % scaler };
+}
 
 // Point3 op float -> Vector3 (C# returns a Vector3 from these three)
 operator * :: (p: Point3, scaler: float) -> Vector3 {
@@ -135,5 +150,10 @@ operator % :: (p: Point3, scaler: float) -> Vector3 {
     };
 }
 
-operator == :: (a: Point3, b: Point3) -> bool { return a.x == b.x && a.y == b.y && a.z == b.z; }
-operator != :: (a: Point3, b: Point3) -> bool { return a.x != b.x || a.y != b.y || a.z != b.z; }
+operator == :: (a: Point3, b: Point3) -> bool {
+    return a.x == b.x && a.y == b.y && a.z == b.z;
+}
+
+operator != :: (a: Point3, b: Point3) -> bool {
+    return a.x != b.x || a.y != b.y || a.z != b.z;
+}

@@ -6,10 +6,10 @@ using Math;
 // Port of Foster Framework/Graphics/Structs/Subtexture.cs.
 
 Subtexture :: struct {
-    Tex:    *Texture = null;
-    Source: Rect;    // pixel rect in the atlas
-    Frame:  Rect;    // full pre-trim bounds (can extend negatively around Source)
-    TexCoords:  [4] Vector2;
+    Tex: *Texture = null;
+    Source: Rect; // pixel rect in the atlas
+    Frame: Rect; // full pre-trim bounds (can extend negatively around Source)
+    TexCoords: [4] Vector2;
     DrawCoords: [4] Vector2;
 }
 
@@ -21,10 +21,10 @@ subtexture_make :: (texture: *Texture, source: Rect, frame: Rect) -> Subtexture 
     s.Source = source;
     s.Frame = frame;
 
-    s.DrawCoords[0] = .{ -frame.x,             -frame.y };
+    s.DrawCoords[0] = .{ -frame.x, -frame.y };
     s.DrawCoords[1] = .{ -frame.x + source.w, -frame.y };
     s.DrawCoords[2] = .{ -frame.x + source.w, -frame.y + source.h };
-    s.DrawCoords[3] = .{ -frame.x,            -frame.y + source.h };
+    s.DrawCoords[3] = .{ -frame.x, -frame.y + source.h };
 
     if texture != null && texture.Width > 0 && texture.Height > 0 {
         px := 1.0 / cast(float) texture.Width;
@@ -51,9 +51,18 @@ subtexture_make_source :: (texture: *Texture, source: Rect) -> Subtexture {
     return subtexture_make(texture, source, .{ 0, 0, source.w, source.h });
 }
 
-subtexture_width  :: (s: Subtexture) -> float { return s.Frame.w; }
-subtexture_height :: (s: Subtexture) -> float { return s.Frame.h; }
-subtexture_size   :: (s: Subtexture) -> Vector2 { return .{ s.Frame.w, s.Frame.h }; }
+subtexture_width :: (s: Subtexture) -> float {
+    return s.Frame.w;
+}
+
+subtexture_height :: (s: Subtexture) -> float {
+    return s.Frame.h;
+}
+
+subtexture_size :: (s: Subtexture) -> Vector2 {
+    return .{ s.Frame.w, s.Frame.h };
+}
+
 subtexture_is_empty :: (s: Subtexture) -> bool {
     return s.Tex == null || (s.Source.w == 0 && s.Source.h == 0);
 }

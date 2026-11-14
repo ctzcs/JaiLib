@@ -99,7 +99,7 @@ using Hash_Table;
 // >= 4），所以 2×/4× 在最小机器上也成立；8× 要看设备。
 SDL_GPUTextureSupportsFormat :: (device: *SDL_GPUDevice, format: SDL_GPUTextureFormat, type: SDL_GPUTextureType, usage: SDL_GPUTextureUsageFlags) -> bool {
     internal := web_gl_sdl_internal_format(format);
-    if internal == 0 return false;   // 包括 B8G8R8A8（WebGL2 没有 BGRA8 存储格式）
+    if internal == 0 return false; // 包括 B8G8R8A8（WebGL2 没有 BGRA8 存储格式）
 
     wants_target := (usage & (.SDL_GPU_TEXTUREUSAGE_COLOR_TARGET |
                               .SDL_GPU_TEXTUREUSAGE_DEPTH_STENCIL_TARGET)) != 0;
@@ -112,12 +112,12 @@ SDL_GPUTextureSupportsFormat :: (device: *SDL_GPUDevice, format: SDL_GPUTextureF
 SDL_GPUTextureSupportsSampleCount :: (device: *SDL_GPUDevice, format: SDL_GPUTextureFormat, sample_count: SDL_GPUSampleCount) -> bool {
     count := web_gl_sdl_sample_count(sample_count);
     if count == 1 return web_gl_sdl_internal_format(format) != 0;
-    if !web_gl_sdl_format_renderable(format) return false;   // 只有 renderable 的格式能多重采样
-    if web_gpu.max_samples <= 0 return count <= 4;           // 还没有 context：报 ES 3.0 的下限
+    if !web_gl_sdl_format_renderable(format) return false; // 只有 renderable 的格式能多重采样
+    if web_gpu.max_samples <= 0 return count <= 4; // 还没有 context：报 ES 3.0 的下限
     return count <= web_gpu.max_samples;
 }
 
-SDL_InsertGPUDebugLabel :: (command_buffer: *SDL_GPUCommandBuffer, text: *u8) { }
+SDL_InsertGPUDebugLabel :: (command_buffer: *SDL_GPUCommandBuffer, text: *u8) {}
 
 //
 // Enum translation shared with the desktop backend
@@ -129,25 +129,25 @@ SDL_InsertGPUDebugLabel :: (command_buffer: *SDL_GPUCommandBuffer, text: *u8) { 
 
 sdl_get_texture_format :: (format: Texture_Format) -> SDL_GPUTextureFormat {
     if format == {
-        case .R8G8B8A8;        return .SDL_GPU_TEXTUREFORMAT_R8G8B8A8_UNORM;
+        case .R8G8B8A8; return .SDL_GPU_TEXTUREFORMAT_R8G8B8A8_UNORM;
         case .R16G16B16A16_FLOAT; return .SDL_GPU_TEXTUREFORMAT_R16G16B16A16_FLOAT;
         case .R32G32B32A32_FLOAT; return .SDL_GPU_TEXTUREFORMAT_R32G32B32A32_FLOAT;
-        case .R8;              return .SDL_GPU_TEXTUREFORMAT_R8_UNORM;
-        case .R8G8;            return .SDL_GPU_TEXTUREFORMAT_R8G8_UNORM;
+        case .R8; return .SDL_GPU_TEXTUREFORMAT_R8_UNORM;
+        case .R8G8; return .SDL_GPU_TEXTUREFORMAT_R8G8_UNORM;
         case .DEPTH24STENCIL8; return .SDL_GPU_TEXTUREFORMAT_D24_UNORM_S8_UINT;
         case .DEPTH32STENCIL8; return .SDL_GPU_TEXTUREFORMAT_D32_FLOAT_S8_UINT;
-        case .DEPTH16;         return .SDL_GPU_TEXTUREFORMAT_D16_UNORM;
-        case .DEPTH24;         return .SDL_GPU_TEXTUREFORMAT_D24_UNORM;
-        case .DEPTH32;         return .SDL_GPU_TEXTUREFORMAT_D32_FLOAT;
+        case .DEPTH16; return .SDL_GPU_TEXTUREFORMAT_D16_UNORM;
+        case .DEPTH24; return .SDL_GPU_TEXTUREFORMAT_D24_UNORM;
+        case .DEPTH32; return .SDL_GPU_TEXTUREFORMAT_D32_FLOAT;
     }
     return .SDL_GPU_TEXTUREFORMAT_INVALID;
 }
 
 sdl_get_sample_count :: (sample_count: Sample_Count) -> SDL_GPUSampleCount {
     if sample_count == {
-        case .ONE;   return .SDL_GPU_SAMPLECOUNT_1;
-        case .TWO;   return .SDL_GPU_SAMPLECOUNT_2;
-        case .FOUR;  return .SDL_GPU_SAMPLECOUNT_4;
+        case .ONE; return .SDL_GPU_SAMPLECOUNT_1;
+        case .TWO; return .SDL_GPU_SAMPLECOUNT_2;
+        case .FOUR; return .SDL_GPU_SAMPLECOUNT_4;
         case .EIGHT; return .SDL_GPU_SAMPLECOUNT_8;
     }
     return .SDL_GPU_SAMPLECOUNT_1;
@@ -171,7 +171,7 @@ sdl_device_create :: (preferred: Graphics_Driver, flags: App_Flags) -> *Graphics
     web_gpu_reset();
 
     d := New(Graphics_Device);
-    d.driver = .PRIVATE;         // no SDL driver name to report; PRIVATE is the stub's old value
+    d.driver = .PRIVATE; // no SDL driver name to report; PRIVATE is the stub's old value
     d.disposed = false;
     d.preferred = preferred;
     d.flags = flags;
@@ -368,14 +368,14 @@ sdl_destroy_device :: (d: *Graphics_Device) {
 // store and the viewport follows it.
 sdl_window_created :: (d: *Graphics_Device, window: *Window) {
     if d == null || window == null return;
-    if table_find_pointer(*d.windows, window.id) != null return;   // already tracked
+    if table_find_pointer(*d.windows, window.id) != null return; // already tracked
 
     state := New(GPU_Window_State);
     state.id = window.id;
     state.handle = window.handle;
     state.reclaim_pending = false;
     state.claimed = true;
-    state.backbuffer = null;                       // nothing offscreen in W3
+    state.backbuffer = null; // nothing offscreen in W3
     state.backbuffer_size = window_size_in_pixels(window);
     state.supports_mailbox_present_mode = false;
     state.supports_immediate_present_mode = false;
@@ -455,7 +455,7 @@ sdl_reclaim_window :: (d: *Graphics_Device, state: *GPU_Window_State) {
         if size.x > 0 && size.y > 0 {
             state.backbuffer_size = size;
             gl_swapchain_bind(size.x, size.y);
-            web_gl_window_msaa_ensure(size.x, size.y);   // [W6] 尺寸变了就重建 MS FBO
+            web_gl_window_msaa_ensure(size.x, size.y); // [W6] 尺寸变了就重建 MS FBO
         }
     }
 }
@@ -848,9 +848,9 @@ sdl_create_buffer :: (d: *Graphics_Device, name: string, type: Buffer_Kind, form
     // ELEMENT_ARRAY_BUFFER). Storage buffers have no WebGL2 equivalent and fall
     // back to ARRAY_BUFFER so an accidental upload does not corrupt an index bind.
     if type == {
-        case .VERTEX;          res.usage = .SDL_GPU_BUFFERUSAGE_VERTEX;
-        case .INDEX;           res.usage = .SDL_GPU_BUFFERUSAGE_INDEX;
-        case .STORAGE;         res.usage = .SDL_GPU_BUFFERUSAGE_GRAPHICS_STORAGE_READ;
+        case .VERTEX; res.usage = .SDL_GPU_BUFFERUSAGE_VERTEX;
+        case .INDEX; res.usage = .SDL_GPU_BUFFERUSAGE_INDEX;
+        case .STORAGE; res.usage = .SDL_GPU_BUFFERUSAGE_GRAPHICS_STORAGE_READ;
         case .COMPUTE_STORAGE;
             res.usage = .SDL_GPU_BUFFERUSAGE_COMPUTE_STORAGE_READ |
                         .SDL_GPU_BUFFERUSAGE_COMPUTE_STORAGE_WRITE |
@@ -1057,7 +1057,7 @@ sdl_release_graphics_pipelines_associated_with :: (d: *Graphics_Device, shader_r
 // the web build never loads — so the struct is declared here with the same field
 // names and defaults. sdl_clear fills it the same way.
 Clear_Info :: struct {
-    Colors: [] Color;          // empty (count 0) = no color clear
+    Colors: [] Color; // empty (count 0) = no color clear
     Depth: float = 0;
     HasDepth: bool = false;
     Stencil: s32 = 0;
@@ -1097,7 +1097,7 @@ sdl_begin_render_pass :: (d: *Graphics_Device, drawable_target: Drawable_Target,
     if drawable_target.Kind == .WINDOW {
         if drawable_target.window == null || drawable_target.window.handle == null return false;
         size = window_size_in_pixels(drawable_target.window);
-        fbo = 0;                       // the canvas default framebuffer
+        fbo = 0; // the canvas default framebuffer
         // [W6] 窗口级 MSAA：有窗口大小的 MS FBO 就画它，present/end pass 时解析到 0 号。
         if web_gpu.window_msaa_wanted && web_gpu.window_ms.ready &&
            web_gpu.window_ms.width == size.x && web_gpu.window_ms.height == size.y {
@@ -1137,7 +1137,7 @@ sdl_begin_render_pass :: (d: *Graphics_Device, drawable_target: Drawable_Target,
         return false;
     }
 
-    d.render_pass = cast(*SDL_GPURenderPass) cast(*void) 1;   // non-null == "in a pass"
+    d.render_pass = cast(*SDL_GPURenderPass) cast(*void) 1; // non-null == "in a pass"
     d.render_pass_target = drawable_target;
     d.render_pass_target_size = size;
     d.render_pass_pipeline = null;
@@ -1218,8 +1218,8 @@ sdl_end_render_pass :: (d: *Graphics_Device) {
 // Desktop opens an SDL copy pass on the upload command buffer. WebGL2 uploads are
 // immediate, so these two exist only so sdl_present / sdl_shutdown / the upload
 // paths keep the same shape.
-sdl_begin_copy_pass :: (d: *Graphics_Device) { }
-sdl_end_copy_pass :: (d: *Graphics_Device) { }
+sdl_begin_copy_pass :: (d: *Graphics_Device) {}
+sdl_end_copy_pass :: (d: *Graphics_Device) {}
 
 // Desktop submits both command buffers here (and optionally waits on fences).
 // There is nothing queued: every gl_* call already went to the driver.
@@ -1308,13 +1308,13 @@ web_gl_get_program :: (d: *Graphics_Device, command: Draw_Command) -> s32 {
 // accepted a layout the draw path then rejects would be worthless.
 web_gl_build_attribute_table :: (command: Draw_Command) -> s32 {
     attribute_count: s32 = 0;
-    for slot: 0..command.VertexBufferCount-1 {
+    for slot: 0..command.VertexBufferCount - 1 {
         it := command.VertexBuffers[slot].Buffer;
         if it == null continue;
         divisor := web_b32(command.VertexBuffers[slot].InstanceInputRate);
         offset: s32 = 0;
 
-        for j: 0..it.Format.ElementCount-1 {
+        for j: 0..it.Format.ElementCount - 1 {
             el := it.Format.Elements[j];
             gl_type, components := web_gl_vertex_type(el.Type);
             if gl_type == 0 continue;
@@ -1350,12 +1350,12 @@ web_gl_pipeline_hash :: (command: Draw_Command) -> u64 {
     hash = web_gl_hash_combine(hash, cast(u64) command.VertexShader.handle);
     hash = web_gl_hash_combine(hash, cast(u64) command.FragmentShader.handle);
 
-    for i: 0..command.VertexBufferCount-1 {
+    for i: 0..command.VertexBufferCount - 1 {
         vb := command.VertexBuffers[i].Buffer;
         if vb == null continue;
         hash = web_gl_hash_combine(hash, cast(u64) vb.Format.Stride);
         hash = web_gl_hash_combine(hash, cast(u64) vb.Format.ElementCount);
-        for j: 0..vb.Format.ElementCount-1 {
+        for j: 0..vb.Format.ElementCount - 1 {
             el := vb.Format.Elements[j];
             hash = web_gl_hash_combine(hash, cast(u64) el.Index);
             hash = web_gl_hash_combine(hash, cast(u64) el.Type);
@@ -1570,7 +1570,7 @@ sdl_perform_draw :: (d: *Graphics_Device, command: Draw_Command) {
     rebind_vertex_buffers := web_gpu.vb_owner_pipeline != pipeline_id ||
                              d.render_pass_vertex_buffer_count != command.VertexBufferCount;
     if !rebind_vertex_buffers {
-        for i: 0..command.VertexBufferCount-1 {
+        for i: 0..command.VertexBufferCount - 1 {
             vb := sdl_find_resource(d, command.VertexBuffers[i].Buffer.handle);
             if vb == null || d.render_pass_vertex_buffers[i] != vb.handle || vb.dirty {
                 rebind_vertex_buffers = true;
@@ -1587,7 +1587,7 @@ sdl_perform_draw :: (d: *Graphics_Device, command: Draw_Command) {
     if rebind_vertex_buffers {
         d.render_pass_vertex_buffer_count = 0;
 
-        for i: 0..command.VertexBufferCount-1 {
+        for i: 0..command.VertexBufferCount - 1 {
             res := sdl_find_resource(d, command.VertexBuffers[i].Buffer.handle);
             if res == null continue;
             res.dirty = false;
@@ -1602,7 +1602,7 @@ sdl_perform_draw :: (d: *Graphics_Device, command: Draw_Command) {
 
     // bind vertex samplers
     if command.VertexShader.SamplerCount > 0 {
-        for i: 0..command.VertexShader.SamplerCount-1 {
+        for i: 0..command.VertexShader.SamplerCount - 1 {
             web_gl_bind_sampler_slot(d, program_id, command.VertexShader, .VERTEX, i,
                                      ifx i < command.VertexSamplerCount then command.VertexSamplers[i] else Bound_Sampler.{},
                                      d.empty_default_texture);
@@ -1611,7 +1611,7 @@ sdl_perform_draw :: (d: *Graphics_Device, command: Draw_Command) {
 
     // bind fragment samplers
     if command.FragmentShader.SamplerCount > 0 {
-        for i: 0..command.FragmentShader.SamplerCount-1 {
+        for i: 0..command.FragmentShader.SamplerCount - 1 {
             web_gl_bind_sampler_slot(d, program_id, command.FragmentShader, .FRAGMENT, i,
                                      ifx i < command.FragmentSamplerCount then command.FragmentSamplers[i] else Bound_Sampler.{},
                                      d.empty_default_texture);
@@ -1709,7 +1709,7 @@ web_gl_bind_sampler_slot :: (d: *Graphics_Device, program_id: s32, shader: *Shad
 // constant buffer read on desktop.
 web_gl_push_uniforms :: (d: *Graphics_Device, program_id: s32, shader: *Shader, stage: Shader_Stage,
                          buffers: [MAX_UNIFORM_BUFFERS] *Uniform_Buffer, buffer_count: s32) {
-    for i: 0..shader.UniformBufferCount-1 {
+    for i: 0..shader.UniformBufferCount - 1 {
         if i >= buffer_count continue;
         ub := buffers[i];
         if ub == null continue;

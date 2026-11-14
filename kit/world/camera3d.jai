@@ -20,33 +20,33 @@
 
 Camera3D :: struct {
     position: Vec3;
-    target:   Vec3;
-    up:       Vec3;
+    target: Vec3;
+    up: Vec3;
 
     field_of_view: float32; // 垂直 FOV（弧度）
-    near_clip:     float32;
-    far_clip:      float32;
+    near_clip: float32;
+    far_clip: float32;
     viewport_size: F.Point2;
 
     aspect_ratio: float32;
 
-    dirty:           bool;
-    view:            Matrix4;
-    projection:      Matrix4;
+    dirty: bool;
+    view: Matrix4;
+    projection: Matrix4;
     view_projection: Matrix4;
 }
 
 camera3d_init :: (cam: *Camera3D, viewport_w: s32, viewport_h: s32) {
     cam.* = .{
-        position      = Vec3.{ 0, 2, 8 },
-        target        = Vec3.{ 0, 0, 0 },
-        up            = Vec3.{ 0, 1, 0 },
+        position = Vec3.{ 0, 2, 8 },
+        target = Vec3.{ 0, 0, 0 },
+        up = Vec3.{ 0, 1, 0 },
         field_of_view = cast(float32) (JM.PI64 / 3),
-        near_clip     = 0.05,
-        far_clip      = 250,
+        near_clip = 0.05,
+        far_clip = 250,
         viewport_size = F.Point2.{ viewport_w, viewport_h },
-        aspect_ratio  = cast(float32) (16.0 / 9.0),
-        dirty         = true,
+        aspect_ratio = cast(float32) (16.0 / 9.0),
+        dirty = true,
     };
 }
 //@endregion

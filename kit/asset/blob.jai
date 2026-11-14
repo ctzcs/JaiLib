@@ -25,32 +25,32 @@
 
 //@region 常量与布局
 
-BLOB_MAGIC :: u8.[ #char "O", #char "L", #char "A", #char "S", #char "B", #char "L", #char "O", #char "B" ];
+BLOB_MAGIC :: u8.[#char "O", #char "L", #char "A", #char "S", #char "B", #char "L", #char "O", #char "B"];
 
 // blob 格式版本（header 布局变化时 +1；v1 读取端精确匹配）。
-BLOB_VERSION : u32 : 1;
+BLOB_VERSION: u32 : 1;
 
 // Texture payload 的像素格式编号（v1 只有 RGBA8 一种）。
-TEXTURE_FORMAT_RGBA8 : u32 : 0;
+TEXTURE_FORMAT_RGBA8: u32 : 0;
 
 // blob 头：importer_version 用于缓存失效——即使源文件 mtime/size 都没变，
 // 只要导入逻辑升级（版本号变化），旧 blob 也会被判定过期而重新导入。
 Blob_Header :: struct {
-    magic:            [8] u8;
-    version:          u32;
+    magic: [8] u8;
+    version: u32;
     importer_version: u32;
-    kind:             u8;      // Asset_Kind 的底层值
-    _pad:             [3] u8;
-    guid:             [16] u8;
-    payload_len:      u32;
-    src_mtime:        s64;     // 源文件 mtime（unix 纳秒），仅作新鲜度比对
-    src_size:         s64;     // 源文件字节数，仅作新鲜度比对
+    kind: u8; // Asset_Kind 的底层值
+    _pad: [3] u8;
+    guid: [16] u8;
+    payload_len: u32;
+    src_mtime: s64; // 源文件 mtime（unix 纳秒），仅作新鲜度比对
+    src_size: s64; // 源文件字节数，仅作新鲜度比对
 }
 
 // Texture payload 的迷你头，其后紧跟 width*height*4 字节 RGBA8 像素。
 // Json / Raw 的 payload 没有迷你头（utf8 / 原样字节）。
 Blob_Texture_Header :: struct {
-    width:  u32;
+    width: u32;
     height: u32;
     format: u32;
 }
@@ -65,12 +65,12 @@ Blob_Texture_Header :: struct {
 // 组装一个完整 blob（header + payload 一次性分配）。
 // payload 生命周期归调用方；返回的 buf 用 allocator 释放。
 blob_build :: (
-    guid:             Guid,
-    kind:             Asset_Kind,
+    guid: Guid,
+    kind: Asset_Kind,
     importer_version: u32,
-    src_mtime:        s64,
-    src_size:         s64,
-    payload:          [] u8,
+    src_mtime: s64,
+    src_size: s64,
+    payload: [] u8,
     allocator := context.allocator,
 ) -> (buf: [] u8, ok: bool) {
     total := size_of(Blob_Header) + payload.count;
@@ -81,14 +81,14 @@ blob_build :: (
     // 结构体字面量会把 _pad 一并清零（olib 的 Odin 字面量同样如此）。
     h := cast(*Blob_Header) data.data;
     h.* = Blob_Header.{
-        magic            = BLOB_MAGIC,
-        version          = BLOB_VERSION,
+        magic = BLOB_MAGIC,
+        version = BLOB_VERSION,
         importer_version = importer_version,
-        kind             = cast(u8) kind,
-        guid             = guid,
-        payload_len      = cast(u32) payload.count,
-        src_mtime        = src_mtime,
-        src_size         = src_size,
+        kind = cast(u8) kind,
+        guid = guid,
+        payload_len = cast(u32) payload.count,
+        src_mtime = src_mtime,
+        src_size = src_size,
     };
     if payload.count > 0 {
         memcpy(data.data + size_of(Blob_Header), payload.data, payload.count);
@@ -116,7 +116,7 @@ blob_payload_texture :: (builder: *Payload_Builder, allocator := context.allocat
 
     th := cast(*Blob_Texture_Header) data.data;
     th.* = Blob_Texture_Header.{
-        width  = builder.width,
+        width = builder.width,
         height = builder.height,
         format = builder.format,
     };

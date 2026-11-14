@@ -21,7 +21,7 @@
 Transform2D :: struct {
     position: W.Vec2;
     rotation: float32;
-    scale:    W.Vec2; // 必须为有限正值；单位变换显式传 {1, 1}。
+    scale: W.Vec2; // 必须为有限正值；单位变换显式传 {1, 1}。
 }
 
 gizmo_transform2d_equal :: (a: Transform2D, b: Transform2D) -> bool {
@@ -32,25 +32,25 @@ gizmo_transform2d_equal :: (a: Transform2D, b: Transform2D) -> bool {
 // 零值可用，不持有对象、输入源或 GPU 资源。更换目标时由调用方传 cancel。
 Transform_Gizmo2D :: struct {
     dragging, captured: bool;
-    mode:               Mode;
-    axis:               int; // 0/1 = X/Y；2 = Z 旋转；3 = 自由移动 / 等比缩放。
-    start:              Transform2D;
+    mode: Mode;
+    axis: int; // 0/1 = X/Y；2 = Z 旋转；3 = 自由移动 / 等比缩放。
+    start: Transform2D;
     pointer, world_pointer, direction: W.Vec2;
     last_angle, angle, sensitivity, draw_scale: float32;
-    viewport:           F.Rect;
-    camera_matrix:      F.Matrix3x2;
+    viewport: F.Rect;
+    camera_matrix: F.Matrix3x2;
 }
 
 Transform_Result2D :: struct {
     transform: Transform2D;
-    axis:      int;
+    axis: int;
     angle, factor: float32;
     started, changed, ended, cancelled, captured: bool;
 }
 
 Transform_Geometry2D :: struct {
-    mode:  Mode;
-    axes:  Translation_Geometry; // 仅前两根轴有效，屏幕像素坐标。
+    mode: Mode;
+    axes: Translation_Geometry; // 仅前两根轴有效，屏幕像素坐标。
     valid: bool;
     radius: float32;
 }
@@ -81,15 +81,15 @@ gizmo_camera2d_valid :: (camera: *W.Camera2D, viewport: F.Rect) -> bool {
 //@region 几何与命中
 
 project2d :: (camera: *W.Camera2D, position: W.Vec2, viewport: F.Rect) -> (W.Vec2, bool) {
-    if !gizmo_camera2d_valid(camera, viewport) || !gizmo_finite2(position) return W.Vec2.{0, 0}, false;
-    p := gizmo_v2_add(W.camera2d_world_to_screen(camera, position), W.Vec2.{viewport.x, viewport.y});
+    if !gizmo_camera2d_valid(camera, viewport) || !gizmo_finite2(position) return W.Vec2.{ 0, 0 }, false;
+    p := gizmo_v2_add(W.camera2d_world_to_screen(camera, position), W.Vec2.{ viewport.x, viewport.y });
     return p, gizmo_finite2(p);
 }
 
 transform2d_geometry :: (camera: *W.Camera2D, value: Transform2D, viewport: F.Rect,
                          mode: Mode, scale: float32 = 1,
                          style := DEFAULT_TRANSLATION_STYLE) -> Transform_Geometry2D {
-    g := Transform_Geometry2D.{mode = mode};
+    g := Transform_Geometry2D.{ mode = mode };
     if !gizmo_transform2d_valid(value) || !gizmo_finite(scale) || scale <= 0 ||
        !gizmo_finite(style.length) || style.length <= 0 {
         return g;
@@ -103,8 +103,8 @@ transform2d_geometry :: (camera: *W.Camera2D, value: Transform2D, viewport: F.Re
     // 移动使用世界轴；缩放轴随对象旋转。轴长度固定为最终输出像素，不随 zoom 改变。
     angle := camera.rotation;
     if mode == .Scale angle += value.rotation;
-    x := W.Vec2.{JM.cos(angle), JM.sin(angle)};
-    y := W.Vec2.{-x.y, x.x};
+    x := W.Vec2.{ JM.cos(angle), JM.sin(angle) };
+    y := W.Vec2.{ -x.y, x.x };
     g.axes.ends[0] = gizmo_v2_add(center, gizmo_v2_scale(x, style.length * scale));
     g.axes.ends[1] = gizmo_v2_add(center, gizmo_v2_scale(y, style.length * scale));
     g.axes.visible[0] = true;
@@ -133,7 +133,7 @@ transform2d_update :: (g: *Transform_Gizmo2D, camera: *W.Camera2D,
                        value: Transform2D, viewport: F.Rect, mode: Mode, input: Translation_Input,
                        scale: float32 = 1, style := DEFAULT_TRANSLATION_STYLE,
                        min_scale: float32 = 0.001, max_scale: float32 = 10000) -> Transform_Result2D {
-    r := Transform_Result2D.{transform = value, axis = -1, factor = 1, captured = g.captured};
+    r := Transform_Result2D.{ transform = value, axis = -1, factor = 1, captured = g.captured };
     if g.dragging {
         r.axis = g.axis;
         r.angle = g.angle;
@@ -161,7 +161,7 @@ transform2d_update :: (g: *Transform_Gizmo2D, camera: *W.Camera2D,
         return r;
     }
     if !gizmo_finite2(input.pointer) return r;
-    local := gizmo_v2_sub(input.pointer, W.Vec2.{viewport.x, viewport.y});
+    local := gizmo_v2_sub(input.pointer, W.Vec2.{ viewport.x, viewport.y });
     p, ok := W.camera2d_screen_to_world(camera, local);
     if !ok || !gizmo_finite2(p) return r;
     if g.dragging {
@@ -221,7 +221,7 @@ transform2d_update :: (g: *Transform_Gizmo2D, camera: *W.Camera2D,
     g.mode = mode;
     g.angle = 0;
     g.last_angle = JM.atan2(p.y - value.position.y, p.x - value.position.x);
-    g.direction = W.Vec2.{0.70710678, -0.70710678};
+    g.direction = W.Vec2.{ 0.70710678, -0.70710678 };
     if mode == .Scale && axis < 2 {
         d := gizmo_v2_sub(geometry.axes.ends[axis], geometry.axes.origin);
         g.direction = gizmo_v2_div(d, JM.sqrt(gizmo_v2_dot(d, d)));
@@ -258,9 +258,9 @@ transform2d_draw :: (batch: *r2d.Render2D, state: *Transform_Gizmo2D,
                 a := cast(float32) i * 2 * JM.PI / cast(float32) RING_SEGMENTS;
                 b := cast(float32) (i + 1) * 2 * JM.PI / cast(float32) RING_SEGMENTS;
                 start := gizmo_v2_add(g.axes.origin,
-                                      gizmo_v2_scale(W.Vec2.{JM.cos(a), JM.sin(a)}, g.radius));
+                                      gizmo_v2_scale(W.Vec2.{ JM.cos(a), JM.sin(a) }, g.radius));
                 end := gizmo_v2_add(g.axes.origin,
-                                    gizmo_v2_scale(W.Vec2.{JM.cos(b), JM.sin(b)}, g.radius));
+                                    gizmo_v2_scale(W.Vec2.{ JM.cos(b), JM.sin(b) }, g.radius));
                 thickness := style.line_width * scale;
                 line_color := color;
                 if pass == 0 {
@@ -272,13 +272,13 @@ transform2d_draw :: (batch: *r2d.Render2D, state: *Transform_Gizmo2D,
         }
         labels[2] = Axis_Label.{
             visible = true,
-            position = gizmo_v2_add(g.axes.origin, W.Vec2.{0, -g.radius - style.label_gap * scale}),
+            position = gizmo_v2_add(g.axes.origin, W.Vec2.{ 0, -g.radius - style.label_gap * scale }),
             color = color,
         };
         return labels;
     }
     if g.mode == .Translate {
-        translation := Translation_Gizmo.{dragging = state.dragging, axis = state.axis};
+        translation := Translation_Gizmo.{ dragging = state.dragging, axis = state.axis };
         labels = gizmo_draw_projected_axes(batch, *translation, g.axes, pointer, scale, style);
     } else {
         for axis: 0..1 {
@@ -328,7 +328,7 @@ gizmo_draw_projected_axes :: (
         if highlighted color = style.highlight;
         direction := gizmo_v2_div(delta, length);
         base := gizmo_v2_sub(end_point, gizmo_v2_scale(direction, style.arrow_length * scale));
-        side := gizmo_v2_scale(W.Vec2.{-direction.y, direction.x}, style.arrow_half_width * scale);
+        side := gizmo_v2_scale(W.Vec2.{ -direction.y, direction.x }, style.arrow_half_width * scale);
         r2d.line(batch, geometry.origin, base, style.outline_width * scale, style.outline);
         r2d.line(batch, geometry.origin, base, style.line_width * scale, color);
         r2d.triangle(batch, end_point, gizmo_v2_add(base, side), gizmo_v2_sub(base, side), color);
@@ -347,7 +347,7 @@ gizmo_draw_projected_axes :: (
 // olib 的 @(private) draw_square。
 gizmo_draw_square :: (batch: *r2d.Render2D, center: W.Vec2, half: float32,
                       color: F.Color, outline: F.Color) {
-    r2d.rect(batch, F.Rect.{center.x - half - 1, center.y - half - 1, 2 * half + 2, 2 * half + 2}, outline);
-    r2d.rect(batch, F.Rect.{center.x - half, center.y - half, 2 * half, 2 * half}, color);
+    r2d.rect(batch, F.Rect.{ center.x - half - 1, center.y - half - 1, 2 * half + 2, 2 * half + 2 }, outline);
+    r2d.rect(batch, F.Rect.{ center.x - half, center.y - half, 2 * half, 2 * half }, color);
 }
 //@endregion

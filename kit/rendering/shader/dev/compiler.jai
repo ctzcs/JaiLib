@@ -39,7 +39,7 @@ operator == :: (a: Resources, b: Resources) -> bool {
 
 Build :: struct {
     code: [2][] u8;
-    resources: [2]Resources;
+    resources: [2] Resources;
     error: string;
     provenance: string; // 仅完整候选成功后填写；源码、工具分发版本、固定参数及输出字节指纹。
 }
@@ -84,7 +84,7 @@ compile :: (source: string, format: string, source_text := "", options := comp.O
             return result;
         }
     }
-    stages: [2] string = .[ "vertex", "fragment" ];
+    stages: [2] string = .["vertex", "fragment"];
     for stage, i: stages {
         base := tprint("%/%", directory, stage);
         spv := tprint("%.spv", base);
@@ -125,7 +125,7 @@ compile :: (source: string, format: string, source_text := "", options := comp.O
         result.error = copy_string("Cannot fingerprint shader snapshot");
         return result;
     }
-    hashes: [2] string = .[ comp.bytes_hash(result.code[0], temp), comp.bytes_hash(result.code[1], temp) ];
+    hashes: [2] string = .[comp.bytes_hash(result.code[0], temp), comp.bytes_hash(result.code[1], temp)];
     {
         builder: String_Builder;
         dev_write_provenance(*builder, tc.identity, sources, format, hashes);
@@ -198,7 +198,9 @@ source_fingerprint :: (root: string) -> (hash: u64, ok: bool) {
         if paths.data != null free(paths.data);
         return 0, false;
     }
-    SORT.quick_sort(paths, (a: string, b: string) -> s64 { return SORT.compare_strings(a, b); });
+    SORT.quick_sort(paths, (a: string, b: string) -> s64 {
+        return SORT.compare_strings(a, b);
+    });
     prefix := dev_directory_prefix(root);
     hash = 1469598103934665603;
     ok = true;

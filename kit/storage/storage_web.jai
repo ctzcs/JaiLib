@@ -17,36 +17,36 @@
 
 #if OS == .WASM {
 
-//@region Web 专用桥接（桌面分支的同名过程在 storage_native.jai 里，两者互斥）
+    //@region Web 专用桥接（桌面分支的同名过程在 storage_native.jai 里，两者互斥）
 
-// strings.clone(s, allocator) 的对位：总是新分配，失败返回空字符串。
-storage_web_copy_string :: (s: string, allocator: Allocator) -> string {
-    if !s.count return "";
-    push_allocator(allocator);
-    out := alloc_string(s.count);
-    if !out return "";
-    memcpy(out.data, s.data, s.count);
-    return out;
-}
-//@endregion
+    // strings.clone(s, allocator) 的对位：总是新分配，失败返回空字符串。
+    storage_web_copy_string :: (s: string, allocator: Allocator) -> string {
+        if !s.count return "";
+        push_allocator(allocator);
+        out := alloc_string(s.count);
+        if !out return "";
+        memcpy(out.data, s.data, s.count);
+        return out;
+    }
+    //@endregion
 
-// 浏览器资源根指向 Foster 虚拟 FS；不是网页 URL，不会自动下载服务器文件。
-// #load 资源无需读取此根；外部资源须先由应用加载/挂载到虚拟 FS。
-resources_root_dev :: (allocator := context.allocator) -> string {
-    return storage_web_copy_string("/", allocator);
-}
+    // 浏览器资源根指向 Foster 虚拟 FS；不是网页 URL，不会自动下载服务器文件。
+    // #load 资源无需读取此根；外部资源须先由应用加载/挂载到虚拟 FS。
+    resources_root_dev :: (allocator := context.allocator) -> string {
+        return storage_web_copy_string("/", allocator);
+    }
 
-resources_root_release :: (allocator := context.allocator) -> string {
-    return resources_root_dev(allocator);
-}
+    resources_root_release :: (allocator := context.allocator) -> string {
+        return resources_root_dev(allocator);
+    }
 
-// 与 Foster OpenUserStorage 使用同一 /foster/<app>/ 命名空间。
-// localStorage 按浏览器源隔离；创建失败（例如禁用存储）返回空字符串。
-// olib 在这里调 foster.CreateDirectory(&container, "")；Jai 侧没有 localStorage
-// 后端，等价于「创建失败」，故直接返回 ""（不编造一个写不进去的虚拟路径）。
-user_root :: (app_name: string, allocator := context.allocator) -> string {
-    if !valid_app_name(app_name) return "";
-    return "";
-}
+    // 与 Foster OpenUserStorage 使用同一 /foster/<app>/ 命名空间。
+    // localStorage 按浏览器源隔离；创建失败（例如禁用存储）返回空字符串。
+    // olib 在这里调 foster.CreateDirectory(&container, "")；Jai 侧没有 localStorage
+    // 后端，等价于「创建失败」，故直接返回 ""（不编造一个写不进去的虚拟路径）。
+    user_root :: (app_name: string, allocator := context.allocator) -> string {
+        if !valid_app_name(app_name) return "";
+        return "";
+    }
 
 }

@@ -149,7 +149,7 @@ shader_selector :: (s: *Session) {
         }
     }
     s.shader_menu_shown = s.shader_menu;
-    ImGui.SetNextWindowPos(ImGui.ImVec2.{ anchor.x, anchor.y + size.y + 2 }, ImGui.Cond.Appearing, ImGui.ImVec2.{0, 0});
+    ImGui.SetNextWindowPos(ImGui.ImVec2.{ anchor.x, anchor.y + size.y + 2 }, ImGui.Cond.Appearing, ImGui.ImVec2.{ 0, 0 });
     ImGui.SetNextWindowSizeConstraints(ImGui.ImVec2.{ size.x, 0 }, ImGui.ImVec2.{ max(size.x, 480), 360 });
     if !imgui_begin_popup("shader-popup") {
         s.shader_menu = false;
@@ -265,7 +265,7 @@ shader_input :: (s: *Session, index: int, field: string) -> (texture: *F.Texture
                 buffer := 0;
                 if t.history {
                     if input.frame == .Previous buffer = 1 - e.current;
-                    else                        buffer = e.current;
+                    else buffer = e.current;
                 }
                 if t.buffers[buffer] == null continue;
                 return F.target_texture(t.buffers[buffer]), tprint("% / %", input.target, input.frame);

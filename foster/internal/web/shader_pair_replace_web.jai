@@ -144,11 +144,11 @@ ShaderPairTryReplace :: (
 
     candidate_vertex := shader_create(
         device, .VERTEX, vertex_info.Bytes,
-        sampler_count        = vertex_info.SamplerCount,
+        sampler_count = vertex_info.SamplerCount,
         uniform_buffer_count = vertex_info.UniformBufferCount,
         storage_buffer_count = vertex_info.StorageBufferCount,
-        entry_point          = vertex_info.EntryPoint,
-        name                 = vertex.Name);
+        entry_point = vertex_info.EntryPoint,
+        name = vertex.Name);
     if candidate_vertex == null {
         log_error("web/hot-replace: 候选顶点 shader 建不起来 —— 旧 pair 保留");
         return false, "Failed to create candidate vertex shader";
@@ -156,11 +156,11 @@ ShaderPairTryReplace :: (
 
     candidate_fragment := shader_create(
         device, .FRAGMENT, fragment_info.Bytes,
-        sampler_count        = fragment_info.SamplerCount,
+        sampler_count = fragment_info.SamplerCount,
         uniform_buffer_count = fragment_info.UniformBufferCount,
         storage_buffer_count = fragment_info.StorageBufferCount,
-        entry_point          = fragment_info.EntryPoint,
-        name                 = fragment.Name);
+        entry_point = fragment_info.EntryPoint,
+        name = fragment.Name);
     if candidate_fragment == null {
         shader_pair_discard(null, candidate_vertex, null);
         log_error("web/hot-replace: 候选片元 shader 建不起来 —— 旧 pair 保留");
@@ -189,7 +189,7 @@ ShaderPairTryReplace :: (
     for probe: probes {
         probe_index += 1;
         command := probe;
-        command.VertexShader   = material.Vertex.shader;
+        command.VertexShader = material.Vertex.shader;
         command.FragmentShader = material.Fragment.shader;
 
         pipeline := web_gl_probe_pipeline(device, command);
@@ -226,7 +226,7 @@ ShaderPairTryReplace :: (
     //    被编译、被链接、被画出来，而不是复用旧 program。
     shader_dispose(vertex);
     shader_dispose(fragment);
-    vertex.*   = candidate_vertex.*;
+    vertex.* = candidate_vertex.*;
     fragment.* = candidate_fragment.*;
 
     // The GPU handles now belong to *vertex / *fragment; only the wrapper structs

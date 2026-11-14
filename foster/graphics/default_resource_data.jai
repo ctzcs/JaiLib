@@ -42,30 +42,30 @@ Embedded_Default_Shader :: struct {
 }
 
 EMBEDDED_DEFAULT_SHADERS :: Embedded_Default_Shader.[
-    .{"Batcher", .VERTEX,
+    .{ "Batcher", .VERTEX,
         #run embed_default_shader_binary("shaders/Compiled/Batcher.vertex.dxil"),
         #run embed_default_shader_binary("shaders/Compiled/Batcher.vertex.spv"),
-        #run embed_default_shader_binary("shaders/Compiled/Batcher.vertex.msl")},
-    .{"Batcher", .FRAGMENT,
+        #run embed_default_shader_binary("shaders/Compiled/Batcher.vertex.msl") },
+    .{ "Batcher", .FRAGMENT,
         #run embed_default_shader_binary("shaders/Compiled/Batcher.fragment.dxil"),
         #run embed_default_shader_binary("shaders/Compiled/Batcher.fragment.spv"),
-        #run embed_default_shader_binary("shaders/Compiled/Batcher.fragment.msl")},
-    .{"Textured", .VERTEX,
+        #run embed_default_shader_binary("shaders/Compiled/Batcher.fragment.msl") },
+    .{ "Textured", .VERTEX,
         #run embed_default_shader_binary("shaders/Compiled/Textured.vertex.dxil"),
         #run embed_default_shader_binary("shaders/Compiled/Textured.vertex.spv"),
-        #run embed_default_shader_binary("shaders/Compiled/Textured.vertex.msl")},
-    .{"Textured", .FRAGMENT,
+        #run embed_default_shader_binary("shaders/Compiled/Textured.vertex.msl") },
+    .{ "Textured", .FRAGMENT,
         #run embed_default_shader_binary("shaders/Compiled/Textured.fragment.dxil"),
         #run embed_default_shader_binary("shaders/Compiled/Textured.fragment.spv"),
-        #run embed_default_shader_binary("shaders/Compiled/Textured.fragment.msl")},
-    .{"Msdf", .VERTEX,
+        #run embed_default_shader_binary("shaders/Compiled/Textured.fragment.msl") },
+    .{ "Msdf", .VERTEX,
         #run embed_default_shader_binary("shaders/Compiled/Msdf.vertex.dxil"),
         #run embed_default_shader_binary("shaders/Compiled/Msdf.vertex.spv"),
-        #run embed_default_shader_binary("shaders/Compiled/Msdf.vertex.msl")},
-    .{"Msdf", .FRAGMENT,
+        #run embed_default_shader_binary("shaders/Compiled/Msdf.vertex.msl") },
+    .{ "Msdf", .FRAGMENT,
         #run embed_default_shader_binary("shaders/Compiled/Msdf.fragment.dxil"),
         #run embed_default_shader_binary("shaders/Compiled/Msdf.fragment.spv"),
-        #run embed_default_shader_binary("shaders/Compiled/Msdf.fragment.msl")},
+        #run embed_default_shader_binary("shaders/Compiled/Msdf.fragment.msl") },
 ];
 
 EMBEDDED_ROBOTO_JSON :: #run embed_default_resource("fonts/Compiled/Roboto.json");
@@ -126,7 +126,9 @@ defaults_shader_bytes :: (name: string, stage: Shader_Stage, driver: Graphics_Dr
     return .[];
 }
 
-defaults_font_license :: () -> string { return EMBEDDED_ROBOTO_LICENSE; }
+defaults_font_license :: () -> string {
+    return EMBEDDED_ROBOTO_LICENSE;
+}
 
 // [W4] The wasm build's shader payload comes from the GLSL ES 3.00 asset family,
 // so this file needs the web tables (name -> variant, variant+stage -> source).

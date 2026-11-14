@@ -39,6 +39,7 @@ builtin_icons_embed :: (name: string) -> string {
     assert(ok && bytes.count > 0, "Missing built-in icon asset: %", name);
     return bytes;
 }
+
 BUILTIN_ICONS_XML :: #run builtin_icons_embed("game-icons.xml");
 BUILTIN_ICONS_PNG :: #run builtin_icons_embed("game-icons.png");
 
@@ -64,7 +65,10 @@ builtin_icons_load :: (atlas: *Sprite_Atlas, device: *F.Graphics_Device) -> bool
     defer kenney_rects_dispose(rects);
     F.image_premultiply(*image);
     atlas_from_rects(atlas, image, rects);
-    if !atlas_upload(atlas, device) { atlas_dispose(atlas); return false; }
+    if !atlas_upload(atlas, device) {
+        atlas_dispose(atlas);
+        return false;
+    }
     return true;
 }
 //@endregion
@@ -73,15 +77,15 @@ builtin_icons_load :: (atlas: *Sprite_Atlas, device: *F.Graphics_Device) -> bool
 
 // 图集的一页：源像素与上传后的纹理。源像素只在上传前存在，atlas_upload 成功后释放。
 Atlas_Page :: struct {
-    image:   F.Image;
+    image: F.Image;
     texture: *F.Texture;
 }
 
 // 名字对应的区域：所在页、页内像素矩形（裁边后的内容），以及裁边前的原始帧
 // （Foster 的 Subtexture.Frame 约定：x、y 为内容相对原始帧的负偏移；零值表示没有裁边）。
 Atlas_Region :: struct {
-    page:  int;
-    rect:  F.Rect_Int;
+    page: int;
+    rect: F.Rect_Int;
     frame: F.Rect_Int;
 }
 
@@ -102,7 +106,7 @@ Sprite_Atlas :: struct {
 // 需要绘制时再 atlas_upload(&atlas, device)。
 atlas_from_rects :: (atlas: *Sprite_Atlas, image: F.Image, rects: *HASH.Table(string, F.Rect_Int)) {
     atlas.* = Sprite_Atlas.{
-        pages   = atlas_alloc_array(Atlas_Page, 1),
+        pages = atlas_alloc_array(Atlas_Page, 1),
         regions = HASH.Table(string, Atlas_Region).{},
     };
     atlas.pages[0].image = image;
@@ -114,7 +118,7 @@ atlas_from_rects :: (atlas: *Sprite_Atlas, image: F.Image, rects: *HASH.Table(st
 // 多页：图集接管 images（每页一张）；regions 的键会被克隆，页号须在 images 范围内，越界的区域丢弃。
 atlas_from_pages :: (atlas: *Sprite_Atlas, images: [] F.Image, regions: *HASH.Table(string, Atlas_Region)) {
     atlas.* = Sprite_Atlas.{
-        pages   = atlas_alloc_array(Atlas_Page, images.count),
+        pages = atlas_alloc_array(Atlas_Page, images.count),
         regions = HASH.Table(string, Atlas_Region).{},
     };
     for image, i: images atlas.pages[i].image = image;

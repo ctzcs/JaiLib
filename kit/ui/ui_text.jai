@@ -47,7 +47,7 @@ UI_Glyph_Quad :: struct {
     x1, y1: float32; // 右下
     u0, v0: float32; // UV 左上
     u1, v1: float32; // UV 右下
-    color:  F.Color;
+    color: F.Color;
 }
 
 // 从笔尖 (pen_x, pen_y 为基线原点) 推进生成全部字形四边形。
@@ -259,8 +259,8 @@ ui_font_bake_image :: (font: *F.Font, size: float32, codepoints: [] s32 = .[]) -
         F.font_get_pixels(font, pixels, ch.GlyphIndex, ch.Width, ch.Height, scale, true);
         rect_x := cast(s32) msdf.Glyphs[i].al;
         rect_y := cast(s32) msdf.Glyphs[i].at;
-        for by: 0 .. ch.Height - 1 {
-            for bx: 0 .. ch.Width - 1 {
+        for by: 0..ch.Height - 1 {
+            for bx: 0..ch.Width - 1 {
                 msdf.Atlas.Data[(rect_y + by) * atlas_w + rect_x + bx] = pixels[by * ch.Width + bx];
             }
         }

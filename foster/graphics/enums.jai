@@ -18,21 +18,21 @@ Texture_Format :: enum {
     DEPTH32;
     R16G16B16A16_FLOAT;
     R32G32B32A32_FLOAT;
-    COLOR :: R8G8B8A8;   // shorthand (Foster: Color = R8G8B8A8)
+    COLOR :: R8G8B8A8; // shorthand (Foster: Color = R8G8B8A8)
 }
 
 texture_format_size :: (format: Texture_Format) -> s32 {
     if format == {
-        case .R8G8B8A8;        return 4;
+        case .R8G8B8A8; return 4;
         case .R16G16B16A16_FLOAT; return 8;
         case .R32G32B32A32_FLOAT; return 16;
-        case .R8;              return 1;
-        case .R8G8;            return 2;
+        case .R8; return 1;
+        case .R8G8; return 2;
         case .DEPTH24STENCIL8; return 4;
         case .DEPTH32STENCIL8; return 5;
-        case .DEPTH16;         return 2;
-        case .DEPTH24;         return 3;
-        case .DEPTH32;         return 4;
+        case .DEPTH16; return 2;
+        case .DEPTH24; return 3;
+        case .DEPTH32; return 4;
     }
     return 0;
 }
@@ -71,13 +71,13 @@ Blend_Op :: enum {
 }
 
 Blend_Mask :: enum_flags u32 {
-    NONE  :: 0;
-    RED   :: 1;
+    NONE :: 0;
+    RED :: 1;
     GREEN :: 2;
-    BLUE  :: 4;
+    BLUE :: 4;
     ALPHA :: 8;
-    RGB   :: RED | GREEN | BLUE;
-    RGBA  :: RED | GREEN | BLUE | ALPHA;
+    RGB :: RED | GREEN | BLUE;
+    RGBA :: RED | GREEN | BLUE | ALPHA;
 }
 
 Cull_Mode :: enum {
@@ -164,33 +164,33 @@ Vertex_Type :: enum {
 
 vertex_type_size_in_bytes :: (t: Vertex_Type) -> s32 {
     if t == {
-        case .FLOAT;   return 4;
-        case .FLOAT2;  return 8;
-        case .FLOAT3;  return 12;
-        case .FLOAT4;  return 16;
-        case .BYTE4;   return 4;
-        case .UBYTE4;  return 4;
-        case .SHORT2;  return 4;
+        case .FLOAT; return 4;
+        case .FLOAT2; return 8;
+        case .FLOAT3; return 12;
+        case .FLOAT4; return 16;
+        case .BYTE4; return 4;
+        case .UBYTE4; return 4;
+        case .SHORT2; return 4;
         case .USHORT2; return 4;
-        case .SHORT4;  return 8;
+        case .SHORT4; return 8;
         case .USHORT4; return 8;
-        case .NONE;    return 0;
+        case .NONE; return 0;
     }
     return 0;
 }
 
 Clear_Mask :: enum_flags u32 {
-    NONE    :: 0;
-    COLOR   :: 1 << 0;
-    DEPTH   :: 1 << 1;
+    NONE :: 0;
+    COLOR :: 1 << 0;
+    DEPTH :: 1 << 1;
     STENCIL :: 1 << 2;
-    ALL     :: COLOR | DEPTH | STENCIL;
+    ALL :: COLOR | DEPTH | STENCIL;
 }
 
 Texture_Flags :: enum_flags u32 {
     NONE :: 0;
     // Allows the Texture to be used during Compute Storage Reads
-    COMPUTE_READ  :: 1 << 0;
+    COMPUTE_READ :: 1 << 0;
     // Allows the Texture to be used during Compute Storage Writes
     COMPUTE_WRITE :: 1 << 1;
 }

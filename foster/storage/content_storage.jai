@@ -1,5 +1,5 @@
 #scope_module
-using Basic;   // module-private
+using Basic; // module-private
 using Math;
 #scope_export
 
@@ -45,9 +45,9 @@ using Math;
 // instead of pretending to work. This is the "no SDL_Storage bindings" path.
 // wasm 目标下没有 SDL_Storage：走文件里已有的 .NOT_AVAILABLE 降级路径。
 #if OS != .WASM {
-CONTENT_STORAGE_SDL_AVAILABLE :: true;
+    CONTENT_STORAGE_SDL_AVAILABLE :: true;
 } else {
-CONTENT_STORAGE_SDL_AVAILABLE :: false;
+    CONTENT_STORAGE_SDL_AVAILABLE :: false;
 }
 
 // Recursive enumeration stops at this depth (guards against a pathological
@@ -59,13 +59,13 @@ CONTENT_STORAGE_MAX_ENUM_DEPTH :: 32;
 //
 
 Content_Storage_Status :: enum {
-    OK;             // success
-    NOT_AVAILABLE;  // built without the SDL_Storage backend (see the switch above)
-    OPEN_FAILED;    // SDL_Open*Storage returned NULL (see the diagnostic)
-    CLOSED;         // the handle is NULL — never opened, or already closed
-    NOT_WRITABLE;   // a write was attempted on a read-only (Title) storage
-    NOT_READY;      // the storage is not ready yet (poll content_storage_ready)
-    IO_FAILED;      // the SDL call itself failed
+    OK; // success
+    NOT_AVAILABLE; // built without the SDL_Storage backend (see the switch above)
+    OPEN_FAILED; // SDL_Open*Storage returned NULL (see the diagnostic)
+    CLOSED; // the handle is NULL — never opened, or already closed
+    NOT_WRITABLE; // a write was attempted on a read-only (Title) storage
+    NOT_READY; // the storage is not ready yet (poll content_storage_ready)
+    IO_FAILED; // the SDL call itself failed
 }
 
 // Decoupled copy of SDL_PathType so this file does not have to be compiled with
@@ -79,16 +79,16 @@ Content_Storage_Path_Type :: enum {
 
 Content_Storage :: struct {
     using container: Storage_Container;
-    Handle: *void;   // SDL_Storage*; null == closed. Typed as *void on purpose:
-                     // the struct then compiles whether or not the SDL bindings
-                     // are loaded, and only the backend touches the real type.
+    Handle: *void; // SDL_Storage*; null == closed. Typed as *void on purpose:
+    // the struct then compiles whether or not the SDL bindings
+    // are loaded, and only the backend touches the real type.
 }
 
 //
 // Diagnostics
 //
 
-content_storage_diagnostic: string;   // last failure; "" after a success
+content_storage_diagnostic: string; // last failure; "" after a success
 
 // Why the last operation failed. "" when it succeeded. The string lives in
 // temporary storage — copy_string it if you need to keep it.
@@ -183,133 +183,170 @@ content_storage_relative_path :: (root: string, path: string) -> string {
 
 #if CONTENT_STORAGE_SDL_AVAILABLE {
 
-cs_backend_available :: () -> bool { return true; }
-
-// SDL_GetError() for whatever the last backend call did.
-cs_backend_last_error :: () -> string {
-    return cstr_to_string(SDL_GetError());
-}
-
-cs_backend_open_user :: (org: string, app_name: string) -> *void {
-    org_c := to_cstr(org);
-    app_c := to_cstr(app_name);
-    defer free(org_c);
-    defer free(app_c);
-    return cast(*void) SDL_OpenUserStorage(org_c, app_c, 0);
-}
-
-// `override_path == ""` maps to a NULL override, i.e. "use the platform default
-// title directory" (C# passes null for the same case).
-cs_backend_open_title :: (override_path: string) -> *void {
-    if override_path == "" return cast(*void) SDL_OpenTitleStorage(null, 0);
-    path_c := to_cstr(override_path);
-    defer free(path_c);
-    return cast(*void) SDL_OpenTitleStorage(path_c, 0);
-}
-
-cs_backend_open_file :: (path: string) -> *void {
-    path_c := to_cstr(path);
-    defer free(path_c);
-    return cast(*void) SDL_OpenFileStorage(path_c);
-}
-
-cs_backend_close :: (handle: *void) {
-    SDL_CloseStorage(cast(*SDL_Storage) handle);
-}
-
-cs_backend_ready :: (handle: *void) -> bool {
-    return SDL_StorageReady(cast(*SDL_Storage) handle);
-}
-
-cs_backend_path_info :: (handle: *void, path: string) -> (Content_Storage_Path_Type, u64, bool) {
-    info: SDL_PathInfo;
-    path_c := to_cstr(path);
-    defer free(path_c);
-    if !SDL_GetStoragePathInfo(cast(*SDL_Storage) handle, path_c, *info) {
-        return .NONE, 0, false;
+    cs_backend_available :: () -> bool {
+        return true;
     }
-    type := Content_Storage_Path_Type.OTHER;
-    if info.type == SDL_PATHTYPE_NONE           type = .NONE;
-    else if info.type == SDL_PATHTYPE_FILE      type = .FILE;
-    else if info.type == SDL_PATHTYPE_DIRECTORY type = .DIRECTORY;
-    return type, info.size, true;
-}
 
-cs_backend_read :: (handle: *void, path: string, destination: *void, length: u64) -> bool {
-    path_c := to_cstr(path);
-    defer free(path_c);
-    return SDL_ReadStorageFile(cast(*SDL_Storage) handle, path_c, destination, length);
-}
-
-cs_backend_write :: (handle: *void, path: string, source: *void, length: u64) -> bool {
-    path_c := to_cstr(path);
-    defer free(path_c);
-    return SDL_WriteStorageFile(cast(*SDL_Storage) handle, path_c, source, length);
-}
-
-cs_backend_create_directory :: (handle: *void, path: string) -> bool {
-    path_c := to_cstr(path);
-    defer free(path_c);
-    return SDL_CreateStorageDirectory(cast(*SDL_Storage) handle, path_c);
-}
-
-cs_backend_remove :: (handle: *void, path: string) -> bool {
-    path_c := to_cstr(path);
-    defer free(path_c);
-    return SDL_RemoveStoragePath(cast(*SDL_Storage) handle, path_c);
-}
-
-cs_backend_space_remaining :: (handle: *void) -> u64 {
-    return SDL_GetStorageSpaceRemaining(cast(*SDL_Storage) handle);
-}
-
-// Every entry (files *and* directories) directly inside `dir`, as paths relative
-// to the storage root, using SDL's own glob engine (pattern "*", which never
-// matches a '/'). Result strings are allocated with the context allocator.
-cs_backend_list :: (handle: *void, dir: string) -> ([..] string, bool) {
-    out: [..] string;
-    dir_c := to_cstr(dir);          // "" (and NULL) mean "the storage root"
-    pattern_c := to_cstr("*");
-    defer free(dir_c);
-    defer free(pattern_c);
-
-    count: s32;
-    results := SDL_GlobStorageDirectory(cast(*SDL_Storage) handle, dir_c, pattern_c, 0, *count);
-    if results == null return out, false;
-    defer SDL_free(cast(*void) results);
-
-    for i: 0..count - 1 {
-        array_add(*out, copy_string(cstr_to_string(results[i])));
+    // SDL_GetError() for whatever the last backend call did.
+    cs_backend_last_error :: () -> string {
+        return cstr_to_string(SDL_GetError());
     }
-    return out, true;
-}
+
+    cs_backend_open_user :: (org: string, app_name: string) -> *void {
+        org_c := to_cstr(org);
+        app_c := to_cstr(app_name);
+        defer free(org_c);
+        defer free(app_c);
+        return cast(*void) SDL_OpenUserStorage(org_c, app_c, 0);
+    }
+
+    // `override_path == ""` maps to a NULL override, i.e. "use the platform default
+    // title directory" (C# passes null for the same case).
+    cs_backend_open_title :: (override_path: string) -> *void {
+        if override_path == "" return cast(*void) SDL_OpenTitleStorage(null, 0);
+        path_c := to_cstr(override_path);
+        defer free(path_c);
+        return cast(*void) SDL_OpenTitleStorage(path_c, 0);
+    }
+
+    cs_backend_open_file :: (path: string) -> *void {
+        path_c := to_cstr(path);
+        defer free(path_c);
+        return cast(*void) SDL_OpenFileStorage(path_c);
+    }
+
+    cs_backend_close :: (handle: *void) {
+        SDL_CloseStorage(cast(*SDL_Storage) handle);
+    }
+
+    cs_backend_ready :: (handle: *void) -> bool {
+        return SDL_StorageReady(cast(*SDL_Storage) handle);
+    }
+
+    cs_backend_path_info :: (handle: *void, path: string) -> (Content_Storage_Path_Type, u64, bool) {
+        info: SDL_PathInfo;
+        path_c := to_cstr(path);
+        defer free(path_c);
+        if !SDL_GetStoragePathInfo(cast(*SDL_Storage) handle, path_c, *info) {
+            return .NONE, 0, false;
+        }
+        type := Content_Storage_Path_Type.OTHER;
+        if info.type == SDL_PATHTYPE_NONE type = .NONE;
+        else if info.type == SDL_PATHTYPE_FILE type = .FILE;
+        else if info.type == SDL_PATHTYPE_DIRECTORY type = .DIRECTORY;
+        return type, info.size, true;
+    }
+
+    cs_backend_read :: (handle: *void, path: string, destination: *void, length: u64) -> bool {
+        path_c := to_cstr(path);
+        defer free(path_c);
+        return SDL_ReadStorageFile(cast(*SDL_Storage) handle, path_c, destination, length);
+    }
+
+    cs_backend_write :: (handle: *void, path: string, source: *void, length: u64) -> bool {
+        path_c := to_cstr(path);
+        defer free(path_c);
+        return SDL_WriteStorageFile(cast(*SDL_Storage) handle, path_c, source, length);
+    }
+
+    cs_backend_create_directory :: (handle: *void, path: string) -> bool {
+        path_c := to_cstr(path);
+        defer free(path_c);
+        return SDL_CreateStorageDirectory(cast(*SDL_Storage) handle, path_c);
+    }
+
+    cs_backend_remove :: (handle: *void, path: string) -> bool {
+        path_c := to_cstr(path);
+        defer free(path_c);
+        return SDL_RemoveStoragePath(cast(*SDL_Storage) handle, path_c);
+    }
+
+    cs_backend_space_remaining :: (handle: *void) -> u64 {
+        return SDL_GetStorageSpaceRemaining(cast(*SDL_Storage) handle);
+    }
+
+    // Every entry (files *and* directories) directly inside `dir`, as paths relative
+    // to the storage root, using SDL's own glob engine (pattern "*", which never
+    // matches a '/'). Result strings are allocated with the context allocator.
+    cs_backend_list :: (handle: *void, dir: string) -> ([..] string, bool) {
+        out: [..] string;
+        dir_c := to_cstr(dir); // "" (and NULL) mean "the storage root"
+        pattern_c := to_cstr("*");
+        defer free(dir_c);
+        defer free(pattern_c);
+
+        count: s32;
+        results := SDL_GlobStorageDirectory(cast(*SDL_Storage) handle, dir_c, pattern_c, 0, *count);
+        if results == null return out, false;
+        defer SDL_free(cast(*void) results);
+
+        for i: 0..count - 1 {
+            array_add(*out, copy_string(cstr_to_string(results[i])));
+        }
+        return out, true;
+    }
 
 } else {
 
-// Degraded build: SDL_Storage is not compiled in. These stubs exist only so the
-// public API below stays identical; every public entry point calls
-// cs_require_backend() first and returns .NOT_AVAILABLE with a diagnostic before
-// reaching them, so they can never be the silent path.
+    // Degraded build: SDL_Storage is not compiled in. These stubs exist only so the
+    // public API below stays identical; every public entry point calls
+    // cs_require_backend() first and returns .NOT_AVAILABLE with a diagnostic before
+    // reaching them, so they can never be the silent path.
 
-cs_backend_available :: () -> bool { return false; }
-cs_backend_last_error :: () -> string { return "no SDL_Storage backend in this build"; }
-cs_backend_open_user :: (org: string, app_name: string) -> *void { return null; }
-cs_backend_open_title :: (override_path: string) -> *void { return null; }
-cs_backend_open_file :: (path: string) -> *void { return null; }
-cs_backend_close :: (handle: *void) {}
-cs_backend_ready :: (handle: *void) -> bool { return false; }
-cs_backend_path_info :: (handle: *void, path: string) -> (Content_Storage_Path_Type, u64, bool) {
-    return .NONE, 0, false;
-}
-cs_backend_read :: (handle: *void, path: string, destination: *void, length: u64) -> bool { return false; }
-cs_backend_write :: (handle: *void, path: string, source: *void, length: u64) -> bool { return false; }
-cs_backend_create_directory :: (handle: *void, path: string) -> bool { return false; }
-cs_backend_remove :: (handle: *void, path: string) -> bool { return false; }
-cs_backend_space_remaining :: (handle: *void) -> u64 { return 0; }
-cs_backend_list :: (handle: *void, dir: string) -> ([..] string, bool) {
-    out: [..] string;
-    return out, false;
-}
+    cs_backend_available :: () -> bool {
+        return false;
+    }
+
+    cs_backend_last_error :: () -> string {
+        return "no SDL_Storage backend in this build";
+    }
+
+    cs_backend_open_user :: (org: string, app_name: string) -> *void {
+        return null;
+    }
+
+    cs_backend_open_title :: (override_path: string) -> *void {
+        return null;
+    }
+
+    cs_backend_open_file :: (path: string) -> *void {
+        return null;
+    }
+
+    cs_backend_close :: (handle: *void) {}
+
+    cs_backend_ready :: (handle: *void) -> bool {
+        return false;
+    }
+
+    cs_backend_path_info :: (handle: *void, path: string) -> (Content_Storage_Path_Type, u64, bool) {
+        return .NONE, 0, false;
+    }
+
+    cs_backend_read :: (handle: *void, path: string, destination: *void, length: u64) -> bool {
+        return false;
+    }
+
+    cs_backend_write :: (handle: *void, path: string, source: *void, length: u64) -> bool {
+        return false;
+    }
+
+    cs_backend_create_directory :: (handle: *void, path: string) -> bool {
+        return false;
+    }
+
+    cs_backend_remove :: (handle: *void, path: string) -> bool {
+        return false;
+    }
+
+    cs_backend_space_remaining :: (handle: *void) -> u64 {
+        return 0;
+    }
+
+    cs_backend_list :: (handle: *void, dir: string) -> ([..] string, bool) {
+        out: [..] string;
+        return out, false;
+    }
 
 }
 
@@ -323,7 +360,7 @@ cs_open_result :: (handle: *void, writable: bool, sdl_method: string) -> (*Conte
     }
     storage := New(Content_Storage);
     storage.Handle = handle;
-    storage.Root = "";          // paths are resolved by SDL, not by storage_full_path
+    storage.Root = ""; // paths are resolved by SDL, not by storage_full_path
     storage.Writable = writable;
     cs_clear_error();
     return storage, .OK;

@@ -17,10 +17,12 @@ Instance_Group :: struct {
     schema: Schema;
     values: [] Value;
 }
+
 Instance :: struct {
     shader: string;
     groups: [] Instance_Group;
 }
+
 Instance_Resource :: struct {
     version: int;
     shader: string; // 文件里的键是 "effect"（见 shader_json_write_instance / read_instance）

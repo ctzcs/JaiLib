@@ -39,23 +39,23 @@ operator == :: (a: Handle, b: Handle) -> bool {
 
 // rows[i] 与 slots[i] 一一对应。存活槽位 slots[i] = {idx = i, gen}；
 // 空槽 slots[i] = {idx = 0, gen = 最后一次使用的代数}，复用时 gen + 1。
-Pool :: struct (T: Type, HT: Type) {
-    rows:     [..] T;   // olib: #soa[dynamic]T，见文件头的 Jai 差异
-    slots:    [..] HT;
+Pool :: struct(T: Type, HT: Type) {
+    rows: [..] T; // olib: #soa[dynamic]T，见文件头的 Jai 差异
+    slots: [..] HT;
     freelist: [..] u32;
-    num:      int;
+    num: int;
 }
 
-Iterator :: struct (T: Type, HT: Type) {
-    pool:  *Pool(T, HT);
+Iterator :: struct(T: Type, HT: Type) {
+    pool: *Pool(T, HT);
     index: int;
 }
 
 // 普通切片组成的快照，可直接存盘 / 拷贝；用 snapshot_delete 释放。
-Snapshot :: struct (T: Type, HT: Type) {
-    slots:    [] HT;
+Snapshot :: struct(T: Type, HT: Type) {
+    slots: [] HT;
     freelist: [] u32;
-    rows:     [] T;
+    rows: [] T;
 }
 //@endregion
 
@@ -67,7 +67,7 @@ soa_reserve :: (array: *[..] $T, desired: s64) -> bool {
     if desired <= array.allocated return true;
     if !array.allocator.proc array.allocator = context.allocator;
     memory := array.allocator.proc(.RESIZE, desired * size_of(T), array.allocated * size_of(T), array.data, array.allocator.data);
-    if memory == null return false;   // 失败时数组保持原样
+    if memory == null return false; // 失败时数组保持原样
     array.data = memory;
     array.allocated = desired;
     return true;
@@ -163,26 +163,47 @@ add :: (p: *Pool($T, $HT), row: T) -> (HT, bool) {
     needed := max(p.slots.count, 1) + 1;
     // 先预留再发布槽位，remove 和 clear 因此不分配。
     if p.freelist.allocated < needed - 1 {
-        if !soa_reserve(*p.freelist, max(needed - 1, max(2 * p.freelist.allocated, 8))) { zero: HT; return zero, false; }
+        if !soa_reserve(*p.freelist, max(needed - 1, max(2 * p.freelist.allocated, 8))) {
+            zero: HT;
+            return zero, false;
+        }
     }
     if p.slots.allocated < needed {
-        if !soa_reserve(*p.slots, max(needed, max(2 * p.slots.allocated, 8))) { zero: HT; return zero, false; }
+        if !soa_reserve(*p.slots, max(needed, max(2 * p.slots.allocated, 8))) {
+            zero: HT;
+            return zero, false;
+        }
     }
     if p.rows.allocated < needed {
-        if !soa_reserve(*p.rows, max(needed, max(2 * p.rows.allocated, 8))) { zero: HT; return zero, false; }
+        if !soa_reserve(*p.rows, max(needed, max(2 * p.rows.allocated, 8))) {
+            zero: HT;
+            return zero, false;
+        }
     }
     if p.slots.count == 0 {
-        dummy: HT;                       // 0 号为 dummy
-        if !soa_append(*p.slots, dummy) { zero: HT; return zero, false; }
+        dummy: HT; // 0 号为 dummy
+        if !soa_append(*p.slots, dummy) {
+            zero: HT;
+            return zero, false;
+        }
         empty_row: T;
-        if !soa_append(*p.rows, empty_row) { zero: HT; return zero, false; }
+        if !soa_append(*p.rows, empty_row) {
+            zero: HT;
+            return zero, false;
+        }
     }
 
     h: HT;
     h.idx = cast(u32) p.slots.count;
     h.gen = 1;
-    if !soa_append(*p.slots, h) { zero: HT; return zero, false; }
-    if !soa_append(*p.rows, row) { zero: HT; return zero, false; }
+    if !soa_append(*p.slots, h) {
+        zero: HT;
+        return zero, false;
+    }
+    if !soa_append(*p.rows, row) {
+        zero: HT;
+        return zero, false;
+    }
     p.num += 1;
     return h, true;
 }

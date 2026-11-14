@@ -41,7 +41,9 @@ F :: #import "foster";
 mat :: #import "kit/rendering/material";
 sh :: #import "kit/rendering/shader";
 HASH :: #import "Hash_Table";
-using HASH;   // `for v, k: table` 的 for_expansion 必须在同一作用域可见（olib 的 map 迭代）
+
+using HASH; // `for v, k: table` 的 for_expansion 必须在同一作用域可见（olib 的 map 迭代）
+
 XML :: #import "core/encoding";
 FILE :: #import "File";
 

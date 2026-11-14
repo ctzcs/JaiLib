@@ -12,7 +12,7 @@
 //   - 常量带类型写 `NAME : type : value;`（odin 的 `API_VERSION :: u32(1)`）。
 #import "Basic";
 
-API_VERSION : u32 : 1;
+API_VERSION: u32 : 1;
 ENTRY_SYMBOL :: "olib_game_api";
 
 // 只在当前回调内借用；模块不得保存 host_context 或 frame。

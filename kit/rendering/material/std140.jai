@@ -34,7 +34,7 @@ std140_write_matrix :: (buf: [] u8, offset: int, m: $M) {
     // 放不下整块：逐列写（每列自己判越界），与 olib 的兜底分支一致。
     local := m;
     columns: MAT4_F32;
-    memcpy(*columns, *local, 64);   // Jai 没有 transmute/xx 位型转换：按字节拷到 [4][4] float32
+    memcpy(*columns, *local, 64); // Jai 没有 transmute/xx 位型转换：按字节拷到 [4][4] float32
     for i: 0..3 {
         std140_write_vec4(buf, offset + i * 16, columns[i]);
     }

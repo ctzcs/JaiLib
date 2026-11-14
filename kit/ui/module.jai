@@ -26,15 +26,16 @@
 #import "Basic";
 STRING :: #import "String";
 JM :: #import "Math";
-UNI :: #import "Unicode";     // utf8_next_character
-F :: #import "foster";       // Texture / Msdf_Font / Font / Image / Color / Vector2 / Matrix3x2
-r2d :: #import "kit/rendering/2d";     // Render2D
+UNI :: #import "Unicode"; // utf8_next_character
+F :: #import "foster"; // Texture / Msdf_Font / Font / Image / Color / Vector2 / Matrix3x2
+r2d :: #import "kit/rendering/2d"; // Render2D
 mat :: #import "kit/rendering/material"; // Material / Material_Library / BUILTIN_TEXT
-tw :: #import "core/tween";   // spring
+tw :: #import "core/tween"; // spring
 clay :: #import "thirdparty/clay/module"; // clay 0.12 绑定
 HASH :: #import "Hash_Table";
-using HASH;   // `for value, key: table` 的 for_expansion 必须在同一作用域可见
-using JM;     // Vector2 / Color 的 + - * == 运算符（clay.Color 与 F.Vector2 都靠它）
+
+using HASH; // `for value, key: table` 的 for_expansion 必须在同一作用域可见
+using JM; // Vector2 / Color 的 + - * == 运算符（clay.Color 与 F.Vector2 都靠它）
 
 #load "ui.jai";
 #load "ui_text.jai";

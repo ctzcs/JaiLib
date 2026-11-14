@@ -27,8 +27,8 @@
 
 //@region 数据
 
-HISTORY :: 240;         // 统计窗口（帧）
-GRAPH_BARS :: 120;      // 曲线显示最近的帧数
+HISTORY :: 240; // 统计窗口（帧）
+GRAPH_BARS :: 120; // 曲线显示最近的帧数
 REFRESH_INTERVAL :: 0.5; // 数字与作用域表的刷新间隔（秒），避免逐帧跳动
 MAX_SCOPES :: 8;
 
@@ -46,7 +46,7 @@ Frame_Summary :: struct {
 }
 
 Scope_Row :: struct {
-    name: string;          // 借用 Overlay.previous 中复制的名字
+    name: string; // 借用 Overlay.previous 中复制的名字
     ms_per_frame, calls_per_frame: float32;
 }
 
@@ -242,10 +242,18 @@ panel_layout :: (o: *Overlay) {
     attach: clay.FloatingAttachPointType;
     offset: clay.Vector2;
     if o.corner == {
-        case .Top_Right;    attach = .RIGHT_TOP;    offset = .[ -12, 12 ];
-        case .Top_Left;     attach = .LEFT_TOP;     offset = .[ 12, 12 ];
-        case .Bottom_Right; attach = .RIGHT_BOTTOM; offset = .[ -12, -12 ];
-        case .Bottom_Left;  attach = .LEFT_BOTTOM;  offset = .[ 12, -12 ];
+        case .Top_Right;
+            attach = .RIGHT_TOP;
+            offset = .[-12, 12];
+        case .Top_Left;
+            attach = .LEFT_TOP;
+            offset = .[12, 12];
+        case .Bottom_Right;
+            attach = .RIGHT_BOTTOM;
+            offset = .[-12, -12];
+        case .Bottom_Left;
+            attach = .LEFT_BOTTOM;
+            offset = .[12, -12];
     }
     panel := ui.ui_column_decl(6);
     panel.id = clay.ID("perf-panel");
@@ -263,18 +271,20 @@ panel_layout :: (o: *Overlay) {
         zIndex = PANEL_Z,
         pointerCaptureMode = .PASSTHROUGH,
     };
-    ui.clay.UI(panel, #code { panel_contents(o); });
+    ui.clay.UI(panel, #code {
+        panel_contents(o);
+    });
 }
 
 panel_contents :: (o: *Overlay) {
     s := o.summary;
     ui.clay.UI(ui.ui_row_decl(), #code {
-        ui.ui_label_ex(*o.ctx, *o.theme, tprint("% FPS", formatFloat(s.fps, trailing_width=0)), rating_color(s.avg_ms), 20);
+        ui.ui_label_ex(*o.ctx, *o.theme, tprint("% FPS", formatFloat(s.fps, trailing_width = 0)), rating_color(s.avg_ms), 20);
         ui.ui_spacer();
-        ui.ui_label_ex(*o.ctx, *o.theme, tprint("% ms", formatFloat(s.avg_ms, trailing_width=2, zero_removal=.NO)), o.theme.text, 16);
+        ui.ui_label_ex(*o.ctx, *o.theme, tprint("% ms", formatFloat(s.avg_ms, trailing_width = 2, zero_removal = .NO)), o.theme.text, 16);
     });
     ui.ui_label_dim(*o.ctx, *o.theme,
-                    tprint("min %  max % ms  1\% low % FPS", formatFloat(s.min_ms, trailing_width=1, zero_removal=.NO), formatFloat(s.max_ms, trailing_width=1, zero_removal=.NO), formatFloat(s.low1_fps, trailing_width=0)));
+                    tprint("min %  max % ms  1\% low % FPS", formatFloat(s.min_ms, trailing_width = 1, zero_removal = .NO), formatFloat(s.max_ms, trailing_width = 1, zero_removal = .NO), formatFloat(s.low1_fps, trailing_width = 0)));
     graph(o);
     if o.scope_count == 0 return;
     ui.clay.UI(ui.ui_row_decl(4), #code {
@@ -285,8 +295,8 @@ panel_contents :: (o: *Overlay) {
     for row: array_view(o.scopes, 0, o.scope_count) {
         ui.clay.UI(ui.ui_row_decl(4), #code {
             cell(o, row.name, 0, o.theme.text);
-            cell(o, tprint("%", formatFloat(row.ms_per_frame, trailing_width=2, zero_removal=.NO)), 64, o.theme.text);
-            cell(o, tprint("%", formatFloat(row.calls_per_frame, trailing_width=1, zero_removal=.NO)), 44, o.theme.text_dim);
+            cell(o, tprint("%", formatFloat(row.ms_per_frame, trailing_width = 2, zero_removal = .NO)), 64, o.theme.text);
+            cell(o, tprint("%", formatFloat(row.calls_per_frame, trailing_width = 1, zero_removal = .NO)), 44, o.theme.text_dim);
         });
     }
 }
@@ -304,7 +314,9 @@ graph :: (o: *Overlay) {
             childAlignment = .{ x = .RIGHT, y = .BOTTOM },
         },
         backgroundColor = ui.ui_clay_color(F.Color.{ 0, 0, 0, 90 }),
-    }, #code { graph_bars(o, bars, top); });
+    }, #code {
+        graph_bars(o, bars, top);
+    });
 }
 
 graph_bars :: (o: *Overlay, bars: int, top: float32) {
@@ -329,7 +341,7 @@ graph_bars :: (o: *Overlay, bars: int, top: float32) {
         floating = .{
             attachTo = .PARENT,
             attachment = .{ element = .LEFT_BOTTOM, parent = .LEFT_BOTTOM },
-            offset = .[ 0, -TARGET_MS / top * cast(float32) GRAPH_HEIGHT ],
+            offset = .[0, -TARGET_MS / top * cast(float32) GRAPH_HEIGHT],
             zIndex = PANEL_Z + 1,
             pointerCaptureMode = .PASSTHROUGH,
         },

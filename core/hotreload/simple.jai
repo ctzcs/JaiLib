@@ -51,7 +51,7 @@ Game_Hooks :: struct(State: Type, Services: Type) {
     stop: (state: *State, services: *Services) -> void;
     // 游戏真正结束（宿主退出）时调用：释放 State 拥有的堆数据。热重载换版本时不调用。可为 null。
     drop: (state: *State, services: *Services) -> void;
-    host_version: u64;  // 宿主协议版本，0 视为 1
+    host_version: u64; // 宿主协议版本，0 视为 1
     state_version: u64; // State 格式版本，0 视为 1
 }
 
@@ -68,10 +68,10 @@ Simple_Slot :: struct(T: Type) {
 SIMPLE_STORE_CAPACITY :: 8;
 
 Simple_Store_Entry :: struct {
-    key: *void;           // type_info(Game_Hooks(State, Services))，查找用的唯一地址
-    state_type: *void;    // type_info(State)，只为可读性与诊断
+    key: *void; // type_info(Game_Hooks(State, Services))，查找用的唯一地址
+    state_type: *void; // type_info(State)，只为可读性与诊断
     services_type: *void; // type_info(Services)，同上
-    hooks: *void;         // Game_Hooks(State, Services) 的地址（模块级变量，生命周期同模块）
+    hooks: *void; // Game_Hooks(State, Services) 的地址（模块级变量，生命周期同模块）
 }
 
 simple_store_entries: [SIMPLE_STORE_CAPACITY] Simple_Store_Entry;

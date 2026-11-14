@@ -81,7 +81,7 @@ ui_dropdown_popup :: (ctx: *UI_Context, theme: *UI_Theme, id: string, popup_id: 
         floating = .{
             attachTo = .PARENT,
             attachment = .{ element = .LEFT_TOP, parent = .LEFT_BOTTOM },
-            offset = .[ 0, 4 ],
+            offset = .[0, 4],
             zIndex = 60,
             pointerCaptureMode = .CAPTURE,
         },
@@ -149,7 +149,7 @@ ui_dropdown_arrow :: (ctx: *UI_Context, theme: *UI_Theme, open: bool) -> string 
 
 // 长列表只声明可见行：before / after 是前后占位高度，[first, last) 是要声明的行。
 UI_Virtual_Range :: struct {
-    first, last:  int;
+    first, last: int;
     before, after: float32;
 }
 
@@ -179,12 +179,12 @@ ui_virtual_spacer :: (height: float32) {
 //@region 拖放
 
 // 按下源控件后移动超过这么多逻辑像素才算开始拖动，否则仍是点击。
-UI_DRAG_THRESHOLD : float32 : 4;
+UI_DRAG_THRESHOLD: float32 : 4;
 
 UI_Drag :: struct {
-    source:  u32;
+    source: u32;
     payload: int;
-    origin:  F.Vector2;
+    origin: F.Vector2;
     pending, dragging: bool;
 }
 

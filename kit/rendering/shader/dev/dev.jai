@@ -87,7 +87,7 @@ init :: (s: *Session, source: string, driver: F.Graphics_Driver,
     s.compiler_options = comp.Options.{ dxil = compiler_options.dxil,
                                        shadercross = copy_string(compiler_options.shadercross),
                                        dxc = copy_string(compiler_options.dxc) };
-    both: [2] Resources = .[ vertex_resources, fragment_resources ];
+    both: [2] Resources = .[vertex_resources, fragment_resources];
     for resources: both {
         if resources.storage_textures != 0 || resources.storage_buffers < 0 ||
            resources.samplers < 0 || resources.samplers > 16 ||

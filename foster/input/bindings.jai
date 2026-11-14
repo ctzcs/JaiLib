@@ -49,10 +49,10 @@ using Math;
 //   Value    - current state (0 = unpressed, 1 = fully pressed)
 //   Timestamp - when last pressed, in seconds
 Binding_State :: struct {
-    Pressed:   bool;
-    Released:  bool;
-    Down:      bool;
-    Value:     float;
+    Pressed: bool;
+    Released: bool;
+    Down: bool;
+    Value: float;
     Timestamp: float64;
 }
 
@@ -62,9 +62,9 @@ Binding_State :: struct {
 
 // How to handle Input Bindings Axis that overlap.
 Binding_Axis_Overlap :: enum {
-    TAKE_NEWER;   // whichever input was pressed most recently
-    TAKE_OLDER;   // whichever input was pressed longest ago
-    CANCEL_OUT;   // inputs cancel each other out
+    TAKE_NEWER; // whichever input was pressed most recently
+    TAKE_OLDER; // whichever input was pressed longest ago
+    CANCEL_OUT; // inputs cancel each other out
 }
 
 // Foster: BindingAxisOverlapExt.Resolve(this BindingAxisOverlap, in BindingState, in BindingState)
@@ -107,16 +107,16 @@ Mouse_Button_Binding :: struct {
 
 // An Input Binding mapped to Mouse Motion along an axis.
 Mouse_Motion_Binding :: struct {
-    Axis: Vector2;   // axis of mouse motion to track
-    Sign: s32;       // sign of the mouse motion to track
-    Min:  float;     // minimum distance before the motion is tracked
-    Max:  float;     // maximum distance before the motion is clamped
+    Axis: Vector2; // axis of mouse motion to track
+    Sign: s32; // sign of the mouse motion to track
+    Min: float; // minimum distance before the motion is tracked
+    Max: float; // maximum distance before the motion is clamped
 }
 
 // An Input Binding mapped to a Controller Axis.
 Controller_Axis_Binding :: struct {
-    Axis:     Axes;
-    Sign:     s32;
+    Axis: Axes;
+    Sign: s32;
     Deadzone: float;
 }
 
@@ -139,10 +139,10 @@ Binding_Kind :: enum {
 Binding :: struct {
     Kind: Binding_Kind = .KEYBOARD_KEY;
     Data: union {
-        Keyboard:         Keyboard_Key_Binding;
-        MouseButton:      Mouse_Button_Binding;
-        MouseMotion:      Mouse_Motion_Binding;
-        ControllerAxis:   Controller_Axis_Binding;
+        Keyboard: Keyboard_Key_Binding;
+        MouseButton: Mouse_Button_Binding;
+        MouseMotion: Mouse_Motion_Binding;
+        ControllerAxis: Controller_Axis_Binding;
         ControllerButton: Controller_Button_Binding;
     }
 }
@@ -195,15 +195,19 @@ binding_from_controller_button :: (button: Buttons) -> Binding {
 binding_from_keyboard_key_binding :: (value: Keyboard_Key_Binding) -> Binding {
     return .{ Kind = .KEYBOARD_KEY, Data = .{ Keyboard = value } };
 }
+
 binding_from_mouse_button_binding :: (value: Mouse_Button_Binding) -> Binding {
     return .{ Kind = .MOUSE_BUTTON, Data = .{ MouseButton = value } };
 }
+
 binding_from_mouse_motion_binding :: (value: Mouse_Motion_Binding) -> Binding {
     return .{ Kind = .MOUSE_MOTION, Data = .{ MouseMotion = value } };
 }
+
 binding_from_controller_axis_binding :: (value: Controller_Axis_Binding) -> Binding {
     return .{ Kind = .CONTROLLER_AXIS, Data = .{ ControllerAxis = value } };
 }
+
 binding_from_controller_button_binding :: (value: Controller_Button_Binding) -> Binding {
     return .{ Kind = .CONTROLLER_BUTTON, Data = .{ ControllerButton = value } };
 }
@@ -217,10 +221,10 @@ keyboard_key_binding_get_state :: (binding: Keyboard_Key_Binding, input: *Input,
     k := *input.State.Keyboard;
     down := keyboard_down(k, binding.Key);
     return .{
-        Pressed   = keyboard_pressed(k, binding.Key),
-        Released  = keyboard_released(k, binding.Key),
-        Down      = down,
-        Value     = ifx down then 1.0 else 0.0,
+        Pressed = keyboard_pressed(k, binding.Key),
+        Released = keyboard_released(k, binding.Key),
+        Down = down,
+        Value = ifx down then 1.0 else 0.0,
         Timestamp = keyboard_timestamp(k, binding.Key),
     };
 }
@@ -239,10 +243,10 @@ mouse_button_binding_get_state :: (binding: Mouse_Button_Binding, input: *Input,
     m := *input.State.Mouse;
     down := mouse_down(m, binding.Button);
     return .{
-        Pressed   = mouse_pressed(m, binding.Button),
-        Released  = mouse_released(m, binding.Button),
-        Down      = down,
-        Value     = ifx down then 1.0 else 0.0,
+        Pressed = mouse_pressed(m, binding.Button),
+        Released = mouse_released(m, binding.Button),
+        Down = down,
+        Value = ifx down then 1.0 else 0.0,
         Timestamp = mouse_pressed_timestamp(m, binding.Button),
     };
 }
@@ -272,12 +276,12 @@ mouse_motion_binding_get_state :: (binding: Mouse_Motion_Binding, input: *Input,
     // C# calls GetValue() four times; it is pure, so computing it twice is
     // equivalent (and matches the "state vs last state" reading).
     value := mouse_motion_binding_value(binding, *input.State.Mouse);
-    prev  := mouse_motion_binding_value(binding, *input.LastState.Mouse);
+    prev := mouse_motion_binding_value(binding, *input.LastState.Mouse);
     return .{
-        Pressed   = value > 0 && prev <= 0,
-        Released  = value <= 0 && prev > 0,
-        Down      = value > 0,
-        Value     = value,
+        Pressed = value > 0 && prev <= 0,
+        Released = value <= 0 && prev > 0,
+        Down = value > 0,
+        Value = value,
         Timestamp = mouse_motion_timestamp(*input.State.Mouse),
     };
 }
@@ -312,12 +316,12 @@ controller_axis_binding_get_state :: (binding: Controller_Axis_Binding, input: *
     if device < 0 || device >= CONTROLLER_MAX return .{};
 
     value := controller_axis_binding_value(binding, *input.State.Controllers[device]);
-    prev  := controller_axis_binding_value(binding, *input.LastState.Controllers[device]);
+    prev := controller_axis_binding_value(binding, *input.LastState.Controllers[device]);
     return .{
-        Pressed   = value > 0 && prev <= 0,
-        Released  = value <= 0 && prev > 0,
-        Down      = value > 0,
-        Value     = value,
+        Pressed = value > 0 && prev <= 0,
+        Released = value <= 0 && prev > 0,
+        Down = value > 0,
+        Value = value,
         Timestamp = input.State.Controllers[device].axis_timestamp[cast(s32) binding.Axis],
     };
 }
@@ -345,10 +349,10 @@ controller_button_binding_get_state :: (binding: Controller_Button_Binding, inpu
     // of range); down/up_pressed do not.
     stamp := ifx index >= 0 && index < CONTROLLER_MAX_BUTTONS then c.timestamp[index] else 0;
     return .{
-        Pressed   = controller_pressed(c, binding.Button),
-        Released  = controller_released(c, binding.Button),
-        Down      = down,
-        Value     = ifx down then 1.0 else 0.0,
+        Pressed = controller_pressed(c, binding.Button),
+        Released = controller_released(c, binding.Button),
+        Down = down,
+        Value = ifx down then 1.0 else 0.0,
         Timestamp = stamp,
     };
 }
@@ -365,11 +369,11 @@ controller_button_binding_descriptor :: (binding: Controller_Button_Binding) -> 
 // Foster: Binding.GetState - the C# virtual call.
 binding_get_state :: (binding: Binding, input: *Input, device: s32) -> Binding_State {
     if binding.Kind == {
-        case .KEYBOARD_KEY;       return keyboard_key_binding_get_state(binding.Data.Keyboard, input, device);
-        case .MOUSE_BUTTON;       return mouse_button_binding_get_state(binding.Data.MouseButton, input, device);
-        case .MOUSE_MOTION;       return mouse_motion_binding_get_state(binding.Data.MouseMotion, input, device);
-        case .CONTROLLER_AXIS;    return controller_axis_binding_get_state(binding.Data.ControllerAxis, input, device);
-        case .CONTROLLER_BUTTON;  return controller_button_binding_get_state(binding.Data.ControllerButton, input, device);
+        case .KEYBOARD_KEY; return keyboard_key_binding_get_state(binding.Data.Keyboard, input, device);
+        case .MOUSE_BUTTON; return mouse_button_binding_get_state(binding.Data.MouseButton, input, device);
+        case .MOUSE_MOTION; return mouse_motion_binding_get_state(binding.Data.MouseMotion, input, device);
+        case .CONTROLLER_AXIS; return controller_axis_binding_get_state(binding.Data.ControllerAxis, input, device);
+        case .CONTROLLER_BUTTON; return controller_button_binding_get_state(binding.Data.ControllerButton, input, device);
     }
     return .{};
 }
@@ -377,11 +381,11 @@ binding_get_state :: (binding: Binding, input: *Input, device: s32) -> Binding_S
 // Foster: Binding.Descriptor - the C# virtual property.
 binding_descriptor :: (binding: Binding) -> string {
     if binding.Kind == {
-        case .KEYBOARD_KEY;       return keyboard_key_binding_descriptor(binding.Data.Keyboard);
-        case .MOUSE_BUTTON;       return mouse_button_binding_descriptor(binding.Data.MouseButton);
-        case .MOUSE_MOTION;       return mouse_motion_binding_descriptor(binding.Data.MouseMotion);
-        case .CONTROLLER_AXIS;    return controller_axis_binding_descriptor(binding.Data.ControllerAxis);
-        case .CONTROLLER_BUTTON;  return controller_button_binding_descriptor(binding.Data.ControllerButton);
+        case .KEYBOARD_KEY; return keyboard_key_binding_descriptor(binding.Data.Keyboard);
+        case .MOUSE_BUTTON; return mouse_button_binding_descriptor(binding.Data.MouseButton);
+        case .MOUSE_MOTION; return mouse_motion_binding_descriptor(binding.Data.MouseMotion);
+        case .CONTROLLER_AXIS; return controller_axis_binding_descriptor(binding.Data.ControllerAxis);
+        case .CONTROLLER_BUTTON; return controller_button_binding_descriptor(binding.Data.ControllerButton);
     }
     return "";
 }
@@ -391,11 +395,11 @@ binding_descriptor :: (binding: Binding) -> string {
 // Useful for writing/reading binding tables.
 binding_type_discriminator :: (binding: Binding) -> string {
     if binding.Kind == {
-        case .KEYBOARD_KEY;       return "Key";
-        case .MOUSE_BUTTON;       return "MouseButton";
-        case .MOUSE_MOTION;       return "MouseMotion";
-        case .CONTROLLER_AXIS;    return "Axis";
-        case .CONTROLLER_BUTTON;  return "Button";
+        case .KEYBOARD_KEY; return "Key";
+        case .MOUSE_BUTTON; return "MouseButton";
+        case .MOUSE_MOTION; return "MouseMotion";
+        case .CONTROLLER_AXIS; return "Axis";
+        case .CONTROLLER_BUTTON; return "Button";
     }
     return "";
 }

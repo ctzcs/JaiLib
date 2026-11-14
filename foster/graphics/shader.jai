@@ -10,17 +10,17 @@ Shader :: struct {
     handle: Graphics_Resource_Handle;
 
     Stage: Shader_Stage;
-    Name:  string;
+    Name: string;
 
-    SamplerCount:  s32;
+    SamplerCount: s32;
     UniformBufferCount: s32;
     // Vertex/Fragment only
     StorageBufferCount: s32;
     // Compute only
     ReadOnlyStorageTextureCount: s32;
-    ReadOnlyStorageBufferCount:  s32;
+    ReadOnlyStorageBufferCount: s32;
     ReadWriteStorageTextureCount: s32;
-    ReadWriteStorageBufferCount:  s32;
+    ReadWriteStorageBufferCount: s32;
     ThreadCountX: s32 = 1;
     ThreadCountY: s32 = 1;
     ThreadCountZ: s32 = 1;
@@ -29,12 +29,12 @@ Shader :: struct {
 }
 
 Shader_Create_Info :: struct {
-    Stage:              Shader_Stage;
-    Bytes:              [] u8;   // 'Code' shadows a Jai primitive type
-    SamplerCount:       s32 = 0;
+    Stage: Shader_Stage;
+    Bytes: [] u8; // 'Code' shadows a Jai primitive type
+    SamplerCount: s32 = 0;
     UniformBufferCount: s32 = 0;
     StorageBufferCount: s32 = 0;
-    EntryPoint:         string = "main";
+    EntryPoint: string = "main";
 }
 
 shader_create :: (

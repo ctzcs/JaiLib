@@ -11,15 +11,15 @@
 //@region 数据类型 —— setter 版 / 指针版 payload
 
 Managed_Tween_Data :: struct(T: Type) {
-    tween:         Tween(T);
+    tween: Tween(T);
     initial_tween: Tween(T);
-    setter:        (value: T);
+    setter: (value: T);
 }
 
 Managed_Ptr_Tween_Data :: struct(T: Type) {
-    tween:         Tween(T);
+    tween: Tween(T);
     initial_tween: Tween(T);
-    target:        *T;
+    target: *T;
 }
 //@endregion
 
@@ -71,23 +71,23 @@ managed_tween_make_node :: (
     result.active = true;
     result.parent = TWEEN_HANDLE_NONE;
     result.timing = Tween_Timing.{
-        delay      = tween.delay,
-        duration   = managed_tween_get_duration(tween),
+        delay = tween.delay,
+        duration = managed_tween_get_duration(tween),
         time_scale = 1,
     };
     result.loops = Loop_Config.{
         count = managed_tween_loop_count(tween.repeat_mode),
-        mode  = tween.repeat_mode,
+        mode = tween.repeat_mode,
     };
     result.control = Tween_Control.{
-        state     = .Idle,
+        state = .Idle,
         auto_kill = tween.repeat_mode == .Once,
     };
     result.payload = payload;
     result.vtable = Tween_Node_VTable.{
-        update    = update_fn,
-        reset     = reset_fn,
-        kill      = kill_fn,
+        update = update_fn,
+        reset = reset_fn,
+        kill = kill_fn,
         set_loops = set_loops_fn,
     };
     return result;
@@ -99,9 +99,9 @@ managed_tween_make_node :: (
 manager_add_tween :: (manager: *Tween_Manager, tween: Tween($T), setter: (value: T)) -> Tween_Handle {
     data := New(Managed_Tween_Data(T));
     <<data = .{
-        tween         = tween,
+        tween = tween,
         initial_tween = tween,
-        setter        = setter,
+        setter = setter,
     };
 
     // manager 负责 delay，所以这里把 tween 的内部起始时间和 delay 归一化。
@@ -170,9 +170,9 @@ manager_add_tween :: (manager: *Tween_Manager, tween: Tween($T), setter: (value:
 manager_add_tween_to :: (manager: *Tween_Manager, tween: Tween($T), target: *T) -> Tween_Handle {
     data := New(Managed_Ptr_Tween_Data(T));
     <<data = .{
-        tween         = tween,
+        tween = tween,
         initial_tween = tween,
-        target        = target,
+        target = target,
     };
 
     // manager 负责 delay，所以这里把 tween 的内部起始时间和 delay 归一化。

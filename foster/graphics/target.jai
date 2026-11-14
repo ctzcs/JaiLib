@@ -6,8 +6,8 @@ using Math;
 // Port of Foster Framework/Graphics/Target.cs.
 
 Target_Attachment_Info :: struct {
-    Format:      Texture_Format;
-    Flags:       Texture_Flags;
+    Format: Texture_Format;
+    Flags: Texture_Flags;
     SampleCount: Sample_Count;
 }
 
@@ -16,7 +16,7 @@ Target :: struct {
     handle: Graphics_Resource_Handle;
 
     Name: string;
-    Width:  s32;
+    Width: s32;
     Height: s32;
     Attachments: [..] *Texture;
 
@@ -34,7 +34,7 @@ target_create_formats :: (device: *Graphics_Device, width: s32, height: s32,
                           formats: [] Texture_Format, flags := Texture_Flags.NONE, name := "") -> *Target {
     infos: [16] Target_Attachment_Info;
     assert(formats.count <= 16);
-    for f, i: formats  infos[i] = .{ Format = f, Flags = flags, SampleCount = .ONE };
+    for f, i: formats infos[i] = .{ Format = f, Flags = flags, SampleCount = .ONE };
     return target_create_attachments(device, width, height, array_view(infos, 0, formats.count), name);
 }
 
@@ -67,9 +67,17 @@ target_create_attachments :: (device: *Graphics_Device, width: s32, height: s32,
     return t;
 }
 
-target_bounds :: (t: *Target) -> Rect_Int { return .{ 0, 0, t.Width, t.Height }; }
-target_texture :: (t: *Target) -> *Texture { return t.Attachments[0]; }   // Foster: implicit operator Texture
-target_is_disposed :: (t: *Target) -> bool { return t.is_disposed || t.device.disposed; }
+target_bounds :: (t: *Target) -> Rect_Int {
+    return .{ 0, 0, t.Width, t.Height };
+}
+
+target_texture :: (t: *Target) -> *Texture {
+    return t.Attachments[0];
+} // Foster: implicit operator Texture
+
+target_is_disposed :: (t: *Target) -> bool {
+    return t.is_disposed || t.device.disposed;
+}
 
 target_dispose :: (t: *Target) {
     if !t.is_disposed {

@@ -110,8 +110,8 @@ input_is_included :: (masks: [] string) -> bool {
 
 // Holds a singular Action binding (Foster: ActionBindingSet.ActionEntry)
 Action_Binding_Entry :: struct {
-    Bind: Binding;         // the Binding to check (C# `Binding`, renamed: the field would shadow the type)
-    Masks:   [] string;    // optional masks to filter the binding by (empty == none)
+    Bind: Binding; // the Binding to check (C# `Binding`, renamed: the field would shadow the type)
+    Masks: [] string; // optional masks to filter the binding by (empty == none)
 }
 
 // Serializable object that holds bindings for a single Action
@@ -195,23 +195,69 @@ action_binding_set_add_axis_masked :: (set: *Action_Binding_Set, masks: [] strin
 
 // Foster: AddLeftJoystickLeft / AddLeftJoystickRight / AddLeftJoystickUp /
 // AddLeftJoystickDown / AddRightJoystick* (each with a masked overload).
-action_binding_set_add_left_joystick_left          :: (set: *Action_Binding_Set, deadzone: float = 0) { action_binding_set_add_axis(set, .LEFT_X, -1, deadzone); }
-action_binding_set_add_left_joystick_right         :: (set: *Action_Binding_Set, deadzone: float = 0) { action_binding_set_add_axis(set, .LEFT_X,  1, deadzone); }
-action_binding_set_add_left_joystick_up            :: (set: *Action_Binding_Set, deadzone: float = 0) { action_binding_set_add_axis(set, .LEFT_Y, -1, deadzone); }
-action_binding_set_add_left_joystick_down          :: (set: *Action_Binding_Set, deadzone: float = 0) { action_binding_set_add_axis(set, .LEFT_Y,  1, deadzone); }
-action_binding_set_add_right_joystick_left         :: (set: *Action_Binding_Set, deadzone: float = 0) { action_binding_set_add_axis(set, .RIGHT_X, -1, deadzone); }
-action_binding_set_add_right_joystick_right        :: (set: *Action_Binding_Set, deadzone: float = 0) { action_binding_set_add_axis(set, .RIGHT_X,  1, deadzone); }
-action_binding_set_add_right_joystick_up           :: (set: *Action_Binding_Set, deadzone: float = 0) { action_binding_set_add_axis(set, .RIGHT_Y, -1, deadzone); }
-action_binding_set_add_right_joystick_down         :: (set: *Action_Binding_Set, deadzone: float = 0) { action_binding_set_add_axis(set, .RIGHT_Y,  1, deadzone); }
+action_binding_set_add_left_joystick_left :: (set: *Action_Binding_Set, deadzone: float = 0) {
+    action_binding_set_add_axis(set, .LEFT_X, -1, deadzone);
+}
 
-action_binding_set_add_left_joystick_left_masked   :: (set: *Action_Binding_Set, masks: [] string, deadzone: float = 0) { action_binding_set_add_axis_masked(set, masks, .LEFT_X, -1, deadzone); }
-action_binding_set_add_left_joystick_right_masked  :: (set: *Action_Binding_Set, masks: [] string, deadzone: float = 0) { action_binding_set_add_axis_masked(set, masks, .LEFT_X,  1, deadzone); }
-action_binding_set_add_left_joystick_up_masked     :: (set: *Action_Binding_Set, masks: [] string, deadzone: float = 0) { action_binding_set_add_axis_masked(set, masks, .LEFT_Y, -1, deadzone); }
-action_binding_set_add_left_joystick_down_masked   :: (set: *Action_Binding_Set, masks: [] string, deadzone: float = 0) { action_binding_set_add_axis_masked(set, masks, .LEFT_Y,  1, deadzone); }
-action_binding_set_add_right_joystick_left_masked  :: (set: *Action_Binding_Set, masks: [] string, deadzone: float = 0) { action_binding_set_add_axis_masked(set, masks, .RIGHT_X, -1, deadzone); }
-action_binding_set_add_right_joystick_right_masked :: (set: *Action_Binding_Set, masks: [] string, deadzone: float = 0) { action_binding_set_add_axis_masked(set, masks, .RIGHT_X,  1, deadzone); }
-action_binding_set_add_right_joystick_up_masked    :: (set: *Action_Binding_Set, masks: [] string, deadzone: float = 0) { action_binding_set_add_axis_masked(set, masks, .RIGHT_Y, -1, deadzone); }
-action_binding_set_add_right_joystick_down_masked  :: (set: *Action_Binding_Set, masks: [] string, deadzone: float = 0) { action_binding_set_add_axis_masked(set, masks, .RIGHT_Y,  1, deadzone); }
+action_binding_set_add_left_joystick_right :: (set: *Action_Binding_Set, deadzone: float = 0) {
+    action_binding_set_add_axis(set, .LEFT_X, 1, deadzone);
+}
+
+action_binding_set_add_left_joystick_up :: (set: *Action_Binding_Set, deadzone: float = 0) {
+    action_binding_set_add_axis(set, .LEFT_Y, -1, deadzone);
+}
+
+action_binding_set_add_left_joystick_down :: (set: *Action_Binding_Set, deadzone: float = 0) {
+    action_binding_set_add_axis(set, .LEFT_Y, 1, deadzone);
+}
+
+action_binding_set_add_right_joystick_left :: (set: *Action_Binding_Set, deadzone: float = 0) {
+    action_binding_set_add_axis(set, .RIGHT_X, -1, deadzone);
+}
+
+action_binding_set_add_right_joystick_right :: (set: *Action_Binding_Set, deadzone: float = 0) {
+    action_binding_set_add_axis(set, .RIGHT_X, 1, deadzone);
+}
+
+action_binding_set_add_right_joystick_up :: (set: *Action_Binding_Set, deadzone: float = 0) {
+    action_binding_set_add_axis(set, .RIGHT_Y, -1, deadzone);
+}
+
+action_binding_set_add_right_joystick_down :: (set: *Action_Binding_Set, deadzone: float = 0) {
+    action_binding_set_add_axis(set, .RIGHT_Y, 1, deadzone);
+}
+
+action_binding_set_add_left_joystick_left_masked :: (set: *Action_Binding_Set, masks: [] string, deadzone: float = 0) {
+    action_binding_set_add_axis_masked(set, masks, .LEFT_X, -1, deadzone);
+}
+
+action_binding_set_add_left_joystick_right_masked :: (set: *Action_Binding_Set, masks: [] string, deadzone: float = 0) {
+    action_binding_set_add_axis_masked(set, masks, .LEFT_X, 1, deadzone);
+}
+
+action_binding_set_add_left_joystick_up_masked :: (set: *Action_Binding_Set, masks: [] string, deadzone: float = 0) {
+    action_binding_set_add_axis_masked(set, masks, .LEFT_Y, -1, deadzone);
+}
+
+action_binding_set_add_left_joystick_down_masked :: (set: *Action_Binding_Set, masks: [] string, deadzone: float = 0) {
+    action_binding_set_add_axis_masked(set, masks, .LEFT_Y, 1, deadzone);
+}
+
+action_binding_set_add_right_joystick_left_masked :: (set: *Action_Binding_Set, masks: [] string, deadzone: float = 0) {
+    action_binding_set_add_axis_masked(set, masks, .RIGHT_X, -1, deadzone);
+}
+
+action_binding_set_add_right_joystick_right_masked :: (set: *Action_Binding_Set, masks: [] string, deadzone: float = 0) {
+    action_binding_set_add_axis_masked(set, masks, .RIGHT_X, 1, deadzone);
+}
+
+action_binding_set_add_right_joystick_up_masked :: (set: *Action_Binding_Set, masks: [] string, deadzone: float = 0) {
+    action_binding_set_add_axis_masked(set, masks, .RIGHT_Y, -1, deadzone);
+}
+
+action_binding_set_add_right_joystick_down_masked :: (set: *Action_Binding_Set, masks: [] string, deadzone: float = 0) {
+    action_binding_set_add_axis_masked(set, masks, .RIGHT_Y, 1, deadzone);
+}
 
 // Foster: ActionBindingSet.GetState
 //
@@ -223,9 +269,9 @@ action_binding_set_get_state :: (set: *Action_Binding_Set, input: *Input, device
         if !input_is_included(entry.Masks) continue;
 
         state := binding_get_state(entry.Bind, input, device);
-        if state.Pressed  result.Pressed  = true;
+        if state.Pressed result.Pressed = true;
         if state.Released result.Released = true;
-        if state.Down     result.Down     = true;
+        if state.Down result.Down = true;
         if state.Value > result.Value result.Value = state.Value;
         if state.Timestamp > result.Timestamp result.Timestamp = state.Timestamp;
     }
@@ -253,10 +299,10 @@ action_binding_set_was_released :: (set: *Action_Binding_Set, input: *Input, dev
 
 // Holds a singular axis binding pair (Foster: AxisBindingSet.AxisEntry)
 Axis_Binding_Entry :: struct {
-    Overlap:  Binding_Axis_Overlap;   // how to resolve negative/positive overlap
+    Overlap: Binding_Axis_Overlap; // how to resolve negative/positive overlap
     Negative: Binding;
     Positive: Binding;
-    Masks:    [] string;
+    Masks: [] string;
 }
 
 // Serializable object that holds bindings for an Axis (Foster: AxisBindingSet)
@@ -288,10 +334,10 @@ axis_binding_set_count :: (set: *Axis_Binding_Set) -> s32 {
 axis_binding_set_add_entry :: (set: *Axis_Binding_Set, negative: Binding, positive: Binding,
                                overlap: Binding_Axis_Overlap = .TAKE_NEWER, masks: [] string = .[]) {
     entry := Axis_Binding_Entry.{
-        Overlap  = overlap,
+        Overlap = overlap,
         Negative = negative,
         Positive = positive,
-        Masks    = masks,
+        Masks = masks,
     };
     array_add(*set.Entries, entry);
 }
@@ -404,13 +450,13 @@ axis_binding_set_pressed_sign :: (set: *Axis_Binding_Set, input: *Input, device:
 
 // Holds a singular stick binding quad (Foster: StickBindingSet.StickEntry)
 Stick_Binding_Entry :: struct {
-    CircularDeadzone: float;               // circular deadzone applied to the final value
-    Overlap:          Binding_Axis_Overlap; // how to resolve overlapping negative/positive inputs
-    Left:             Binding;
-    Right:            Binding;
-    Up:               Binding;
-    Down:             Binding;
-    Masks:            [] string;
+    CircularDeadzone: float; // circular deadzone applied to the final value
+    Overlap: Binding_Axis_Overlap; // how to resolve overlapping negative/positive inputs
+    Left: Binding;
+    Right: Binding;
+    Up: Binding;
+    Down: Binding;
+    Masks: [] string;
 }
 
 // An Input binding that represents a 2D Axis/Stick (Foster: StickBindingSet)
@@ -446,12 +492,12 @@ stick_binding_set_add_entry :: (set: *Stick_Binding_Set,
                                 masks: [] string = .[]) {
     entry := Stick_Binding_Entry.{
         CircularDeadzone = circular_deadzone,
-        Overlap          = overlap,
-        Left             = left,
-        Right            = right,
-        Up               = up,
-        Down             = down,
-        Masks            = masks,
+        Overlap = overlap,
+        Left = left,
+        Right = right,
+        Up = up,
+        Down = down,
+        Masks = masks,
     };
     array_add(*set.Entries, entry);
 }
@@ -566,18 +612,18 @@ stick_binding_set_add_axes_deadzones_masked :: (set: *Stick_Binding_Set, masks: 
 stick_binding_set_add_mouse_motion :: (set: *Stick_Binding_Set, max_motion: float = 25) {
     stick_binding_set_add_entry(set,
         binding_from_mouse_motion(.{ 1, 0 }, -1, 0, max_motion),
-        binding_from_mouse_motion(.{ 1, 0 },  1, 0, max_motion),
+        binding_from_mouse_motion(.{ 1, 0 }, 1, 0, max_motion),
         binding_from_mouse_motion(.{ 0, 1 }, -1, 0, max_motion),
-        binding_from_mouse_motion(.{ 0, 1 },  1, 0, max_motion));
+        binding_from_mouse_motion(.{ 0, 1 }, 1, 0, max_motion));
 }
 
 // Foster: AddMouseMotion(in ReadOnlySpan<string> masks, float maxMotion = 25)
 stick_binding_set_add_mouse_motion_masked :: (set: *Stick_Binding_Set, masks: [] string, max_motion: float = 25) {
     stick_binding_set_add_entry(set,
         binding_from_mouse_motion(.{ 1, 0 }, -1, 0, max_motion),
-        binding_from_mouse_motion(.{ 1, 0 },  1, 0, max_motion),
+        binding_from_mouse_motion(.{ 1, 0 }, 1, 0, max_motion),
         binding_from_mouse_motion(.{ 0, 1 }, -1, 0, max_motion),
-        binding_from_mouse_motion(.{ 0, 1 },  1, 0, max_motion),
+        binding_from_mouse_motion(.{ 0, 1 }, 1, 0, max_motion),
         0,
         .TAKE_NEWER,
         masks);
@@ -587,6 +633,7 @@ stick_binding_set_add_mouse_motion_masked :: (set: *Stick_Binding_Set, masks: []
 stick_binding_set_add_arrow_keys :: (set: *Stick_Binding_Set, overlap: Binding_Axis_Overlap = .TAKE_NEWER) {
     stick_binding_set_add_keys(set, .LEFT, .RIGHT, .UP, .DOWN, overlap);
 }
+
 stick_binding_set_add_arrow_keys_masked :: (set: *Stick_Binding_Set, masks: [] string, overlap: Binding_Axis_Overlap = .TAKE_NEWER) {
     stick_binding_set_add_keys_masked(set, masks, .LEFT, .RIGHT, .UP, .DOWN, overlap);
 }
@@ -595,6 +642,7 @@ stick_binding_set_add_arrow_keys_masked :: (set: *Stick_Binding_Set, masks: [] s
 stick_binding_set_add_wasd :: (set: *Stick_Binding_Set, overlap: Binding_Axis_Overlap = .TAKE_NEWER) {
     stick_binding_set_add_keys(set, .A, .D, .W, .S, overlap);
 }
+
 stick_binding_set_add_wasd_masked :: (set: *Stick_Binding_Set, masks: [] string, overlap: Binding_Axis_Overlap = .TAKE_NEWER) {
     stick_binding_set_add_keys_masked(set, masks, .A, .D, .W, .S, overlap);
 }
@@ -603,12 +651,15 @@ stick_binding_set_add_wasd_masked :: (set: *Stick_Binding_Set, masks: [] string,
 stick_binding_set_add_left_joystick :: (set: *Stick_Binding_Set, deadzone: float) {
     stick_binding_set_add_axes(set, .LEFT_X, .LEFT_Y, deadzone);
 }
+
 stick_binding_set_add_left_joystick_masked :: (set: *Stick_Binding_Set, masks: [] string, deadzone: float) {
     stick_binding_set_add_axes_masked(set, masks, .LEFT_X, .LEFT_Y, deadzone);
 }
+
 stick_binding_set_add_right_joystick :: (set: *Stick_Binding_Set, deadzone: float) {
     stick_binding_set_add_axes(set, .RIGHT_X, .RIGHT_Y, deadzone);
 }
+
 stick_binding_set_add_right_joystick_masked :: (set: *Stick_Binding_Set, masks: [] string, deadzone: float) {
     stick_binding_set_add_axes_masked(set, masks, .RIGHT_X, .RIGHT_Y, deadzone);
 }
@@ -617,6 +668,7 @@ stick_binding_set_add_right_joystick_masked :: (set: *Stick_Binding_Set, masks: 
 stick_binding_set_add_dpad :: (set: *Stick_Binding_Set, overlap: Binding_Axis_Overlap = .TAKE_NEWER) {
     stick_binding_set_add_buttons(set, .DPAD_LEFT, .DPAD_RIGHT, .DPAD_UP, .DPAD_DOWN, overlap);
 }
+
 stick_binding_set_add_dpad_masked :: (set: *Stick_Binding_Set, masks: [] string, overlap: Binding_Axis_Overlap = .TAKE_NEWER) {
     stick_binding_set_add_buttons_masked(set, masks, .DPAD_LEFT, .DPAD_RIGHT, .DPAD_UP, .DPAD_DOWN, overlap);
 }
@@ -635,10 +687,10 @@ stick_binding_set_value :: (set: *Stick_Binding_Set, input: *Input, device: s32)
     for *entry: set.Entries {
         if !input_is_included(entry.Masks) continue;
 
-        left  := binding_get_state(entry.Left,  input, device);
+        left := binding_get_state(entry.Left, input, device);
         right := binding_get_state(entry.Right, input, device);
-        up    := binding_get_state(entry.Up,    input, device);
-        down  := binding_get_state(entry.Down,  input, device);
+        up := binding_get_state(entry.Up, input, device);
+        down := binding_get_state(entry.Down, input, device);
 
         next_value := Vector2.{
             binding_axis_overlap_resolve(entry.Overlap, left, right),

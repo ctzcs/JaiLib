@@ -13,7 +13,7 @@ using Math;
 
 Circle :: struct {
     position: Vector2;
-    radius:   float;
+    radius: float;
 }
 
 circle_contains :: (c: Circle, p: Vector2) -> bool {
@@ -32,7 +32,7 @@ circle_overlaps :: (a: Circle, b: Circle) -> bool, Vector2 {
     dist := sqrt(dist2);
     if dist == 0 return true, Vector2.{ 0, 0 };
     overlap := cast(float) (r - dist);
-    dir : Vector2 = .{ (b.position.x - a.position.x) / cast(float) dist, (b.position.y - a.position.y) / cast(float) dist };
+    dir: Vector2 = .{ (b.position.x - a.position.x) / cast(float) dist, (b.position.y - a.position.y) / cast(float) dist };
     return true, dir * overlap;
 }
 
@@ -51,8 +51,14 @@ circle_overlaps_triangle :: (c: Circle, a: Vector2, b: Vector2, d: Vector2) -> b
     return false;
 }
 
-circle_area :: (c: Circle) -> float { return PI * c.radius * c.radius; }
-circle_circumference :: (c: Circle) -> float { return TAU * c.radius; }
+circle_area :: (c: Circle) -> float {
+    return PI * c.radius * c.radius;
+}
+
+circle_circumference :: (c: Circle) -> float {
+    return TAU * c.radius;
+}
+
 circle_bounds :: (c: Circle) -> Rect {
     return .{ c.position.x - c.radius, c.position.y - c.radius, c.radius * 2, c.radius * 2 };
 }
@@ -63,12 +69,12 @@ circle_bounds :: (c: Circle) -> Rect {
 
 Line :: struct {
     from: Vector2;
-    to:   Vector2;
+    to: Vector2;
 }
 
 Line_Int :: struct {
     from: Point2;
-    to:   Point2;
+    to: Point2;
 }
 
 line_length :: (l: Line) -> float {
@@ -225,10 +231,13 @@ CONVEX_POLYGON_MAX :: 32;
 
 Convex_Polygon :: struct {
     points: [CONVEX_POLYGON_MAX] Vector2;
-    count:  s32;
+    count: s32;
 }
 
-convex_polygon_clear :: (p: *Convex_Polygon) { p.count = 0; }
+convex_polygon_clear :: (p: *Convex_Polygon) {
+    p.count = 0;
+}
+
 convex_polygon_add :: (p: *Convex_Polygon, v: Vector2) {
     assert(p.count < CONVEX_POLYGON_MAX);
     p.points[p.count] = v;
@@ -249,7 +258,7 @@ convex_polygon_get_axis :: (p: Convex_Polygon, index: s32) -> Vector2 {
 convex_polygon_contains :: (p: Convex_Polygon, v: Vector2) -> bool {
     if p.count < 3 return false;
     total: float = 0;
-    for i: 0..p.count-1 {
+    for i: 0..p.count - 1 {
         a := convex_polygon_get_point(p, i);
         b := convex_polygon_get_point(p, i + 1);
         total += cross_z(b - a, v - a);
@@ -261,7 +270,7 @@ convex_polygon_contains :: (p: Convex_Polygon, v: Vector2) -> bool {
 convex_polygon_project :: (p: Convex_Polygon, axis: Vector2) -> float, float {
     min_v: float = 3.4e38;
     max_v: float = -3.4e38;
-    for i: 0..p.count-1 {
+    for i: 0..p.count - 1 {
         v := dot(p.points[i], axis);
         if v < min_v min_v = v;
         if v > max_v max_v = v;
@@ -271,7 +280,7 @@ convex_polygon_project :: (p: Convex_Polygon, axis: Vector2) -> float, float {
 
 convex_polygon_transform :: (p: Convex_Polygon, m: Matrix3x2, maintain_winding := true) -> Convex_Polygon {
     out: Convex_Polygon;
-    for i: 0..p.count-1 convex_polygon_add(*out, vector2_transform(p.points[i], m));
+    for i: 0..p.count - 1 convex_polygon_add(*out, vector2_transform(p.points[i], m));
     // winding is maintained for rotations/translations/uniform scales; reflection flips it
     return out;
 }
@@ -329,14 +338,16 @@ convex_polygon_create_hull :: (points: [] Vector2) -> Convex_Polygon {
         }
         array_add(*hull, p);
     }
-    hull.count -= 1;   // last point == first
+    hull.count -= 1; // last point == first
 
     out: Convex_Polygon;
     for p: hull convex_polygon_add(*out, p);
     return unique_hull_result(out);
 }
 
-unique_hull_result :: (p: Convex_Polygon) -> Convex_Polygon { return p; }
+unique_hull_result :: (p: Convex_Polygon) -> Convex_Polygon {
+    return p;
+}
 
 //
 // Polygon (concave, triangulated via ear clipping)
@@ -372,8 +383,10 @@ polygon_get_bounds :: (p: *Polygon) -> Rect {
         if p.points.count == 0 {
             p.bounds = Rect_Empty;
         } else {
-            min_x := p.points[0].x; max_x := p.points[0].x;
-            min_y := p.points[0].y; max_y := p.points[0].y;
+            min_x := p.points[0].x;
+            max_x := p.points[0].x;
+            min_y := p.points[0].y;
+            max_y := p.points[0].y;
             for pt: p.points {
                 if pt.x < min_x min_x = pt.x;
                 if pt.x > max_x max_x = pt.x;
@@ -440,7 +453,7 @@ polygon_area :: (p: *Polygon) -> float {
 
 Transform :: struct {
     position: Vector2;
-    scale:    Vector2 = .{ 1, 1 };
+    scale: Vector2 = .{ 1, 1 };
     rotation: float;
 
     matrix_dirty: bool = true;
@@ -450,15 +463,24 @@ Transform :: struct {
 }
 
 transform_set_position :: (t: *Transform, position: Vector2) {
-    if t.position != position { t.position = position; t.matrix_dirty = true; }
+    if t.position != position {
+        t.position = position;
+        t.matrix_dirty = true;
+    }
 }
 
 transform_set_scale :: (t: *Transform, scale: Vector2) {
-    if t.scale != scale { t.scale = scale; t.matrix_dirty = true; }
+    if t.scale != scale {
+        t.scale = scale;
+        t.matrix_dirty = true;
+    }
 }
 
 transform_set_rotation :: (t: *Transform, rotation: float) {
-    if t.rotation != rotation { t.rotation = rotation; t.matrix_dirty = true; }
+    if t.rotation != rotation {
+        t.rotation = rotation;
+        t.matrix_dirty = true;
+    }
 }
 
 transform_matrix :: (t: *Transform) -> Matrix3x2 {
@@ -496,7 +518,7 @@ Cardinal :: enum u32 {
     UP;
 }
 
-CARDINAL_ALL :: Cardinal.[ .RIGHT, .DOWN, .LEFT, .UP ];
+CARDINAL_ALL :: Cardinal.[.RIGHT, .DOWN, .LEFT, .UP];
 
 cardinal_reverse :: (c: Cardinal) -> Cardinal {
     return cast(Cardinal) ((cast(u32) c + 2) % 4);
@@ -510,15 +532,20 @@ cardinal_turn_right :: (c: Cardinal) -> Cardinal {
     return cast(Cardinal) ((cast(u32) c + 1) % 4);
 }
 
-cardinal_is_horizontal :: (c: Cardinal) -> bool { return cast(u32) c % 2 == 0; }
-cardinal_is_vertical   :: (c: Cardinal) -> bool { return cast(u32) c % 2 == 1; }
+cardinal_is_horizontal :: (c: Cardinal) -> bool {
+    return cast(u32) c % 2 == 0;
+}
+
+cardinal_is_vertical :: (c: Cardinal) -> bool {
+    return cast(u32) c % 2 == 1;
+}
 
 cardinal_point :: (c: Cardinal) -> Point2 {
     if c == {
-        case .RIGHT; return .{  1,  0 };
-        case .DOWN;  return .{  0,  1 };
-        case .LEFT;  return .{ -1,  0 };
-        case .UP;    return .{  0, -1 };
+        case .RIGHT; return .{ 1, 0 };
+        case .DOWN; return .{ 0, 1 };
+        case .LEFT; return .{ -1, 0 };
+        case .UP; return .{ 0, -1 };
     }
     return .{ 0, 0 };
 }
@@ -545,7 +572,10 @@ signs_as_int :: (s: Signs) -> s32 {
     if s.neg return -1;
     return 1;
 }
-signs_negate :: (s: *Signs) { s.neg = !s.neg; }
+
+signs_negate :: (s: *Signs) {
+    s.neg = !s.neg;
+}
 
 signs_from_int :: (v: s32) -> Signs {
     return .{ neg = v < 0 };

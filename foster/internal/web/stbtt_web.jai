@@ -50,7 +50,7 @@ stbtt_ScaleForMappingEmToPixels :: (info: *STBTT_Font_Info, pixels: float) -> fl
 
 stbtt_GetFontVMetrics :: (info: *STBTT_Font_Info, ascent: *s32, descent: *s32, lineGap: *s32) {
     // Write through only if the caller actually passed the out parameter.
-    if ascent  != null ascent.*  = 0;
+    if ascent != null ascent.* = 0;
     if descent != null descent.* = 0;
     if lineGap != null lineGap.* = 0;
 }
@@ -60,8 +60,8 @@ stbtt_GetGlyphKernAdvance :: (info: *STBTT_Font_Info, glyph1: s32, glyph2: s32) 
 }
 
 stbtt_GetGlyphHMetrics :: (info: *STBTT_Font_Info, glyph_index: s32, advance_width: *s32, left_side_bearing: *s32) {
-    if advance_width      != null advance_width.*      = 0;
-    if left_side_bearing  != null left_side_bearing.*  = 0;
+    if advance_width != null advance_width.* = 0;
+    if left_side_bearing != null left_side_bearing.* = 0;
 }
 
 stbtt_GetGlyphBox :: (info: *STBTT_Font_Info, glyph_index: s32, x0: *s32, y0: *s32, x1: *s32, y1: *s32) -> s32 {

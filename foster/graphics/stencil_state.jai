@@ -6,10 +6,10 @@ using Math;
 // Port of Foster Framework/Graphics/Structs/StencilState.cs.
 
 Stencil_State :: struct {
-    FailOp:       Stencil_Op;
-    PassOp:       Stencil_Op;
-    DepthFailOp:  Stencil_Op;
-    CompareOp:    Depth_Compare;
+    FailOp: Stencil_Op;
+    PassOp: Stencil_Op;
+    DepthFailOp: Stencil_Op;
+    CompareOp: Depth_Compare;
 }
 
 stencil_state_make :: (op: Stencil_Op, compare: Depth_Compare) -> Stencil_State {

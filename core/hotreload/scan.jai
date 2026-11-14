@@ -39,19 +39,19 @@ STRING :: #import "String";
 
 //@region 扫描表
 
-FNV_OFFSET : u64 : 1469598103934665603;
-FNV_PRIME : u64 : 1099511628211;
+FNV_OFFSET: u64 : 1469598103934665603;
+FNV_PRIME: u64 : 1099511628211;
 // 指纹里用的混合常量（超过 s64 范围，必须显式声明成 u64）。
-SCAN_CONTENT_SALT : u64 : 0x9e3779b97f4a7c15;
-SCAN_MIX_1 : u64 : 0xbf58476d1ce4e5b9;
-SCAN_MIX_2 : u64 : 0x94d049bb133111eb;
+SCAN_CONTENT_SALT: u64 : 0x9e3779b97f4a7c15;
+SCAN_MIX_1: u64 : 0xbf58476d1ce4e5b9;
+SCAN_MIX_2: u64 : 0x94d049bb133111eb;
 
 // 读取内容时，修改时间离读取时刻不足此余量的文件可能在同一时间戳内再次改写，下次扫描仍按内容复核。
 // 覆盖 FAT 的 2 秒、HFS+ 的 1 秒精度和网络盘的元数据缓存；NTFS/ext4/APFS 只是多读几次刚改过的文件。
-SCAN_RACY_NS : s64 : 3 * 1000 * 1000 * 1000;
+SCAN_RACY_NS: s64 : 3 * 1000 * 1000 * 1000;
 
 // 内容变化后这段时间内算热文件：完整扫描间隔被拉长时，每次唤醒仍单独检查，最多 SCAN_HOT_LIMIT 个。
-SCAN_HOT_NS : s64 : 30 * 1000 * 1000 * 1000;
+SCAN_HOT_NS: s64 : 30 * 1000 * 1000 * 1000;
 SCAN_HOT_LIMIT :: 64;
 
 // 完整扫描的间隔至少是其耗时的这个倍数：文件很多时后台最多占约十分之一个核心，检测延迟随之变长。
@@ -79,9 +79,9 @@ Scan_File :: struct {
     content: u64;
     size: s64;
     modified: s64;
-    checked: s64;   // 最近一次读取内容的扫描开始时刻（Unix 纳秒），判断时间戳是否过近
+    checked: s64; // 最近一次读取内容的扫描开始时刻（Unix 纳秒），判断时间戳是否过近
     hot_until: s64; // 内容最近变化：此前每次唤醒都单独检查
-    sweep: u32;     // 最近一次见到它的完整扫描编号
+    sweep: u32; // 最近一次见到它的完整扫描编号
 }
 //@endregion
 
@@ -102,7 +102,7 @@ Scanner :: struct {
     result: Scan_Result;
     wake: THREAD.Semaphore;
     requested: u64; // 原子：完整扫描请求号
-    stop: bool;     // 原子
+    stop: bool; // 原子
     thread: *THREAD.Thread;
     roots: [] string;
     extensions: [] string;

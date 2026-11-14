@@ -55,8 +55,8 @@ imgui_foster_style_kit :: (scale: float32 = 1) {
     style.Colors[Col.TabUnfocusedActive] = imgui_foster_rgba(30, 40, 54);
     style.Colors[Col.TextSelectedBg] = imgui_foster_rgba(117, 184, 255, 90);
     style.Colors[Col.NavHighlight] = accent;
-    style.Colors[Col.DockingPreview]=imgui_foster_rgba(90,155,220,180);
-    style.Colors[Col.DockingEmptyBg]=imgui_foster_rgba(16,19,24,255);
+    style.Colors[Col.DockingPreview] = imgui_foster_rgba(90, 155, 220, 180);
+    style.Colors[Col.DockingEmptyBg] = imgui_foster_rgba(16, 19, 24, 255);
     Style.ScaleAllSizes(style, scale);
 }
 

@@ -18,7 +18,9 @@
 #import "Basic";
 STRING :: #import "String";
 HASH :: #import "Hash_Table";
+
 using HASH;
+
 JM :: #import "Math";
 F :: #import "foster";
 profiler :: #import "core/profiler";

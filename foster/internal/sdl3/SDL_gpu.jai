@@ -5,32 +5,34 @@
 
 /* Opaque handle types */
 
-SDL_GPUDevice          :: void;
-SDL_GPUBuffer          :: void;
-SDL_GPUTransferBuffer  :: void;
-SDL_GPUTexture         :: void;
-SDL_GPUSampler         :: void;
-SDL_GPUShader          :: void;
+SDL_GPUDevice :: void;
+SDL_GPUBuffer :: void;
+SDL_GPUTransferBuffer :: void;
+SDL_GPUTexture :: void;
+SDL_GPUSampler :: void;
+SDL_GPUShader :: void;
 SDL_GPUComputePipeline :: void;
-SDL_GPUGraphicsPipeline:: void;
-SDL_GPUCommandBuffer   :: void;
-SDL_GPURenderPass      :: void;
-SDL_GPUComputePass     :: void;
-SDL_GPUCopyPass        :: void;
-SDL_GPUFence           :: void;
+SDL_GPUGraphicsPipeline :: void;
+SDL_GPUCommandBuffer :: void;
+SDL_GPURenderPass :: void;
+SDL_GPUComputePass :: void;
+SDL_GPUCopyPass :: void;
+SDL_GPUFence :: void;
 
 /* Supporting types pulled in from SDL_pixels.h / SDL_surface.h / SDL_rect.h */
 
-SDL_FColor :: struct { r, g, b, a: float; }   // SDL_pixels.h
+SDL_FColor :: struct {
+    r, g, b, a: float;
+} // SDL_pixels.h
 
-using SDL_FlipMode :: enum u32 {              // SDL_surface.h
+using SDL_FlipMode :: enum u32 { // SDL_surface.h
     SDL_FLIP_NONE;
     SDL_FLIP_HORIZONTAL;
     SDL_FLIP_VERTICAL;
     SDL_FLIP_HORIZONTAL_AND_VERTICAL :: SDL_FLIP_HORIZONTAL | SDL_FLIP_VERTICAL;
 }
 
-SDL_Rect :: struct {                          // SDL_rect.h
+SDL_Rect :: struct { // SDL_rect.h
     x, y: s32;
     w, h: s32;
 }
@@ -188,12 +190,12 @@ using SDL_GPUTextureFormat :: enum u32 {
 }
 
 using SDL_GPUTextureUsageFlags :: enum_flags u32 {
-    SDL_GPU_TEXTUREUSAGE_SAMPLER                                 :: 1 << 0;
-    SDL_GPU_TEXTUREUSAGE_COLOR_TARGET                            :: 1 << 1;
-    SDL_GPU_TEXTUREUSAGE_DEPTH_STENCIL_TARGET                    :: 1 << 2;
-    SDL_GPU_TEXTUREUSAGE_GRAPHICS_STORAGE_READ                   :: 1 << 3;
-    SDL_GPU_TEXTUREUSAGE_COMPUTE_STORAGE_READ                    :: 1 << 4;
-    SDL_GPU_TEXTUREUSAGE_COMPUTE_STORAGE_WRITE                   :: 1 << 5;
+    SDL_GPU_TEXTUREUSAGE_SAMPLER :: 1 << 0;
+    SDL_GPU_TEXTUREUSAGE_COLOR_TARGET :: 1 << 1;
+    SDL_GPU_TEXTUREUSAGE_DEPTH_STENCIL_TARGET :: 1 << 2;
+    SDL_GPU_TEXTUREUSAGE_GRAPHICS_STORAGE_READ :: 1 << 3;
+    SDL_GPU_TEXTUREUSAGE_COMPUTE_STORAGE_READ :: 1 << 4;
+    SDL_GPU_TEXTUREUSAGE_COMPUTE_STORAGE_WRITE :: 1 << 5;
     SDL_GPU_TEXTUREUSAGE_COMPUTE_STORAGE_SIMULTANEOUS_READ_WRITE :: 1 << 6;
 }
 
@@ -222,12 +224,12 @@ using SDL_GPUCubeMapFace :: enum u32 {
 }
 
 using SDL_GPUBufferUsageFlags :: enum_flags u32 {
-    SDL_GPU_BUFFERUSAGE_VERTEX                  :: 1 << 0;
-    SDL_GPU_BUFFERUSAGE_INDEX                   :: 1 << 1;
-    SDL_GPU_BUFFERUSAGE_INDIRECT                :: 1 << 2;
-    SDL_GPU_BUFFERUSAGE_GRAPHICS_STORAGE_READ   :: 1 << 3;
-    SDL_GPU_BUFFERUSAGE_COMPUTE_STORAGE_READ    :: 1 << 4;
-    SDL_GPU_BUFFERUSAGE_COMPUTE_STORAGE_WRITE   :: 1 << 5;
+    SDL_GPU_BUFFERUSAGE_VERTEX :: 1 << 0;
+    SDL_GPU_BUFFERUSAGE_INDEX :: 1 << 1;
+    SDL_GPU_BUFFERUSAGE_INDIRECT :: 1 << 2;
+    SDL_GPU_BUFFERUSAGE_GRAPHICS_STORAGE_READ :: 1 << 3;
+    SDL_GPU_BUFFERUSAGE_COMPUTE_STORAGE_READ :: 1 << 4;
+    SDL_GPU_BUFFERUSAGE_COMPUTE_STORAGE_WRITE :: 1 << 5;
 }
 
 using SDL_GPUTransferBufferUsage :: enum u32 {
@@ -241,12 +243,12 @@ using SDL_GPUShaderStage :: enum u32 {
 }
 
 using SDL_GPUShaderFormat :: enum_flags u32 {
-    SDL_GPU_SHADERFORMAT_INVALID  :: 0;
-    SDL_GPU_SHADERFORMAT_PRIVATE  :: 1 << 0;
-    SDL_GPU_SHADERFORMAT_SPIRV    :: 1 << 1;
-    SDL_GPU_SHADERFORMAT_DXBC     :: 1 << 2;
-    SDL_GPU_SHADERFORMAT_DXIL     :: 1 << 3;
-    SDL_GPU_SHADERFORMAT_MSL      :: 1 << 4;
+    SDL_GPU_SHADERFORMAT_INVALID :: 0;
+    SDL_GPU_SHADERFORMAT_PRIVATE :: 1 << 0;
+    SDL_GPU_SHADERFORMAT_SPIRV :: 1 << 1;
+    SDL_GPU_SHADERFORMAT_DXBC :: 1 << 2;
+    SDL_GPU_SHADERFORMAT_DXIL :: 1 << 3;
+    SDL_GPU_SHADERFORMAT_MSL :: 1 << 4;
     SDL_GPU_SHADERFORMAT_METALLIB :: 1 << 5;
 }
 
@@ -563,9 +565,9 @@ SDL_GPUColorTargetBlendState :: struct {
 }
 
 SDL_GPUShaderCreateInfo :: struct {
-    code_size: u64;      // size_t
-    code: *u8;           // const Uint8 *
-    entrypoint: *u8;     // const char *
+    code_size: u64; // size_t
+    code: *u8; // const Uint8 *
+    entrypoint: *u8; // const char *
     format: SDL_GPUShaderFormat;
     stage: SDL_GPUShaderStage;
     num_samplers: u32;
@@ -663,9 +665,9 @@ SDL_GPUGraphicsPipelineCreateInfo :: struct {
 }
 
 SDL_GPUComputePipelineCreateInfo :: struct {
-    code_size: u64;      // size_t
-    code: *u8;           // const Uint8 *
-    entrypoint: *u8;     // const char *
+    code_size: u64; // size_t
+    code: *u8; // const Uint8 *
+    entrypoint: *u8; // const char *
     format: SDL_GPUShaderFormat;
     num_samplers: u32;
     num_readonly_storage_textures: u32;
@@ -755,9 +757,9 @@ SDL_GPUVulkanOptions :: struct {
     feature_list: *void;
     vulkan_10_physical_device_features: *void;
     device_extension_count: u32;
-    device_extension_names: **u8;      // const char **
+    device_extension_names: **u8; // const char **
     instance_extension_count: u32;
-    instance_extension_names: **u8;    // const char **
+    instance_extension_names: **u8; // const char **
 }
 
 /* Functions */
@@ -765,139 +767,139 @@ SDL_GPUVulkanOptions :: struct {
 /* Device */
 
 #if OS != .WASM {
-SDL_GPUSupportsShaderFormats  :: (format_flags: SDL_GPUShaderFormat, name: *u8) -> bool #foreign SDL3;
-SDL_GPUSupportsProperties     :: (props: SDL_PropertiesID) -> bool #foreign SDL3;
-SDL_CreateGPUDevice           :: (format_flags: SDL_GPUShaderFormat, debug_mode: bool, name: *u8) -> *SDL_GPUDevice #foreign SDL3;
-SDL_CreateGPUDeviceWithProperties :: (props: SDL_PropertiesID) -> *SDL_GPUDevice #foreign SDL3;
-SDL_DestroyGPUDevice          :: (device: *SDL_GPUDevice) #foreign SDL3;
-SDL_GetNumGPUDrivers          :: () -> s32 #foreign SDL3;
-SDL_GetGPUDriver              :: (index: s32) -> *u8 #foreign SDL3;
-SDL_GetGPUDeviceDriver        :: (device: *SDL_GPUDevice) -> *u8 #foreign SDL3;
-SDL_GetGPUShaderFormats       :: (device: *SDL_GPUDevice) -> SDL_GPUShaderFormat #foreign SDL3;
-SDL_GetGPUDeviceProperties    :: (device: *SDL_GPUDevice) -> SDL_PropertiesID #foreign SDL3;
+    SDL_GPUSupportsShaderFormats :: (format_flags: SDL_GPUShaderFormat, name: *u8) -> bool #foreign SDL3;
+    SDL_GPUSupportsProperties :: (props: SDL_PropertiesID) -> bool #foreign SDL3;
+    SDL_CreateGPUDevice :: (format_flags: SDL_GPUShaderFormat, debug_mode: bool, name: *u8) -> *SDL_GPUDevice #foreign SDL3;
+    SDL_CreateGPUDeviceWithProperties :: (props: SDL_PropertiesID) -> *SDL_GPUDevice #foreign SDL3;
+    SDL_DestroyGPUDevice :: (device: *SDL_GPUDevice) #foreign SDL3;
+    SDL_GetNumGPUDrivers :: () -> s32 #foreign SDL3;
+    SDL_GetGPUDriver :: (index: s32) -> *u8 #foreign SDL3;
+    SDL_GetGPUDeviceDriver :: (device: *SDL_GPUDevice) -> *u8 #foreign SDL3;
+    SDL_GetGPUShaderFormats :: (device: *SDL_GPUDevice) -> SDL_GPUShaderFormat #foreign SDL3;
+    SDL_GetGPUDeviceProperties :: (device: *SDL_GPUDevice) -> SDL_PropertiesID #foreign SDL3;
 
-/* State Creation */
+    /* State Creation */
 
-SDL_CreateGPUComputePipeline  :: (device: *SDL_GPUDevice, createinfo: *SDL_GPUComputePipelineCreateInfo) -> *SDL_GPUComputePipeline #foreign SDL3;
-SDL_CreateGPUGraphicsPipeline :: (device: *SDL_GPUDevice, createinfo: *SDL_GPUGraphicsPipelineCreateInfo) -> *SDL_GPUGraphicsPipeline #foreign SDL3;
-SDL_CreateGPUSampler          :: (device: *SDL_GPUDevice, createinfo: *SDL_GPUSamplerCreateInfo) -> *SDL_GPUSampler #foreign SDL3;
-SDL_CreateGPUShader           :: (device: *SDL_GPUDevice, createinfo: *SDL_GPUShaderCreateInfo) -> *SDL_GPUShader #foreign SDL3;
-SDL_CreateGPUTexture          :: (device: *SDL_GPUDevice, createinfo: *SDL_GPUTextureCreateInfo) -> *SDL_GPUTexture #foreign SDL3;
-SDL_CreateGPUBuffer           :: (device: *SDL_GPUDevice, createinfo: *SDL_GPUBufferCreateInfo) -> *SDL_GPUBuffer #foreign SDL3;
-SDL_CreateGPUTransferBuffer   :: (device: *SDL_GPUDevice, createinfo: *SDL_GPUTransferBufferCreateInfo) -> *SDL_GPUTransferBuffer #foreign SDL3;
+    SDL_CreateGPUComputePipeline :: (device: *SDL_GPUDevice, createinfo: *SDL_GPUComputePipelineCreateInfo) -> *SDL_GPUComputePipeline #foreign SDL3;
+    SDL_CreateGPUGraphicsPipeline :: (device: *SDL_GPUDevice, createinfo: *SDL_GPUGraphicsPipelineCreateInfo) -> *SDL_GPUGraphicsPipeline #foreign SDL3;
+    SDL_CreateGPUSampler :: (device: *SDL_GPUDevice, createinfo: *SDL_GPUSamplerCreateInfo) -> *SDL_GPUSampler #foreign SDL3;
+    SDL_CreateGPUShader :: (device: *SDL_GPUDevice, createinfo: *SDL_GPUShaderCreateInfo) -> *SDL_GPUShader #foreign SDL3;
+    SDL_CreateGPUTexture :: (device: *SDL_GPUDevice, createinfo: *SDL_GPUTextureCreateInfo) -> *SDL_GPUTexture #foreign SDL3;
+    SDL_CreateGPUBuffer :: (device: *SDL_GPUDevice, createinfo: *SDL_GPUBufferCreateInfo) -> *SDL_GPUBuffer #foreign SDL3;
+    SDL_CreateGPUTransferBuffer :: (device: *SDL_GPUDevice, createinfo: *SDL_GPUTransferBufferCreateInfo) -> *SDL_GPUTransferBuffer #foreign SDL3;
 
-/* Debug Naming */
+    /* Debug Naming */
 
-SDL_SetGPUBufferName   :: (device: *SDL_GPUDevice, buffer: *SDL_GPUBuffer, text: *u8) #foreign SDL3;
-SDL_SetGPUTextureName  :: (device: *SDL_GPUDevice, texture: *SDL_GPUTexture, text: *u8) #foreign SDL3;
-SDL_InsertGPUDebugLabel :: (command_buffer: *SDL_GPUCommandBuffer, text: *u8) #foreign SDL3;
-SDL_PushGPUDebugGroup  :: (command_buffer: *SDL_GPUCommandBuffer, name: *u8) #foreign SDL3;
-SDL_PopGPUDebugGroup   :: (command_buffer: *SDL_GPUCommandBuffer) #foreign SDL3;
+    SDL_SetGPUBufferName :: (device: *SDL_GPUDevice, buffer: *SDL_GPUBuffer, text: *u8) #foreign SDL3;
+    SDL_SetGPUTextureName :: (device: *SDL_GPUDevice, texture: *SDL_GPUTexture, text: *u8) #foreign SDL3;
+    SDL_InsertGPUDebugLabel :: (command_buffer: *SDL_GPUCommandBuffer, text: *u8) #foreign SDL3;
+    SDL_PushGPUDebugGroup :: (command_buffer: *SDL_GPUCommandBuffer, name: *u8) #foreign SDL3;
+    SDL_PopGPUDebugGroup :: (command_buffer: *SDL_GPUCommandBuffer) #foreign SDL3;
 
-/* Disposal */
+    /* Disposal */
 
-SDL_ReleaseGPUTexture          :: (device: *SDL_GPUDevice, texture: *SDL_GPUTexture) #foreign SDL3;
-SDL_ReleaseGPUSampler          :: (device: *SDL_GPUDevice, sampler: *SDL_GPUSampler) #foreign SDL3;
-SDL_ReleaseGPUBuffer           :: (device: *SDL_GPUDevice, buffer: *SDL_GPUBuffer) #foreign SDL3;
-SDL_ReleaseGPUTransferBuffer   :: (device: *SDL_GPUDevice, transfer_buffer: *SDL_GPUTransferBuffer) #foreign SDL3;
-SDL_ReleaseGPUComputePipeline  :: (device: *SDL_GPUDevice, compute_pipeline: *SDL_GPUComputePipeline) #foreign SDL3;
-SDL_ReleaseGPUShader           :: (device: *SDL_GPUDevice, shader: *SDL_GPUShader) #foreign SDL3;
-SDL_ReleaseGPUGraphicsPipeline :: (device: *SDL_GPUDevice, graphics_pipeline: *SDL_GPUGraphicsPipeline) #foreign SDL3;
+    SDL_ReleaseGPUTexture :: (device: *SDL_GPUDevice, texture: *SDL_GPUTexture) #foreign SDL3;
+    SDL_ReleaseGPUSampler :: (device: *SDL_GPUDevice, sampler: *SDL_GPUSampler) #foreign SDL3;
+    SDL_ReleaseGPUBuffer :: (device: *SDL_GPUDevice, buffer: *SDL_GPUBuffer) #foreign SDL3;
+    SDL_ReleaseGPUTransferBuffer :: (device: *SDL_GPUDevice, transfer_buffer: *SDL_GPUTransferBuffer) #foreign SDL3;
+    SDL_ReleaseGPUComputePipeline :: (device: *SDL_GPUDevice, compute_pipeline: *SDL_GPUComputePipeline) #foreign SDL3;
+    SDL_ReleaseGPUShader :: (device: *SDL_GPUDevice, shader: *SDL_GPUShader) #foreign SDL3;
+    SDL_ReleaseGPUGraphicsPipeline :: (device: *SDL_GPUDevice, graphics_pipeline: *SDL_GPUGraphicsPipeline) #foreign SDL3;
 
-SDL_AcquireGPUCommandBuffer    :: (device: *SDL_GPUDevice) -> *SDL_GPUCommandBuffer #foreign SDL3;
+    SDL_AcquireGPUCommandBuffer :: (device: *SDL_GPUDevice) -> *SDL_GPUCommandBuffer #foreign SDL3;
 
-/* Uniform Data */
+    /* Uniform Data */
 
-SDL_PushGPUVertexUniformData   :: (command_buffer: *SDL_GPUCommandBuffer, slot_index: u32, data: *void, length: u32) #foreign SDL3;
-SDL_PushGPUFragmentUniformData :: (command_buffer: *SDL_GPUCommandBuffer, slot_index: u32, data: *void, length: u32) #foreign SDL3;
-SDL_PushGPUComputeUniformData  :: (command_buffer: *SDL_GPUCommandBuffer, slot_index: u32, data: *void, length: u32) #foreign SDL3;
+    SDL_PushGPUVertexUniformData :: (command_buffer: *SDL_GPUCommandBuffer, slot_index: u32, data: *void, length: u32) #foreign SDL3;
+    SDL_PushGPUFragmentUniformData :: (command_buffer: *SDL_GPUCommandBuffer, slot_index: u32, data: *void, length: u32) #foreign SDL3;
+    SDL_PushGPUComputeUniformData :: (command_buffer: *SDL_GPUCommandBuffer, slot_index: u32, data: *void, length: u32) #foreign SDL3;
 
-/* Graphics State */
+    /* Graphics State */
 
-SDL_BeginGPURenderPass :: (command_buffer: *SDL_GPUCommandBuffer, color_target_infos: *SDL_GPUColorTargetInfo, num_color_targets: u32, depth_stencil_target_info: *SDL_GPUDepthStencilTargetInfo) -> *SDL_GPURenderPass #foreign SDL3;
-SDL_BindGPUGraphicsPipeline :: (render_pass: *SDL_GPURenderPass, graphics_pipeline: *SDL_GPUGraphicsPipeline) #foreign SDL3;
-SDL_SetGPUViewport     :: (render_pass: *SDL_GPURenderPass, viewport: *SDL_GPUViewport) #foreign SDL3;
-SDL_SetGPUScissor      :: (render_pass: *SDL_GPURenderPass, scissor: *SDL_Rect) #foreign SDL3;
-SDL_SetGPUBlendConstants :: (render_pass: *SDL_GPURenderPass, blend_constants: SDL_FColor) #foreign SDL3;
-SDL_SetGPUStencilReference :: (render_pass: *SDL_GPURenderPass, reference: u8) #foreign SDL3;
-SDL_BindGPUVertexBuffers :: (render_pass: *SDL_GPURenderPass, first_slot: u32, bindings: *SDL_GPUBufferBinding, num_bindings: u32) #foreign SDL3;
-SDL_BindGPUIndexBuffer :: (render_pass: *SDL_GPURenderPass, binding: *SDL_GPUBufferBinding, index_element_size: SDL_GPUIndexElementSize) #foreign SDL3;
-SDL_BindGPUVertexSamplers :: (render_pass: *SDL_GPURenderPass, first_slot: u32, texture_sampler_bindings: *SDL_GPUTextureSamplerBinding, num_bindings: u32) #foreign SDL3;
-SDL_BindGPUVertexStorageTextures :: (render_pass: *SDL_GPURenderPass, first_slot: u32, storage_textures: **SDL_GPUTexture, num_bindings: u32) #foreign SDL3;
-SDL_BindGPUVertexStorageBuffers :: (render_pass: *SDL_GPURenderPass, first_slot: u32, storage_buffers: **SDL_GPUBuffer, num_bindings: u32) #foreign SDL3;
-SDL_BindGPUFragmentSamplers :: (render_pass: *SDL_GPURenderPass, first_slot: u32, texture_sampler_bindings: *SDL_GPUTextureSamplerBinding, num_bindings: u32) #foreign SDL3;
-SDL_BindGPUFragmentStorageTextures :: (render_pass: *SDL_GPURenderPass, first_slot: u32, storage_textures: **SDL_GPUTexture, num_bindings: u32) #foreign SDL3;
-SDL_BindGPUFragmentStorageBuffers :: (render_pass: *SDL_GPURenderPass, first_slot: u32, storage_buffers: **SDL_GPUBuffer, num_bindings: u32) #foreign SDL3;
+    SDL_BeginGPURenderPass :: (command_buffer: *SDL_GPUCommandBuffer, color_target_infos: *SDL_GPUColorTargetInfo, num_color_targets: u32, depth_stencil_target_info: *SDL_GPUDepthStencilTargetInfo) -> *SDL_GPURenderPass #foreign SDL3;
+    SDL_BindGPUGraphicsPipeline :: (render_pass: *SDL_GPURenderPass, graphics_pipeline: *SDL_GPUGraphicsPipeline) #foreign SDL3;
+    SDL_SetGPUViewport :: (render_pass: *SDL_GPURenderPass, viewport: *SDL_GPUViewport) #foreign SDL3;
+    SDL_SetGPUScissor :: (render_pass: *SDL_GPURenderPass, scissor: *SDL_Rect) #foreign SDL3;
+    SDL_SetGPUBlendConstants :: (render_pass: *SDL_GPURenderPass, blend_constants: SDL_FColor) #foreign SDL3;
+    SDL_SetGPUStencilReference :: (render_pass: *SDL_GPURenderPass, reference: u8) #foreign SDL3;
+    SDL_BindGPUVertexBuffers :: (render_pass: *SDL_GPURenderPass, first_slot: u32, bindings: *SDL_GPUBufferBinding, num_bindings: u32) #foreign SDL3;
+    SDL_BindGPUIndexBuffer :: (render_pass: *SDL_GPURenderPass, binding: *SDL_GPUBufferBinding, index_element_size: SDL_GPUIndexElementSize) #foreign SDL3;
+    SDL_BindGPUVertexSamplers :: (render_pass: *SDL_GPURenderPass, first_slot: u32, texture_sampler_bindings: *SDL_GPUTextureSamplerBinding, num_bindings: u32) #foreign SDL3;
+    SDL_BindGPUVertexStorageTextures :: (render_pass: *SDL_GPURenderPass, first_slot: u32, storage_textures: **SDL_GPUTexture, num_bindings: u32) #foreign SDL3;
+    SDL_BindGPUVertexStorageBuffers :: (render_pass: *SDL_GPURenderPass, first_slot: u32, storage_buffers: **SDL_GPUBuffer, num_bindings: u32) #foreign SDL3;
+    SDL_BindGPUFragmentSamplers :: (render_pass: *SDL_GPURenderPass, first_slot: u32, texture_sampler_bindings: *SDL_GPUTextureSamplerBinding, num_bindings: u32) #foreign SDL3;
+    SDL_BindGPUFragmentStorageTextures :: (render_pass: *SDL_GPURenderPass, first_slot: u32, storage_textures: **SDL_GPUTexture, num_bindings: u32) #foreign SDL3;
+    SDL_BindGPUFragmentStorageBuffers :: (render_pass: *SDL_GPURenderPass, first_slot: u32, storage_buffers: **SDL_GPUBuffer, num_bindings: u32) #foreign SDL3;
 
-/* Drawing */
+    /* Drawing */
 
-SDL_DrawGPUIndexedPrimitives :: (render_pass: *SDL_GPURenderPass, num_indices: u32, num_instances: u32, first_index: u32, vertex_offset: s32, first_instance: u32) #foreign SDL3;
-SDL_DrawGPUPrimitives :: (render_pass: *SDL_GPURenderPass, num_vertices: u32, num_instances: u32, first_vertex: u32, first_instance: u32) #foreign SDL3;
-SDL_DrawGPUPrimitivesIndirect :: (render_pass: *SDL_GPURenderPass, buffer: *SDL_GPUBuffer, offset: u32, draw_count: u32) #foreign SDL3;
-SDL_DrawGPUIndexedPrimitivesIndirect :: (render_pass: *SDL_GPURenderPass, buffer: *SDL_GPUBuffer, offset: u32, draw_count: u32) #foreign SDL3;
-SDL_EndGPURenderPass :: (render_pass: *SDL_GPURenderPass) #foreign SDL3;
+    SDL_DrawGPUIndexedPrimitives :: (render_pass: *SDL_GPURenderPass, num_indices: u32, num_instances: u32, first_index: u32, vertex_offset: s32, first_instance: u32) #foreign SDL3;
+    SDL_DrawGPUPrimitives :: (render_pass: *SDL_GPURenderPass, num_vertices: u32, num_instances: u32, first_vertex: u32, first_instance: u32) #foreign SDL3;
+    SDL_DrawGPUPrimitivesIndirect :: (render_pass: *SDL_GPURenderPass, buffer: *SDL_GPUBuffer, offset: u32, draw_count: u32) #foreign SDL3;
+    SDL_DrawGPUIndexedPrimitivesIndirect :: (render_pass: *SDL_GPURenderPass, buffer: *SDL_GPUBuffer, offset: u32, draw_count: u32) #foreign SDL3;
+    SDL_EndGPURenderPass :: (render_pass: *SDL_GPURenderPass) #foreign SDL3;
 
-/* Compute Pass */
+    /* Compute Pass */
 
-SDL_BeginGPUComputePass :: (command_buffer: *SDL_GPUCommandBuffer, storage_texture_bindings: *SDL_GPUStorageTextureReadWriteBinding, num_storage_texture_bindings: u32, storage_buffer_bindings: *SDL_GPUStorageBufferReadWriteBinding, num_storage_buffer_bindings: u32) -> *SDL_GPUComputePass #foreign SDL3;
-SDL_BindGPUComputePipeline :: (compute_pass: *SDL_GPUComputePass, compute_pipeline: *SDL_GPUComputePipeline) #foreign SDL3;
-SDL_BindGPUComputeSamplers :: (compute_pass: *SDL_GPUComputePass, first_slot: u32, texture_sampler_bindings: *SDL_GPUTextureSamplerBinding, num_bindings: u32) #foreign SDL3;
-SDL_BindGPUComputeStorageTextures :: (compute_pass: *SDL_GPUComputePass, first_slot: u32, storage_textures: **SDL_GPUTexture, num_bindings: u32) #foreign SDL3;
-SDL_BindGPUComputeStorageBuffers :: (compute_pass: *SDL_GPUComputePass, first_slot: u32, storage_buffers: **SDL_GPUBuffer, num_bindings: u32) #foreign SDL3;
-SDL_DispatchGPUCompute :: (compute_pass: *SDL_GPUComputePass, groupcount_x: u32, groupcount_y: u32, groupcount_z: u32) #foreign SDL3;
-SDL_DispatchGPUComputeIndirect :: (compute_pass: *SDL_GPUComputePass, buffer: *SDL_GPUBuffer, offset: u32) #foreign SDL3;
-SDL_EndGPUComputePass :: (compute_pass: *SDL_GPUComputePass) #foreign SDL3;
+    SDL_BeginGPUComputePass :: (command_buffer: *SDL_GPUCommandBuffer, storage_texture_bindings: *SDL_GPUStorageTextureReadWriteBinding, num_storage_texture_bindings: u32, storage_buffer_bindings: *SDL_GPUStorageBufferReadWriteBinding, num_storage_buffer_bindings: u32) -> *SDL_GPUComputePass #foreign SDL3;
+    SDL_BindGPUComputePipeline :: (compute_pass: *SDL_GPUComputePass, compute_pipeline: *SDL_GPUComputePipeline) #foreign SDL3;
+    SDL_BindGPUComputeSamplers :: (compute_pass: *SDL_GPUComputePass, first_slot: u32, texture_sampler_bindings: *SDL_GPUTextureSamplerBinding, num_bindings: u32) #foreign SDL3;
+    SDL_BindGPUComputeStorageTextures :: (compute_pass: *SDL_GPUComputePass, first_slot: u32, storage_textures: **SDL_GPUTexture, num_bindings: u32) #foreign SDL3;
+    SDL_BindGPUComputeStorageBuffers :: (compute_pass: *SDL_GPUComputePass, first_slot: u32, storage_buffers: **SDL_GPUBuffer, num_bindings: u32) #foreign SDL3;
+    SDL_DispatchGPUCompute :: (compute_pass: *SDL_GPUComputePass, groupcount_x: u32, groupcount_y: u32, groupcount_z: u32) #foreign SDL3;
+    SDL_DispatchGPUComputeIndirect :: (compute_pass: *SDL_GPUComputePass, buffer: *SDL_GPUBuffer, offset: u32) #foreign SDL3;
+    SDL_EndGPUComputePass :: (compute_pass: *SDL_GPUComputePass) #foreign SDL3;
 
-/* TransferBuffer Data */
+    /* TransferBuffer Data */
 
-SDL_MapGPUTransferBuffer   :: (device: *SDL_GPUDevice, transfer_buffer: *SDL_GPUTransferBuffer, cycle: bool) -> *void #foreign SDL3;
-SDL_UnmapGPUTransferBuffer :: (device: *SDL_GPUDevice, transfer_buffer: *SDL_GPUTransferBuffer) #foreign SDL3;
+    SDL_MapGPUTransferBuffer :: (device: *SDL_GPUDevice, transfer_buffer: *SDL_GPUTransferBuffer, cycle: bool) -> *void #foreign SDL3;
+    SDL_UnmapGPUTransferBuffer :: (device: *SDL_GPUDevice, transfer_buffer: *SDL_GPUTransferBuffer) #foreign SDL3;
 
-/* Copy Pass */
+    /* Copy Pass */
 
-SDL_BeginGPUCopyPass :: (command_buffer: *SDL_GPUCommandBuffer) -> *SDL_GPUCopyPass #foreign SDL3;
-SDL_UploadToGPUTexture :: (copy_pass: *SDL_GPUCopyPass, source: *SDL_GPUTextureTransferInfo, destination: *SDL_GPUTextureRegion, cycle: bool) #foreign SDL3;
-SDL_UploadToGPUBuffer :: (copy_pass: *SDL_GPUCopyPass, source: *SDL_GPUTransferBufferLocation, destination: *SDL_GPUBufferRegion, cycle: bool) #foreign SDL3;
-SDL_CopyGPUTextureToTexture :: (copy_pass: *SDL_GPUCopyPass, source: *SDL_GPUTextureLocation, destination: *SDL_GPUTextureLocation, w: u32, h: u32, d: u32, cycle: bool) #foreign SDL3;
-SDL_CopyGPUBufferToBuffer :: (copy_pass: *SDL_GPUCopyPass, source: *SDL_GPUBufferLocation, destination: *SDL_GPUBufferLocation, size: u32, cycle: bool) #foreign SDL3;
-SDL_DownloadFromGPUTexture :: (copy_pass: *SDL_GPUCopyPass, source: *SDL_GPUTextureRegion, destination: *SDL_GPUTextureTransferInfo) #foreign SDL3;
-SDL_DownloadFromGPUBuffer :: (copy_pass: *SDL_GPUCopyPass, source: *SDL_GPUBufferRegion, destination: *SDL_GPUTransferBufferLocation) #foreign SDL3;
-SDL_EndGPUCopyPass :: (copy_pass: *SDL_GPUCopyPass) #foreign SDL3;
-SDL_GenerateMipmapsForGPUTexture :: (command_buffer: *SDL_GPUCommandBuffer, texture: *SDL_GPUTexture) #foreign SDL3;
-SDL_BlitGPUTexture :: (command_buffer: *SDL_GPUCommandBuffer, info: *SDL_GPUBlitInfo) #foreign SDL3;
+    SDL_BeginGPUCopyPass :: (command_buffer: *SDL_GPUCommandBuffer) -> *SDL_GPUCopyPass #foreign SDL3;
+    SDL_UploadToGPUTexture :: (copy_pass: *SDL_GPUCopyPass, source: *SDL_GPUTextureTransferInfo, destination: *SDL_GPUTextureRegion, cycle: bool) #foreign SDL3;
+    SDL_UploadToGPUBuffer :: (copy_pass: *SDL_GPUCopyPass, source: *SDL_GPUTransferBufferLocation, destination: *SDL_GPUBufferRegion, cycle: bool) #foreign SDL3;
+    SDL_CopyGPUTextureToTexture :: (copy_pass: *SDL_GPUCopyPass, source: *SDL_GPUTextureLocation, destination: *SDL_GPUTextureLocation, w: u32, h: u32, d: u32, cycle: bool) #foreign SDL3;
+    SDL_CopyGPUBufferToBuffer :: (copy_pass: *SDL_GPUCopyPass, source: *SDL_GPUBufferLocation, destination: *SDL_GPUBufferLocation, size: u32, cycle: bool) #foreign SDL3;
+    SDL_DownloadFromGPUTexture :: (copy_pass: *SDL_GPUCopyPass, source: *SDL_GPUTextureRegion, destination: *SDL_GPUTextureTransferInfo) #foreign SDL3;
+    SDL_DownloadFromGPUBuffer :: (copy_pass: *SDL_GPUCopyPass, source: *SDL_GPUBufferRegion, destination: *SDL_GPUTransferBufferLocation) #foreign SDL3;
+    SDL_EndGPUCopyPass :: (copy_pass: *SDL_GPUCopyPass) #foreign SDL3;
+    SDL_GenerateMipmapsForGPUTexture :: (command_buffer: *SDL_GPUCommandBuffer, texture: *SDL_GPUTexture) #foreign SDL3;
+    SDL_BlitGPUTexture :: (command_buffer: *SDL_GPUCommandBuffer, info: *SDL_GPUBlitInfo) #foreign SDL3;
 
-/* Submission/Presentation */
+    /* Submission/Presentation */
 
-SDL_WindowSupportsGPUSwapchainComposition :: (device: *SDL_GPUDevice, window: *SDL_Window, swapchain_composition: SDL_GPUSwapchainComposition) -> bool #foreign SDL3;
-SDL_WindowSupportsGPUPresentMode :: (device: *SDL_GPUDevice, window: *SDL_Window, present_mode: SDL_GPUPresentMode) -> bool #foreign SDL3;
-SDL_ClaimWindowForGPUDevice :: (device: *SDL_GPUDevice, window: *SDL_Window) -> bool #foreign SDL3;
-SDL_ReleaseWindowFromGPUDevice :: (device: *SDL_GPUDevice, window: *SDL_Window) #foreign SDL3;
-SDL_SetGPUSwapchainParameters :: (device: *SDL_GPUDevice, window: *SDL_Window, swapchain_composition: SDL_GPUSwapchainComposition, present_mode: SDL_GPUPresentMode) -> bool #foreign SDL3;
-SDL_SetGPUAllowedFramesInFlight :: (device: *SDL_GPUDevice, allowed_frames_in_flight: u32) -> bool #foreign SDL3;
-SDL_GetGPUSwapchainTextureFormat :: (device: *SDL_GPUDevice, window: *SDL_Window) -> SDL_GPUTextureFormat #foreign SDL3;
-SDL_AcquireGPUSwapchainTexture :: (command_buffer: *SDL_GPUCommandBuffer, window: *SDL_Window, swapchain_texture: **SDL_GPUTexture, swapchain_texture_width: *u32, swapchain_texture_height: *u32) -> bool #foreign SDL3;
-SDL_WaitForGPUSwapchain :: (device: *SDL_GPUDevice, window: *SDL_Window) -> bool #foreign SDL3;
-SDL_WaitAndAcquireGPUSwapchainTexture :: (command_buffer: *SDL_GPUCommandBuffer, window: *SDL_Window, swapchain_texture: **SDL_GPUTexture, swapchain_texture_width: *u32, swapchain_texture_height: *u32) -> bool #foreign SDL3;
-SDL_SubmitGPUCommandBuffer :: (command_buffer: *SDL_GPUCommandBuffer) -> bool #foreign SDL3;
-SDL_SubmitGPUCommandBufferAndAcquireFence :: (command_buffer: *SDL_GPUCommandBuffer) -> *SDL_GPUFence #foreign SDL3;
-SDL_CancelGPUCommandBuffer :: (command_buffer: *SDL_GPUCommandBuffer) -> bool #foreign SDL3;
-SDL_WaitForGPUIdle :: (device: *SDL_GPUDevice) -> bool #foreign SDL3;
-SDL_WaitForGPUFences :: (device: *SDL_GPUDevice, wait_all: bool, fences: **SDL_GPUFence, num_fences: u32) -> bool #foreign SDL3;
-SDL_QueryGPUFence :: (device: *SDL_GPUDevice, fence: *SDL_GPUFence) -> bool #foreign SDL3;
-SDL_ReleaseGPUFence :: (device: *SDL_GPUDevice, fence: *SDL_GPUFence) #foreign SDL3;
+    SDL_WindowSupportsGPUSwapchainComposition :: (device: *SDL_GPUDevice, window: *SDL_Window, swapchain_composition: SDL_GPUSwapchainComposition) -> bool #foreign SDL3;
+    SDL_WindowSupportsGPUPresentMode :: (device: *SDL_GPUDevice, window: *SDL_Window, present_mode: SDL_GPUPresentMode) -> bool #foreign SDL3;
+    SDL_ClaimWindowForGPUDevice :: (device: *SDL_GPUDevice, window: *SDL_Window) -> bool #foreign SDL3;
+    SDL_ReleaseWindowFromGPUDevice :: (device: *SDL_GPUDevice, window: *SDL_Window) #foreign SDL3;
+    SDL_SetGPUSwapchainParameters :: (device: *SDL_GPUDevice, window: *SDL_Window, swapchain_composition: SDL_GPUSwapchainComposition, present_mode: SDL_GPUPresentMode) -> bool #foreign SDL3;
+    SDL_SetGPUAllowedFramesInFlight :: (device: *SDL_GPUDevice, allowed_frames_in_flight: u32) -> bool #foreign SDL3;
+    SDL_GetGPUSwapchainTextureFormat :: (device: *SDL_GPUDevice, window: *SDL_Window) -> SDL_GPUTextureFormat #foreign SDL3;
+    SDL_AcquireGPUSwapchainTexture :: (command_buffer: *SDL_GPUCommandBuffer, window: *SDL_Window, swapchain_texture: **SDL_GPUTexture, swapchain_texture_width: *u32, swapchain_texture_height: *u32) -> bool #foreign SDL3;
+    SDL_WaitForGPUSwapchain :: (device: *SDL_GPUDevice, window: *SDL_Window) -> bool #foreign SDL3;
+    SDL_WaitAndAcquireGPUSwapchainTexture :: (command_buffer: *SDL_GPUCommandBuffer, window: *SDL_Window, swapchain_texture: **SDL_GPUTexture, swapchain_texture_width: *u32, swapchain_texture_height: *u32) -> bool #foreign SDL3;
+    SDL_SubmitGPUCommandBuffer :: (command_buffer: *SDL_GPUCommandBuffer) -> bool #foreign SDL3;
+    SDL_SubmitGPUCommandBufferAndAcquireFence :: (command_buffer: *SDL_GPUCommandBuffer) -> *SDL_GPUFence #foreign SDL3;
+    SDL_CancelGPUCommandBuffer :: (command_buffer: *SDL_GPUCommandBuffer) -> bool #foreign SDL3;
+    SDL_WaitForGPUIdle :: (device: *SDL_GPUDevice) -> bool #foreign SDL3;
+    SDL_WaitForGPUFences :: (device: *SDL_GPUDevice, wait_all: bool, fences: **SDL_GPUFence, num_fences: u32) -> bool #foreign SDL3;
+    SDL_QueryGPUFence :: (device: *SDL_GPUDevice, fence: *SDL_GPUFence) -> bool #foreign SDL3;
+    SDL_ReleaseGPUFence :: (device: *SDL_GPUDevice, fence: *SDL_GPUFence) #foreign SDL3;
 
-/* Format Info */
+    /* Format Info */
 
-SDL_GPUTextureFormatTexelBlockSize :: (format: SDL_GPUTextureFormat) -> u32 #foreign SDL3;
-SDL_GPUTextureSupportsFormat :: (device: *SDL_GPUDevice, format: SDL_GPUTextureFormat, type: SDL_GPUTextureType, usage: SDL_GPUTextureUsageFlags) -> bool #foreign SDL3;
-SDL_GPUTextureSupportsSampleCount :: (device: *SDL_GPUDevice, format: SDL_GPUTextureFormat, sample_count: SDL_GPUSampleCount) -> bool #foreign SDL3;
-SDL_CalculateGPUTextureFormatSize :: (format: SDL_GPUTextureFormat, width: u32, height: u32, depth_or_layer_count: u32) -> u32 #foreign SDL3;
-// SDL_PixelFormat kept as u32 until the pixels binding lands (same choice as SDL_video.jai).
-SDL_GetPixelFormatFromGPUTextureFormat :: (format: SDL_GPUTextureFormat) -> u32 #foreign SDL3;
-SDL_GetGPUTextureFormatFromPixelFormat :: (format: u32) -> SDL_GPUTextureFormat #foreign SDL3;
+    SDL_GPUTextureFormatTexelBlockSize :: (format: SDL_GPUTextureFormat) -> u32 #foreign SDL3;
+    SDL_GPUTextureSupportsFormat :: (device: *SDL_GPUDevice, format: SDL_GPUTextureFormat, type: SDL_GPUTextureType, usage: SDL_GPUTextureUsageFlags) -> bool #foreign SDL3;
+    SDL_GPUTextureSupportsSampleCount :: (device: *SDL_GPUDevice, format: SDL_GPUTextureFormat, sample_count: SDL_GPUSampleCount) -> bool #foreign SDL3;
+    SDL_CalculateGPUTextureFormatSize :: (format: SDL_GPUTextureFormat, width: u32, height: u32, depth_or_layer_count: u32) -> u32 #foreign SDL3;
+    // SDL_PixelFormat kept as u32 until the pixels binding lands (same choice as SDL_video.jai).
+    SDL_GetPixelFormatFromGPUTextureFormat :: (format: SDL_GPUTextureFormat) -> u32 #foreign SDL3;
+    SDL_GetGPUTextureFormatFromPixelFormat :: (format: u32) -> SDL_GPUTextureFormat #foreign SDL3;
 
-/* GDK (Xbox; the vendored Windows SDL3.dll exports these too) */
+    /* GDK (Xbox; the vendored Windows SDL3.dll exports these too) */
 
-SDL_GDKSuspendGPU :: (device: *SDL_GPUDevice) #foreign SDL3;
-SDL_GDKResumeGPU :: (device: *SDL_GPUDevice) #foreign SDL3;
+    SDL_GDKSuspendGPU :: (device: *SDL_GPUDevice) #foreign SDL3;
+    SDL_GDKResumeGPU :: (device: *SDL_GPUDevice) #foreign SDL3;
 }

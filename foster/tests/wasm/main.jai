@@ -93,25 +93,25 @@
 
 // ---------------------------------------------------------------- 示例配置
 STOP_AFTER_SECONDS :: 15.0;
-LOG_EVERY_N_FRAMES :: 60;       // 1 秒一条心跳（60 fps 定步长）
-REPORT_EVERY_N_FRAMES :: 300;   // 5 秒一条完整状态报告
-PIXEL_CHECK_FRAME :: 30;        // 第 30 帧做一次像素读回断言（给 rAF 一点时间稳定）
+LOG_EVERY_N_FRAMES :: 60; // 1 秒一条心跳（60 fps 定步长）
+REPORT_EVERY_N_FRAMES :: 300; // 5 秒一条完整状态报告
+PIXEL_CHECK_FRAME :: 30; // 第 30 帧做一次像素读回断言（给 rAF 一点时间稳定）
 
 // W4 热替换的三个时间点。都排在 PIXEL_CHECK_FRAME 之后，于是「换之前」的像素
 // 已经由 12/13 那一次断言抓在手里了。
-HOTRELOAD_GOOD_FRAME :: 60;     // 换成一个有效的候选（应该成功）
-HOTRELOAD_BAD_COMPILE_FRAME :: 90;   // 换成语法错的候选（编译失败，应该被拒）
-HOTRELOAD_BAD_LINK_FRAME :: 120;     // 换成 varying 不匹配的候选（链接失败，应该被拒）
-HOTRELOAD_SUMMARY_FRAME :: 150;      // 打印热替换的完整结论
+HOTRELOAD_GOOD_FRAME :: 60; // 换成一个有效的候选（应该成功）
+HOTRELOAD_BAD_COMPILE_FRAME :: 90; // 换成语法错的候选（编译失败，应该被拒）
+HOTRELOAD_BAD_LINK_FRAME :: 120; // 换成 varying 不匹配的候选（链接失败，应该被拒）
+HOTRELOAD_SUMMARY_FRAME :: 150; // 打印热替换的完整结论
 
 // W5/W6 的检查帧。都排在 PIXEL_CHECK_FRAME 之后（屏幕已经稳定画了几帧），
 // 又排在热替换之前（热替换会换掉自己那块 quad 的像素，别互相干扰）。
-W5_CHECK_FRAME :: 40;           // 离屏 target 的屏幕读回 + blit + 超限拒绝
-W5_MSAA_FRAME  :: 45;           // MSAA 1× / 4× 的部分覆盖对比
-W6_WINDOW_MSAA_FRAME :: 50;     // 窗口级 MSAA 的能力/降级断言 + 一帧画面读回
+W5_CHECK_FRAME :: 40; // 离屏 target 的屏幕读回 + blit + 超限拒绝
+W5_MSAA_FRAME :: 45; // MSAA 1× / 4× 的部分覆盖对比
+W6_WINDOW_MSAA_FRAME :: 50; // 窗口级 MSAA 的能力/降级断言 + 一帧画面读回
 
 // W3 的 quad：纹理 8×8，左 4 列红、右 4 列蓝（NEAREST，所以边界是硬的）。
-QUAD_TEXTURE_SIZE  :: 8;
+QUAD_TEXTURE_SIZE :: 8;
 QUAD_TEXTURE_SPLIT :: 4;
 
 // W4 Batcher 用的纹理：4×4，全部 texel 都是 (200,100,50,128)。
@@ -125,16 +125,16 @@ BATCH_TEX_COLOR :: Color.{ 200, 100, 50, 128 };
 CLEAR_COLOR :: Color.{ 16, 32, 48, 255 };
 
 // 期望的读回值。写成常量，报告里和实际读回值并排打印。
-EXPECT_LEFT    :: Color.{ 255, 0, 0, 255 };
-EXPECT_RIGHT   :: Color.{ 0, 0, 255, 255 };
+EXPECT_LEFT :: Color.{ 255, 0, 0, 255 };
+EXPECT_RIGHT :: Color.{ 0, 0, 255, 255 };
 EXPECT_OUTSIDE :: CLEAR_COLOR;
 
 // --- W4：Batcher 四模式的期望值 ---
 // 四块都画在 y = 22%..36% 的横条上，各自居中采样。
-EXPECT_SOLID :: Color.{ 255, 0, 0, 255 };            // fill 模式 + 单色红
-GRAD_LEFT    :: Color.{ 255, 0, 0, 255 };            // 渐变左端
-GRAD_RIGHT   :: Color.{ 0, 0, 255, 255 };            // 渐变右端
-EXPECT_FILL  :: Color.{ 0, 255, 0, 255 };            // fill 模式 + 顶点色绿（纹理被忽略）
+EXPECT_SOLID :: Color.{ 255, 0, 0, 255 }; // fill 模式 + 单色红
+GRAD_LEFT :: Color.{ 255, 0, 0, 255 }; // 渐变左端
+GRAD_RIGHT :: Color.{ 0, 0, 255, 255 }; // 渐变右端
+EXPECT_FILL :: Color.{ 0, 255, 0, 255 }; // fill 模式 + 顶点色绿（纹理被忽略）
 // wash：oColor = texture.a * vColor = (128/255, 128/255, 128/255, 128/255)，
 // 再按 Blend_Mode_Premultiply（src ONE / dst ONE_MINUS_SRC_ALPHA）盖在清屏色上：
 //   128/255 + (16/255)*(127/255)  → 135.97 → 136
@@ -149,7 +149,7 @@ WASH_TOLERANCE :: 2;
 // 用 W3 那张 8×8 红/蓝纹理（PosTexCol 顶点格式），画在右侧 78%..96% / 40%..56%。
 // 采样点落在左半 → 期望红；换过候选之后 → 期望黄。
 EXPECT_HR_V1 :: Color.{ 255, 0, 0, 255 };
-EXPECT_HR_V2 :: Color.{ 255, 255, 0, 255 };   // 候选 v2 输出 vec4(1,1,0,1)
+EXPECT_HR_V2 :: Color.{ 255, 255, 0, 255 }; // 候选 v2 输出 vec4(1,1,0,1)
 
 // 热替换的两个候选片元 shader（都是完整的 GLSL ES 3.00 文本）。
 //
@@ -180,10 +180,10 @@ W5_TARGET_SIZE :: 256;
 // 象限之外的清屏色：故意三个通道都和四个象限色不同，任何一处「画漏了」都读得出来。
 W5_TARGET_CLEAR :: Color.{ 90, 30, 120, 255 };
 
-W5_Q_TL :: Color.{ 255, 0,   0,   255 };   // 左上 红
-W5_Q_TR :: Color.{ 0,   255, 0,   255 };   // 右上 绿
-W5_Q_BL :: Color.{ 0,   0,   255, 255 };   // 左下 蓝
-W5_Q_BR :: Color.{ 255, 255, 0,   255 };   // 右下 黄
+W5_Q_TL :: Color.{ 255, 0, 0, 255 }; // 左上 红
+W5_Q_TR :: Color.{ 0, 255, 0, 255 }; // 右上 绿
+W5_Q_BL :: Color.{ 0, 0, 255, 255 }; // 左下 蓝
+W5_Q_BR :: Color.{ 255, 255, 0, 255 }; // 右下 黄
 
 // 「把 target 当纹理画到窗口」的那块屏幕区域：左侧 2%..22%、纵向 62%..92%。
 // 刻意避开 W3 的 quad（25%..75% / 62%..96%）、Batcher 横条（22%..36%）、
@@ -197,8 +197,8 @@ W5_SCREEN_H :: 0.30;
 // MSAA 对比用：画进两张 Target 的同一个三角形（像素空间中）
 //   v0=(0,0)  v1=(256,0)  v2=(0,256)   ← 斜边就是 x+y=256，穿过每个像素的角点
 // 于是 1× 采样「没有部分覆盖像素」，4× 采样「每行恰好一个」。
-MSAA_TRI_GREEN :: Color.{ 0, 255, 0, 255 };     // 三角形色（清屏色仍用 CLEAR_COLOR）
-MSAA_EDGE_ROW  :: 128;                          // 读回的那一行（左上原点）
+MSAA_TRI_GREEN :: Color.{ 0, 255, 0, 255 }; // 三角形色（清屏色仍用 CLEAR_COLOR）
+MSAA_EDGE_ROW :: 128; // 读回的那一行（左上原点）
 
 // 读回缓冲的哨兵值：(1,2,3,4) 不可能是任何断言期望的颜色，也不可能是清屏色 /
 // 三角形色 / 象限色。读回真的发生却没写这块内存时，值就还是它 —— 于是
@@ -206,7 +206,7 @@ MSAA_EDGE_ROW  :: 128;                          // 读回的那一行（左上�
 TEXTURE_PIXEL_SENTINEL :: Color.{ 1, 2, 3, 4 };
 // 4× 的部分覆盖像素期望值：2/4 覆盖 → (0+0+16+16)/4, (255+255+32+32)/4, (0+0+48+48)/4
 EXPECT_MSAA_PARTIAL :: Color.{ 8, 143, 24, 255 };
-MSAA_PARTIAL_TOLERANCE :: 3;        // 驱动在 resolve 时的舍入，实测是精确值
+MSAA_PARTIAL_TOLERANCE :: 3; // 驱动在 resolve 时的舍入，实测是精确值
 
 // ------------------------------------------------------- W6：soak / 超限拒绕
 //
@@ -214,8 +214,8 @@ MSAA_PARTIAL_TOLERANCE :: 3;        // 驱动在 resolve 时的舍入，实测�
 // 500 帧之后才采，是因为前 500 帧里后端的缓存表（program/pipeline/sampler/
 // target FBO/纹理 FBO）还在按需懒建 —— 那时候涨是应该的，不是泄漏。
 W6_SOAK_FIRST_FRAME :: 500;
-W6_SOAK_EVERY       :: 500;
-W6_SOAK_LAST_FRAME  :: 3000;
+W6_SOAK_EVERY :: 500;
+W6_SOAK_LAST_FRAME :: 3000;
 W6_SOAK_MAX_SAMPLES :: 8;
 // 首尾内存允许的增长（字节）。wasm 的页只增不减，所以「完全不涨」是可以要求的；
 // 留 0 是有意的：一旦某次改动让它每帧多留一块，这个断言就是第一个报警的。
@@ -239,126 +239,128 @@ Vertex :: struct {
 sample: Sample_State;
 
 Hotreload_State :: struct {
-    vs, fs:   *Shader;          // 就地热替换的那一对（地址不变）
-    mat:      *Material;
-    mesh:     *Mesh;
-    vertex_glsl:   string;
-    fragment_glsl: string;      // 当前生效的那份（提交后更新）
+    vs, fs: *Shader; // 就地热替换的那一对（地址不变）
+    mat: *Material;
+    mesh: *Mesh;
+    vertex_glsl: string;
+    fragment_glsl: string; // 当前生效的那份（提交后更新）
 
-    ok_good:  bool;             // 第 60 帧：换成 v2 应该成功
-    ok_syntax: bool;            // 第 90 帧：语法错应该失败
-    ok_link:  bool;             // 第 120 帧：varying 不匹配应该失败
+    ok_good: bool; // 第 60 帧：换成 v2 应该成功
+    ok_syntax: bool; // 第 90 帧：语法错应该失败
+    ok_link: bool; // 第 120 帧：varying 不匹配应该失败
     err_syntax: string;
-    err_link:   string;
+    err_link: string;
 
-    before:      Color;         // 换之前的像素
-    after_good:  Color;         // 换成功之后的像素
-    after_syntax: Color;        // 语法错被拒之后的像素（必须 == after_good）
-    after_link:   Color;        // 链接错被拒之后的像素（必须 == after_good）
-    have_before: bool; have_after_good: bool;
-    have_after_syntax: bool; have_after_link: bool;
+    before: Color; // 换之前的像素
+    after_good: Color; // 换成功之后的像素
+    after_syntax: Color; // 语法错被拒之后的像素（必须 == after_good）
+    after_link: Color; // 链接错被拒之后的像素（必须 == after_good）
+    have_before: bool;
+    have_after_good: bool;
+    have_after_syntax: bool;
+    have_after_link: bool;
 };
 
 Sample_State :: struct {
-    updates:      s32;      // App.update 被调了多少次
-    heartbeats:   s32;
-    last_dt:      float64;
-    elapsed:      float64;
-    store:        *Storage_Container;
-    storage_ok:   bool;
+    updates: s32; // App.update 被调了多少次
+    heartbeats: s32;
+    last_dt: float64;
+    elapsed: float64;
+    store: *Storage_Container;
+    storage_ok: bool;
     clipboard_ok: bool;
-    last_key:     string;
+    last_key: string;
     pressed_total: s32;
-    seen_focus:   bool;
+    seen_focus: bool;
 
     // ---- W3: WebGL2 图形 ----
-    material:      *Material;     // 默认 Textured program（名字 = "Textured"）
-    mesh:          *Mesh;
-    texture:       *Texture;
-    graphics_ok:   bool;          // 材质/网格/纹理都建起来了
-    pixel_checked: bool;          // 读回断言只做一次
-    pixel_result:  s32;           // 1 = 通过 0 = 失败 -1 = 跳过（宿主没有 WebGL2）
-    frames_drawn:  s32;
+    material: *Material; // 默认 Textured program（名字 = "Textured"）
+    mesh: *Mesh;
+    texture: *Texture;
+    graphics_ok: bool; // 材质/网格/纹理都建起来了
+    pixel_checked: bool; // 读回断言只做一次
+    pixel_result: s32; // 1 = 通过 0 = 失败 -1 = 跳过（宿主没有 WebGL2）
+    frames_drawn: s32;
 
     // ---- W4: Batcher 四模式 ----
-    batcher:      *Batcher;
-    batch_tex:    *Texture;
-    batch_ok:     bool;
-    batch_result: s32;            // 1 PASS / 0 FAIL / -1 SKIP
-    solid_px:     Color;
-    grad_l_px:    Color;
-    grad_r_px:    Color;
-    wash_px:      Color;
-    fill_px:      Color;
+    batcher: *Batcher;
+    batch_tex: *Texture;
+    batch_ok: bool;
+    batch_result: s32; // 1 PASS / 0 FAIL / -1 SKIP
+    solid_px: Color;
+    grad_l_px: Color;
+    grad_r_px: Color;
+    wash_px: Color;
+    fill_px: Color;
 
     // ---- W4: 字体 / MSDF ----
     // Msdf_Font 是 jfoster 模块私有的类型（images/msdf_font.jai 用的是 #scope_module），
     // 所以这里不存指针、只存从它身上取到的数（尺寸 / DistanceRange / 墨迹数）。
     // 图集指针本身只在 sample_font_startup 的栈上用一次。
-    font:        *Sprite_Font;
-    font_ok:     bool;
-    font_result: s32;             // 1 PASS / 0 FAIL / -1 SKIP
-    font_pixels: s32;             // 扫描带里非清屏像素的个数
-    font_scanned: s32;            // 扫描带总像素数
+    font: *Sprite_Font;
+    font_ok: bool;
+    font_result: s32; // 1 PASS / 0 FAIL / -1 SKIP
+    font_pixels: s32; // 扫描带里非清屏像素的个数
+    font_scanned: s32; // 扫描带总像素数
     font_distance_range: float;
     font_atlas_w: s32;
     font_atlas_h: s32;
-    font_atlas_ink: s32;          // CPU 侧图集里非零 texel 的个数（QOI 解码是否真的解出东西）
-    scan: [..] Color;             // web_read_pixels 的落点
+    font_atlas_ink: s32; // CPU 侧图集里非零 texel 的个数（QOI 解码是否真的解出东西）
+    scan: [..] Color; // web_read_pixels 的落点
 
     // ---- W4: 着色器热替换 ----
     hr: Hotreload_State;
-    hr_result: s32;               // 1 PASS / 0 FAIL / -1 SKIP
+    hr_result: s32; // 1 PASS / 0 FAIL / -1 SKIP
     hr_reported: bool;
 
     // ---- W5: 离屏 Target / MSAA / blit ----
     // 全部在 startup 建好：soak 阶段再分配的话，「存活计数不变」这条断言会自动
     // 失效（分不清「泄漏」和「这个功能第一次跑」）。
-    w5_batcher:      *Batcher;    // 离屏绘制专用的第二个 Batcher（不打断窗口那个）
-    w5_target:       *Target;     // 256×256、单采样：四色象限的落点
-    w5_screen_mat:   *Material;   // 把 target 的附件当纹理画到窗口（克隆 Textured）
-    w5_screen_mesh:  *Mesh;       // PosTexCol，4 顶点 + 6 索引
-    w5_blit_dst:     *Texture;    // blit_texture 的落点
-    ms1_target:      *Target;     // 256×256、Sample_Count.ONE
-    ms4_target:      *Target;     // 256×256、Sample_Count.FOUR
-    w5_ok:           bool;        // 上面这些都建起来了
-    w5_checked:      bool;
-    w5_result:       s32;         // 1 PASS / 0 FAIL / -1 SKIP
-    w5_px:           [4] Color;   // 屏幕上读回的四个象限（TL TR BL BR）
-    blit_px:         [4] Color;   // blit 之后从落点纹理读回的四个象限
-    blit_result:     s32;
-    edge_row:        [..] Color;  // 读回一行像素的落点（复用，避免每帧分配）
-    msaa_result:     s32;
+    w5_batcher: *Batcher; // 离屏绘制专用的第二个 Batcher（不打断窗口那个）
+    w5_target: *Target; // 256×256、单采样：四色象限的落点
+    w5_screen_mat: *Material; // 把 target 的附件当纹理画到窗口（克隆 Textured）
+    w5_screen_mesh: *Mesh; // PosTexCol，4 顶点 + 6 索引
+    w5_blit_dst: *Texture; // blit_texture 的落点
+    ms1_target: *Target; // 256×256、Sample_Count.ONE
+    ms4_target: *Target; // 256×256、Sample_Count.FOUR
+    w5_ok: bool; // 上面这些都建起来了
+    w5_checked: bool;
+    w5_result: s32; // 1 PASS / 0 FAIL / -1 SKIP
+    w5_px: [4] Color; // 屏幕上读回的四个象限（TL TR BL BR）
+    blit_px: [4] Color; // blit 之后从落点纹理读回的四个象限
+    blit_result: s32;
+    edge_row: [..] Color; // 读回一行像素的落点（复用，避免每帧分配）
+    msaa_result: s32;
     msaa_partial_1x: s32;
     msaa_partial_4x: s32;
-    msaa_edge_1x:    Color;
-    msaa_edge_4x:    Color;
-    msaa_edge_x_1x:  s32;
-    msaa_edge_x_4x:  s32;
-    msaa_reported:   bool;
-    limit_result:    s32;
-    limit_max:       s32;         // MAX_TEXTURE_SIZE（fw_stats(200+22)）
-    limit_handle:    s32;         // 超限纹理拿到的句柄（必须是 0）
+    msaa_edge_1x: Color;
+    msaa_edge_4x: Color;
+    msaa_edge_x_1x: s32;
+    msaa_edge_x_4x: s32;
+    msaa_reported: bool;
+    limit_result: s32;
+    limit_max: s32; // MAX_TEXTURE_SIZE（fw_stats(200+22)）
+    limit_handle: s32; // 超限纹理拿到的句柄（必须是 0）
 
     // ---- W6: 窗口级 MSAA ----
-    w6_window_result:   s32;
+    w6_window_result: s32;
     w6_window_reported: bool;
-    w6_bb_samples:    s32;        // backbuffer_format.SampleCount 的真实值
-    w6_ms_samples:    s32;        // fw_stats(200+10)：窗口 MS FBO 的 samples
-    w6_resolves:      s32;        // fw_stats(200+9)：present 时的 resolve 次数
+    w6_bb_samples: s32; // backbuffer_format.SampleCount 的真实值
+    w6_ms_samples: s32; // fw_stats(200+10)：窗口 MS FBO 的 samples
+    w6_resolves: s32; // fw_stats(200+9)：present 时的 resolve 次数
 
     // ---- W6: 内存 soak ----
-    soak_result:     s32;
-    soak_samples:    s32;
-    soak_frames:     [W6_SOAK_MAX_SAMPLES] s32;
-    soak_mem:        [W6_SOAK_MAX_SAMPLES] s32;
-    soak_programs:   [W6_SOAK_MAX_SAMPLES] s32;
-    soak_pipelines:  [W6_SOAK_MAX_SAMPLES] s32;
-    soak_samplers:   [W6_SOAK_MAX_SAMPLES] s32;
-    soak_targets:    [W6_SOAK_MAX_SAMPLES] s32;
-    soak_tex_fbos:   [W6_SOAK_MAX_SAMPLES] s32;
-    soak_textures:   [W6_SOAK_MAX_SAMPLES] s32;
-    soak_buffers:    [W6_SOAK_MAX_SAMPLES] s32;
+    soak_result: s32;
+    soak_samples: s32;
+    soak_frames: [W6_SOAK_MAX_SAMPLES] s32;
+    soak_mem: [W6_SOAK_MAX_SAMPLES] s32;
+    soak_programs: [W6_SOAK_MAX_SAMPLES] s32;
+    soak_pipelines: [W6_SOAK_MAX_SAMPLES] s32;
+    soak_samplers: [W6_SOAK_MAX_SAMPLES] s32;
+    soak_targets: [W6_SOAK_MAX_SAMPLES] s32;
+    soak_tex_fbos: [W6_SOAK_MAX_SAMPLES] s32;
+    soak_textures: [W6_SOAK_MAX_SAMPLES] s32;
+    soak_buffers: [W6_SOAK_MAX_SAMPLES] s32;
     soak_target_res: [W6_SOAK_MAX_SAMPLES] s32;
 }
 
@@ -407,9 +409,9 @@ sample_memory_bytes :: () -> s32 {
 // （cast 依赖声明顺序，读起来还得回头数）。
 sample_sample_count_value :: (s: Sample_Count) -> s32 {
     if s == {
-        case .ONE;   return 1;
-        case .TWO;   return 2;
-        case .FOUR;  return 4;
+        case .ONE; return 1;
+        case .TWO; return 2;
+        case .FOUR; return 4;
         case .EIGHT; return 8;
     }
     return 1;
@@ -421,13 +423,13 @@ sample_sample_count_value :: (s: Sample_Count) -> s32 {
 sample_ortho :: (width: s32, height: s32) -> Matrix4 {
     zfar := 1000000.0;
     m: Matrix4;
-    m._11 =  2.0 / cast(float) width;
+    m._11 = 2.0 / cast(float) width;
     m._22 = -2.0 / cast(float) height;
-    m._33 =  1.0 / zfar;
+    m._33 = 1.0 / zfar;
     m._41 = -1;
-    m._42 =  1;
+    m._42 = 1;
     m._43 = -1;
-    m._44 =  1;
+    m._44 = 1;
     return m;
 }
 
@@ -479,19 +481,19 @@ sample_rect :: (width: s32, height: s32, fx: float, fy: float, fw: float, fh: fl
 // ---------------------------------------------------------------- 生命周期
 main :: () {
     App.startup = sample_startup;
-    App.update  = sample_update;
-    App.render  = sample_render;
+    App.update = sample_update;
+    App.render = sample_render;
 
     app_run(.{
         application_name = "jfoster wasm sample",
-        window_title     = "jfoster wasm / W2（点击画布后按键，ESC 退出）",
-        width            = 960,
-        height           = 540,
-        resizable        = true,
+        window_title = "jfoster wasm / W2（点击画布后按键，ESC 退出）",
+        width = 960,
+        height = 540,
+        resizable = true,
         // [W6] 窗口级 MSAA：web 后端把它落地成「窗口大小的 MS FBO + present 时
         // resolve 到 0 号 FBO」。设备不支持时后端会明确降级并打一条日志，
         // 于是 backbuffer_format.SampleCount 报的永远是**真实**生效的样本数。
-        flags            = .MULTI_SAMPLED_BACK_BUFFER,
+        flags = .MULTI_SAMPLED_BACK_BUFFER,
     });
 
     // web 目标下 app_run 只是 setup，帧循环归宿主，所以这里 **不能** app_destroy：
@@ -504,9 +506,9 @@ main :: () {
 sample_startup :: () {
     log_info("sample: startup —— 窗口尺寸/像素比来自 canvas");
 
-    size   := window_size(App.window);
+    size := window_size(App.window);
     pixels := window_size_in_pixels(App.window);
-    scale  := window_content_scale(App.window);
+    scale := window_content_scale(App.window);
     log_info(tprint("sample: window css=%x% device=%x% scale=%",
                     size.x, size.y, pixels.x, pixels.y, scale.x));
 
@@ -545,8 +547,8 @@ sample_graphics_startup :: () {
 
     // 8×8 纹理：左 4 列红、右 4 列蓝。NEAREST + 明确的纹理坐标，读回时颜色是硬的。
     pixels: [QUAD_TEXTURE_SIZE * QUAD_TEXTURE_SIZE] Color;
-    for y: 0..QUAD_TEXTURE_SIZE-1 {
-        for x: 0..QUAD_TEXTURE_SIZE-1 {
+    for y: 0..QUAD_TEXTURE_SIZE - 1 {
+        for x: 0..QUAD_TEXTURE_SIZE - 1 {
             pixels[y * QUAD_TEXTURE_SIZE + x] =
                 ifx x < QUAD_TEXTURE_SPLIT then Color.{ 255, 0, 0, 255 } else Color.{ 0, 0, 255, 255 };
         }
@@ -559,7 +561,7 @@ sample_graphics_startup :: () {
     elements: [3] Vertex_Format_Element = .[
         .{ Index = 0, Type = .FLOAT2, Normalized = false },
         .{ Index = 1, Type = .FLOAT2, Normalized = false },
-        .{ Index = 2, Type = .UBYTE4, Normalized = true  },
+        .{ Index = 2, Type = .UBYTE4, Normalized = true },
     ];
     sample.mesh = mesh_create(device, vertex_format_make(elements), .THIRTY_TWO, "w3_quad");
 
@@ -574,14 +576,14 @@ sample_graphics_startup :: () {
     sample_batcher_startup(device);
     sample_font_startup(device);
     sample_hotreload_startup(device);
-    sample_w5_startup(device);            // W5/W6 的资源（离屏 target / MSAA / blit）
+    sample_w5_startup(device); // W5/W6 的资源（离屏 target / MSAA / blit）
 }
 
 // ------------------------------------------------------- W4：Batcher 四模式
 sample_batcher_startup :: (device: *Graphics_Device) {
     // 4×4 单色纹理：wash 只吃它的 alpha（128），fill 完全忽略它。
     texels: [BATCH_TEXTURE_SIZE * BATCH_TEXTURE_SIZE] Color;
-    for i: 0..BATCH_TEXTURE_SIZE*BATCH_TEXTURE_SIZE-1 texels[i] = BATCH_TEX_COLOR;
+    for i: 0..BATCH_TEXTURE_SIZE * BATCH_TEXTURE_SIZE - 1 texels[i] = BATCH_TEX_COLOR;
     sample.batch_tex = texture_create_from_colors(device, BATCH_TEXTURE_SIZE, BATCH_TEXTURE_SIZE, texels,
                                                   name = "w4_batch_tex");
 
@@ -623,8 +625,8 @@ sample_batcher_render :: (b: *Batcher, target: Drawable_Target, width: s32, heig
         r := sample_rect(width, height, 0.50, 0.22, 0.20, 0.14);
         batcher_push_mode(b, .WASH);
         batcher_quad_textured(b, sample.batch_tex,
-            .{ r.x,          r.y          }, .{ r.x + r.w, r.y          },
-            .{ r.x + r.w,    r.y + r.h    }, .{ r.x,       r.y + r.h    },
+            .{ r.x, r.y }, .{ r.x + r.w, r.y },
+            .{ r.x + r.w, r.y + r.h }, .{ r.x, r.y + r.h },
             .{ 0.0, 0.0 }, .{ 1.0, 0.0 }, .{ 1.0, 1.0 }, .{ 0.0, 1.0 },
             Color_White);
         batcher_pop_mode(b);
@@ -635,8 +637,8 @@ sample_batcher_render :: (b: *Batcher, target: Drawable_Target, width: s32, heig
         r := sample_rect(width, height, 0.74, 0.22, 0.20, 0.14);
         batcher_push_mode(b, .FILL);
         batcher_quad_textured(b, sample.batch_tex,
-            .{ r.x,          r.y          }, .{ r.x + r.w, r.y          },
-            .{ r.x + r.w,    r.y + r.h    }, .{ r.x,       r.y + r.h    },
+            .{ r.x, r.y }, .{ r.x + r.w, r.y },
+            .{ r.x + r.w, r.y + r.h }, .{ r.x, r.y + r.h },
             .{ 0.0, 0.0 }, .{ 1.0, 0.0 }, .{ 1.0, 1.0 }, .{ 0.0, 1.0 },
             EXPECT_FILL);
         batcher_pop_mode(b);
@@ -727,7 +729,7 @@ sample_hotreload_startup :: (device: *Graphics_Device) {
     elements: [3] Vertex_Format_Element = .[
         .{ Index = 0, Type = .FLOAT2, Normalized = false },
         .{ Index = 1, Type = .FLOAT2, Normalized = false },
-        .{ Index = 2, Type = .UBYTE4, Normalized = true  },
+        .{ Index = 2, Type = .UBYTE4, Normalized = true },
     ];
     hr.mesh = mesh_create(device, vertex_format_make(elements), .THIRTY_TWO, "w4_hotreload");
 
@@ -744,23 +746,23 @@ sample_hotreload_render :: (device: *Graphics_Device, target: Drawable_Target, w
     // 正交矩阵：像素坐标 → NDC，原点左上（和 W3 的 quad 完全一致）。
     zfar := 1000000.0;
     m: Matrix4;
-    m._11 =  2.0 / cast(float) width;
+    m._11 = 2.0 / cast(float) width;
     m._22 = -2.0 / cast(float) height;
-    m._33 =  1.0 / zfar;
+    m._33 = 1.0 / zfar;
     m._41 = -1;
-    m._42 =  1;
+    m._42 = 1;
     m._43 = -1;
-    m._44 =  1;
+    m._44 = 1;
     material_stage_set_uniform_value(*hr.mat.Vertex, 0, m);
 
     white := Color_White;
     vertices: [4] Vertex = .[
-        .{ pos = .{ r.x,      r.y      }, tex = .{ 0.0, 0.0 }, col = white },
-        .{ pos = .{ r.x + r.w, r.y     }, tex = .{ 1.0, 0.0 }, col = white },
+        .{ pos = .{ r.x, r.y }, tex = .{ 0.0, 0.0 }, col = white },
+        .{ pos = .{ r.x + r.w, r.y }, tex = .{ 1.0, 0.0 }, col = white },
         .{ pos = .{ r.x + r.w, r.y + r.h }, tex = .{ 1.0, 1.0 }, col = white },
-        .{ pos = .{ r.x,      r.y + r.h }, tex = .{ 0.0, 1.0 }, col = white },
+        .{ pos = .{ r.x, r.y + r.h }, tex = .{ 0.0, 1.0 }, col = white },
     ];
-    indices: [6] s32 = .[ 0, 1, 2, 0, 2, 3 ];
+    indices: [6] s32 = .[0, 1, 2, 0, 2, 3];
     mesh_set_vertices(hr.mesh, vertices);
     mesh_set_indices(hr.mesh, indices);
 
@@ -784,8 +786,14 @@ sample_hotreload_try :: (device: *Graphics_Device, target: Drawable_Target, whic
 
     fragment_text := HR_FRAGMENT_V2_GLSL;
     tag := "v2(texture ignored)";
-    if which == 2 { fragment_text = HR_FRAGMENT_SYNTAX_GLSL; tag = "syntax error"; }
-    if which == 3 { fragment_text = HR_FRAGMENT_LINK_GLSL;   tag = "varying mismatch"; }
+    if which == 2 {
+        fragment_text = HR_FRAGMENT_SYNTAX_GLSL;
+        tag = "syntax error";
+    }
+    if which == 3 {
+        fragment_text = HR_FRAGMENT_LINK_GLSL;
+        tag = "varying mismatch";
+    }
 
     vertex_info := Shader_Create_Info.{
         Stage = .VERTEX,
@@ -834,19 +842,19 @@ sample_render :: () {
     // ---- W5/W6：三个检查帧（都在窗口 pass 还开着的时候读回） ----
     if !sample.w5_checked && sample.updates >= W5_CHECK_FRAME {
         sample.w5_checked = true;
-        width  := window_width_in_pixels(App.window);
+        width := window_width_in_pixels(App.window);
         height := window_height_in_pixels(App.window);
-        sample_w5_verify(App.device, width, height);                    // 屏幕读回 + blit + 超限
+        sample_w5_verify(App.device, width, height); // 屏幕读回 + blit + 超限
     }
     if !sample.msaa_reported && sample.updates >= W5_MSAA_FRAME {
         sample.msaa_reported = true;
-        width  := window_width_in_pixels(App.window);
+        width := window_width_in_pixels(App.window);
         height := window_height_in_pixels(App.window);
         sample_msaa_verify(App.device, drawable_target_window(App.window), width, height);
     }
     if !sample.w6_window_reported && sample.updates >= W6_WINDOW_MSAA_FRAME {
         sample.w6_window_reported = true;
-        width  := window_width_in_pixels(App.window);
+        width := window_width_in_pixels(App.window);
         height := window_height_in_pixels(App.window);
         sample_w6_window_verify(width, height);
     }
@@ -865,7 +873,7 @@ sample_graphics_render :: () {
     if device == null || !sample.graphics_ok return;
 
     target := drawable_target_window(App.window);
-    width  := drawable_target_width_in_pixels(target);
+    width := drawable_target_width_in_pixels(target);
     height := drawable_target_height_in_pixels(target);
     if width <= 0 || height <= 0 return;
 
@@ -878,25 +886,25 @@ sample_graphics_render :: () {
         //     (Matrix4x4.CreateOrthographicOffCenter(0, w, h, 0, 0, zfar))
         zfar := 1000000.0;
         m: Matrix4;
-        m._11 =  2.0 / cast(float) width;
+        m._11 = 2.0 / cast(float) width;
         m._22 = -2.0 / cast(float) height;
-        m._33 =  1.0 / zfar;
+        m._33 = 1.0 / zfar;
         m._41 = -1;
-        m._42 =  1;
+        m._42 = 1;
         m._43 = -1;
-        m._44 =  1;
+        m._44 = 1;
         material_stage_set_uniform_value(*sample.material.Vertex, 0, m);
 
         r := sample_rect(width, height, 0.25, 0.62, 0.50, 0.34);
         white := Color.{ 255, 255, 255, 255 };
 
         vertices: [4] Vertex = .[
-            .{ pos = .{ r.x,       r.y       }, tex = .{ 0.0, 0.0 }, col = white },
-            .{ pos = .{ r.x + r.w, r.y       }, tex = .{ 1.0, 0.0 }, col = white },
+            .{ pos = .{ r.x, r.y }, tex = .{ 0.0, 0.0 }, col = white },
+            .{ pos = .{ r.x + r.w, r.y }, tex = .{ 1.0, 0.0 }, col = white },
             .{ pos = .{ r.x + r.w, r.y + r.h }, tex = .{ 1.0, 1.0 }, col = white },
-            .{ pos = .{ r.x,       r.y + r.h }, tex = .{ 0.0, 1.0 }, col = white },
+            .{ pos = .{ r.x, r.y + r.h }, tex = .{ 0.0, 1.0 }, col = white },
         ];
-        indices: [6] s32 = .[ 0, 1, 2, 0, 2, 3 ];
+        indices: [6] s32 = .[0, 1, 2, 0, 2, 3];
 
         mesh_set_vertices(sample.mesh, vertices);
         mesh_set_indices(sample.mesh, indices);
@@ -932,7 +940,7 @@ sample_graphics_verify :: () {
         return;
     }
 
-    width  := window_width_in_pixels(App.window);
+    width := window_width_in_pixels(App.window);
     height := window_height_in_pixels(App.window);
     if width <= 0 || height <= 0 {
         sample.pixel_result = -1;
@@ -944,15 +952,15 @@ sample_graphics_verify :: () {
     //   quad 内部左半：x = 37.5% 宽，y = 79% 高   → 期望红
     //   quad 内部右半：x = 62.5% 宽，y = 79% 高   → 期望蓝
     //   quad 之外    ：x = 5% 宽，y = 5% 高      → 期望清屏色（上面什么都没画）
-    left_x  := cast(s32) (cast(float) width * 0.375);
+    left_x := cast(s32) (cast(float) width * 0.375);
     right_x := cast(s32) (cast(float) width * 0.625);
-    mid_y   := cast(s32) (cast(float) height * 0.79);
-    out_x   := cast(s32) (cast(float) width * 0.05);
-    out_y   := cast(s32) (cast(float) height * 0.05);
+    mid_y := cast(s32) (cast(float) height * 0.79);
+    out_x := cast(s32) (cast(float) width * 0.05);
+    out_y := cast(s32) (cast(float) height * 0.05);
 
-    left, ok_left     := sample_read_pixel(left_x, mid_y);
-    right, ok_right   := sample_read_pixel(right_x, mid_y);
-    outside, ok_out   := sample_read_pixel(out_x, out_y);
+    left, ok_left := sample_read_pixel(left_x, mid_y);
+    right, ok_right := sample_read_pixel(right_x, mid_y);
+    outside, ok_out := sample_read_pixel(out_x, out_y);
 
     if !ok_left || !ok_right || !ok_out {
         sample.pixel_result = -1;
@@ -988,7 +996,7 @@ sample_batcher_verify :: () {
         return;
     }
 
-    width  := window_width_in_pixels(App.window);
+    width := window_width_in_pixels(App.window);
     height := window_height_in_pixels(App.window);
     if width <= 0 || height <= 0 {
         sample.batch_result = -1;
@@ -1001,14 +1009,14 @@ sample_batcher_verify :: () {
     solid_x := cast(s32) (cast(float) width * 0.12);
     grad_lx := cast(s32) (cast(float) width * (0.26 + 0.20 * 0.25));
     grad_rx := cast(s32) (cast(float) width * (0.26 + 0.20 * 0.75));
-    wash_x  := cast(s32) (cast(float) width * 0.60);
-    fill_x  := cast(s32) (cast(float) width * 0.84);
+    wash_x := cast(s32) (cast(float) width * 0.60);
+    fill_x := cast(s32) (cast(float) width * 0.84);
 
     solid, ok_solid := sample_read_pixel(solid_x, mid_y);
-    grad_l, ok_gl   := sample_read_pixel(grad_lx, mid_y);
-    grad_r, ok_gr   := sample_read_pixel(grad_rx, mid_y);
-    wash, ok_wash   := sample_read_pixel(wash_x, mid_y);
-    fill, ok_fill   := sample_read_pixel(fill_x, mid_y);
+    grad_l, ok_gl := sample_read_pixel(grad_lx, mid_y);
+    grad_r, ok_gr := sample_read_pixel(grad_rx, mid_y);
+    wash, ok_wash := sample_read_pixel(wash_x, mid_y);
+    fill, ok_fill := sample_read_pixel(fill_x, mid_y);
 
     if !ok_solid || !ok_gl || !ok_gr || !ok_wash || !ok_fill {
         sample.batch_result = -1;
@@ -1016,11 +1024,11 @@ sample_batcher_verify :: () {
         return;
     }
 
-    sample.solid_px  = solid;
+    sample.solid_px = solid;
     sample.grad_l_px = grad_l;
     sample.grad_r_px = grad_r;
-    sample.wash_px   = wash;
-    sample.fill_px   = fill;
+    sample.wash_px = wash;
+    sample.fill_px = fill;
 
     // solid / fill / 渐变的两个端点都是「不透明覆盖」，颜色应当精确。
     ok_s := solid == EXPECT_SOLID;
@@ -1063,7 +1071,7 @@ sample_font_verify :: () {
         return;
     }
 
-    width  := window_width_in_pixels(App.window);
+    width := window_width_in_pixels(App.window);
     height := window_height_in_pixels(App.window);
     if width <= 0 || height <= 0 {
         sample.font_result = -1;
@@ -1083,8 +1091,8 @@ sample_font_verify :: () {
     strip_h := cast(s32) (cast(float) height * 0.22);
     if strip_h > 72 strip_h = 72;
     if strip_w > 512 strip_w = 512;
-    if strip_x + strip_w > width   strip_w = width - strip_x;
-    if strip_y + strip_h > height  strip_h = height - strip_y;
+    if strip_x + strip_w > width strip_w = width - strip_x;
+    if strip_y + strip_h > height strip_h = height - strip_y;
 
     pixels, ok := sample_read_strip(strip_x, strip_y, strip_w, strip_h);
     if !ok {
@@ -1096,8 +1104,9 @@ sample_font_verify :: () {
     // 数「不是清屏色」的像素。字形边缘有 MSDF 抗锯齿，所以任何非零覆盖都会偏
     // 离清屏色 —— 计数本身就是覆盖率。
     non_clear: s32 = 0;
-    min_x: s32 = strip_w; max_x: s32 = -1;
-    for i: 0..cast(s32) pixels.count-1 {
+    min_x: s32 = strip_w;
+    max_x: s32 = -1;
+    for i: 0..cast(s32) pixels.count - 1 {
         if pixels[i] != CLEAR_COLOR {
             non_clear += 1;
             x := i % strip_w;
@@ -1142,7 +1151,7 @@ sample_hotreload_poll :: () {
     hr := *sample.hr;
     if hr.mat == null return;
 
-    width  := window_width_in_pixels(App.window);
+    width := window_width_in_pixels(App.window);
     height := window_height_in_pixels(App.window);
     if width <= 0 || height <= 0 return;
 
@@ -1152,7 +1161,7 @@ sample_hotreload_poll :: () {
     color, ok := sample_read_pixel(px, py);
     if !ok return;
 
-    if !sample.pixel_checked return;                  // 画面还没稳定，先不记
+    if !sample.pixel_checked return; // 画面还没稳定，先不记
 
     if !sample.hr.have_before && sample.updates == PIXEL_CHECK_FRAME {
         sample.hr.before = color;
@@ -1255,7 +1264,7 @@ sample_w5_startup :: (device: *Graphics_Device) {
     elements: [3] Vertex_Format_Element = .[
         .{ Index = 0, Type = .FLOAT2, Normalized = false },
         .{ Index = 1, Type = .FLOAT2, Normalized = false },
-        .{ Index = 2, Type = .UBYTE4, Normalized = true  },
+        .{ Index = 2, Type = .UBYTE4, Normalized = true },
     ];
     sample.w5_screen_mesh = mesh_create(device, vertex_format_make(elements), .THIRTY_TWO, "w5_screen");
 
@@ -1294,9 +1303,9 @@ sample_w5_render :: (device: *Graphics_Device, window_target: Drawable_Target, w
         batcher_clear(b);
         batcher_set_texture(b, sample.batch_tex);
         batcher_set_sampler(b, texture_sampler_make(.NEAREST, .CLAMP));
-        batcher_rect_xy(b, 0,    0,    half, half, W5_Q_TL);
-        batcher_rect_xy(b, half, 0,    half, half, W5_Q_TR);
-        batcher_rect_xy(b, 0,    half, half, half, W5_Q_BL);
+        batcher_rect_xy(b, 0, 0, half, half, W5_Q_TL);
+        batcher_rect_xy(b, half, 0, half, half, W5_Q_TR);
+        batcher_rect_xy(b, 0, half, half, half, W5_Q_BL);
         batcher_rect_xy(b, half, half, half, half, W5_Q_BR);
         batcher_render(b, offscreen);
     }
@@ -1319,12 +1328,12 @@ sample_w5_present :: (device: *Graphics_Device, window_target: Drawable_Target, 
 
     white := Color_White;
     vertices: [4] Vertex = .[
-        .{ pos = .{ r.x,       r.y       }, tex = .{ 0.0, 0.0 }, col = white },
-        .{ pos = .{ r.x + r.w, r.y       }, tex = .{ 1.0, 0.0 }, col = white },
+        .{ pos = .{ r.x, r.y }, tex = .{ 0.0, 0.0 }, col = white },
+        .{ pos = .{ r.x + r.w, r.y }, tex = .{ 1.0, 0.0 }, col = white },
         .{ pos = .{ r.x + r.w, r.y + r.h }, tex = .{ 1.0, 1.0 }, col = white },
-        .{ pos = .{ r.x,       r.y + r.h }, tex = .{ 0.0, 1.0 }, col = white },
+        .{ pos = .{ r.x, r.y + r.h }, tex = .{ 0.0, 1.0 }, col = white },
     ];
-    indices: [6] s32 = .[ 0, 1, 2, 0, 2, 3 ];
+    indices: [6] s32 = .[0, 1, 2, 0, 2, 3];
     mesh_set_vertices(sample.w5_screen_mesh, vertices);
     mesh_set_indices(sample.w5_screen_mesh, indices);
 
@@ -1357,9 +1366,9 @@ sample_w5_verify :: (device: *Graphics_Device, width: s32, height: s32) {
 
     // 屏幕上那块 quad 的四个象限中心（左上原点，设备像素）
     r := sample_rect(width, height, W5_SCREEN_X, W5_SCREEN_Y, W5_SCREEN_W, W5_SCREEN_H);
-    expects: [4] Color = .[ W5_Q_TL, W5_Q_TR, W5_Q_BL, W5_Q_BR ];
-    names:   [4] string = .[ "TL", "TR", "BL", "BR" ];
-    offsets: [2] float = .[ 0.25, 0.75 ];
+    expects: [4] Color = .[W5_Q_TL, W5_Q_TR, W5_Q_BL, W5_Q_BR];
+    names: [4] string = .["TL", "TR", "BL", "BR"];
+    offsets: [2] float = .[0.25, 0.75];
 
     all_ok := true;
     read_ok_any := false;
@@ -1412,8 +1421,8 @@ sample_blit_verify :: (device: *Graphics_Device) {
     texture_blit(target_texture(sample.w5_target), sample.w5_blit_dst, .NEAREST);
     blits_after := sample_gpu_stat(8);
 
-    expects: [4] Color = .[ W5_Q_TL, W5_Q_TR, W5_Q_BL, W5_Q_BR ];
-    names:   [4] string = .[ "TL", "TR", "BL", "BR" ];
+    expects: [4] Color = .[W5_Q_TL, W5_Q_TR, W5_Q_BL, W5_Q_BR];
+    names: [4] string = .["TL", "TR", "BL", "BR"];
     half: s32 = W5_TARGET_SIZE / 2;
     quarter: s32 = half / 2;
 
@@ -1506,15 +1515,18 @@ sample_msaa_probe :: (device: *Graphics_Device, target: *Target) -> (partial: s3
 
     // 读回一行。先填哨兵：读失败（没有 GL / FBO 不完整）时不会被算成「全清屏」。
     array_resize(*sample.edge_row, W5_TARGET_SIZE);
-    for i: 0..W5_TARGET_SIZE-1 sample.edge_row[i] = TEXTURE_PIXEL_SENTINEL;
+    for i: 0..W5_TARGET_SIZE - 1 sample.edge_row[i] = TEXTURE_PIXEL_SENTINEL;
     texture_get_data_region(tex, sample.edge_row, .{ 0, MSAA_EDGE_ROW, W5_TARGET_SIZE, 1 });
 
     sentinels: s32 = 0;
-    for k: 0..W5_TARGET_SIZE-1 {
+    for k: 0..W5_TARGET_SIZE - 1 {
         c := sample.edge_row[k];
-        if c == TEXTURE_PIXEL_SENTINEL { sentinels += 1; continue; }
-        if c == CLEAR_COLOR continue;          // 完全在三角形外
-        if c == MSAA_TRI_GREEN continue;       // 完全在三角形内
+        if c == TEXTURE_PIXEL_SENTINEL {
+            sentinels += 1;
+            continue;
+        }
+        if c == CLEAR_COLOR continue; // 完全在三角形外
+        if c == MSAA_TRI_GREEN continue; // 完全在三角形内
         if partial == 0 {
             edge_px = c;
             edge_x = cast(s32) k;
@@ -1551,7 +1563,7 @@ sample_msaa_verify :: (device: *Graphics_Device, window_target: Drawable_Target,
     // 探针最后停在 ms4 的 target pass 上：把 window pass 重新打开（见 sample_w5_present）。
     sample_w5_present(device, window_target, width, height);
 
-    one_ok  := sample.msaa_partial_1x == 0;
+    one_ok := sample.msaa_partial_1x == 0;
     four_ok := sample.msaa_partial_4x >= 1;
     value_ok := sample_color_near(sample.msaa_edge_4x, EXPECT_MSAA_PARTIAL, MSAA_PARTIAL_TOLERANCE);
 
@@ -1591,8 +1603,8 @@ sample_w6_window_verify :: (width: s32, height: s32) {
     }
 
     bb := sample_sample_count_value(device.backbuffer_format.SampleCount);
-    ms := sample_gpu_stat(10);          // window_ms.samples（MS FBO 真实建出来的）
-    resolves := sample_gpu_stat(9);     // window_resolves（present 时的 resolve 次数）
+    ms := sample_gpu_stat(10); // window_ms.samples（MS FBO 真实建出来的）
+    resolves := sample_gpu_stat(9); // window_resolves（present 时的 resolve 次数）
     max_samples := sample_gpu_stat(23);
     sample.w6_bb_samples = bb;
     sample.w6_ms_samples = ms;
@@ -1603,14 +1615,14 @@ sample_w6_window_verify :: (width: s32, height: s32) {
     frame_ok := false;
     read_ok_any := false;
     if width > 0 && height > 0 {
-        left_x  := cast(s32) (cast(float) width * 0.375);
+        left_x := cast(s32) (cast(float) width * 0.375);
         right_x := cast(s32) (cast(float) width * 0.625);
-        mid_y   := cast(s32) (cast(float) height * 0.79);
-        out_x   := cast(s32) (cast(float) width * 0.05);
-        out_y   := cast(s32) (cast(float) height * 0.05);
-        left, ok_l  := sample_read_pixel(left_x, mid_y);
+        mid_y := cast(s32) (cast(float) height * 0.79);
+        out_x := cast(s32) (cast(float) width * 0.05);
+        out_y := cast(s32) (cast(float) height * 0.05);
+        left, ok_l := sample_read_pixel(left_x, mid_y);
         right, ok_r := sample_read_pixel(right_x, mid_y);
-        out, ok_o   := sample_read_pixel(out_x, out_y);
+        out, ok_o := sample_read_pixel(out_x, out_y);
         read_ok_any = ok_l && ok_r && ok_o;
         frame_ok = read_ok_any &&
                    left == EXPECT_LEFT && right == EXPECT_RIGHT && out == EXPECT_OUTSIDE;
@@ -1643,15 +1655,15 @@ sample_soak_poll :: () {
     i: s32 = sample.soak_samples;
     if i >= W6_SOAK_MAX_SAMPLES return;
 
-    sample.soak_frames[i]     = sample.updates;
-    sample.soak_mem[i]        = sample_memory_bytes();
-    sample.soak_programs[i]   = sample_gpu_stat(0);
-    sample.soak_pipelines[i]  = sample_gpu_stat(1);
-    sample.soak_samplers[i]   = sample_gpu_stat(2);
-    sample.soak_targets[i]    = sample_gpu_stat(3);
-    sample.soak_tex_fbos[i]   = sample_gpu_stat(4);
-    sample.soak_textures[i]   = sample_gpu_stat(13);
-    sample.soak_buffers[i]    = sample_gpu_stat(14);
+    sample.soak_frames[i] = sample.updates;
+    sample.soak_mem[i] = sample_memory_bytes();
+    sample.soak_programs[i] = sample_gpu_stat(0);
+    sample.soak_pipelines[i] = sample_gpu_stat(1);
+    sample.soak_samplers[i] = sample_gpu_stat(2);
+    sample.soak_targets[i] = sample_gpu_stat(3);
+    sample.soak_tex_fbos[i] = sample_gpu_stat(4);
+    sample.soak_textures[i] = sample_gpu_stat(13);
+    sample.soak_buffers[i] = sample_gpu_stat(14);
     sample.soak_target_res[i] = sample_gpu_stat(21);
     sample.soak_samples += 1;
 
@@ -1673,26 +1685,26 @@ sample_soak_report :: () {
     }
 
     mem_first := sample.soak_mem[0];
-    mem_last  := sample.soak_mem[n-1];
+    mem_last := sample.soak_mem[n - 1];
     mem_growth := mem_last - mem_first;
 
     // 「单调增长」= 每一个相邻对都更大。内存 soak 要证伪的就是它。
     monotonic := true;
-    for i: 1..n-1 {
-        if sample.soak_mem[i] <= sample.soak_mem[i-1] monotonic = false;
+    for i: 1..n - 1 {
+        if sample.soak_mem[i] <= sample.soak_mem[i - 1] monotonic = false;
     }
 
     // 存活计数：首尾必须完全相等（只增不减就是泄漏）。
     counts_ok := true;
-    for i: 1..n-1 {
-        if sample.soak_programs[i]   != sample.soak_programs[0]   counts_ok = false;
-        if sample.soak_pipelines[i]  != sample.soak_pipelines[0]  counts_ok = false;
-        if sample.soak_samplers[i]   != sample.soak_samplers[0]   counts_ok = false;
-        if sample.soak_targets[i]    != sample.soak_targets[0]    counts_ok = false;
-        if sample.soak_tex_fbos[i]   != sample.soak_tex_fbos[0]   counts_ok = false;
-        if sample.soak_textures[i]   != sample.soak_textures[0]   counts_ok = false;
-        if sample.soak_buffers[i]    != sample.soak_buffers[0]    counts_ok = false;
-        if sample.soak_target_res[i] != sample.soak_target_res[0]  counts_ok = false;
+    for i: 1..n - 1 {
+        if sample.soak_programs[i] != sample.soak_programs[0] counts_ok = false;
+        if sample.soak_pipelines[i] != sample.soak_pipelines[0] counts_ok = false;
+        if sample.soak_samplers[i] != sample.soak_samplers[0] counts_ok = false;
+        if sample.soak_targets[i] != sample.soak_targets[0] counts_ok = false;
+        if sample.soak_tex_fbos[i] != sample.soak_tex_fbos[0] counts_ok = false;
+        if sample.soak_textures[i] != sample.soak_textures[0] counts_ok = false;
+        if sample.soak_buffers[i] != sample.soak_buffers[0] counts_ok = false;
+        if sample.soak_target_res[i] != sample.soak_target_res[0] counts_ok = false;
     }
 
     mem_ok := mem_growth <= W6_SOAK_MEM_TOLERANCE;
@@ -1701,7 +1713,7 @@ sample_soak_report :: () {
     if ok sample.soak_result = 1;
 
     log_info(tprint("W6 SOAK memory: frame % → %  memory % B → % B（Δ=%，容差 %）不单调增长=%  PASS=%",
-                    sample.soak_frames[0], sample.soak_frames[n-1], mem_first, mem_last,
+                    sample.soak_frames[0], sample.soak_frames[n - 1], mem_first, mem_last,
                     mem_growth, W6_SOAK_MEM_TOLERANCE, !monotonic, mem_ok));
     log_info(tprint("W6 SOAK alive : programs=% pipelines=% samplers=% targets=% texture_fbos=% 资源(texture/buffer/target)=%/%/% 首尾相等=%",
                     sample.soak_programs[0], sample.soak_pipelines[0], sample.soak_samplers[0],
@@ -1715,7 +1727,7 @@ sample_soak_report :: () {
 // ---------------------------------------------------------------- 更新
 sample_update :: () {
     sample.updates += 1;
-    dt := 1.0 / 60.0;                      // fixed step 60：一个 update 一个定步
+    dt := 1.0 / 60.0; // fixed step 60：一个 update 一个定步
     sample.elapsed += dt;
     sample.last_dt = dt;
 
@@ -1763,15 +1775,21 @@ sample_update :: () {
         target := drawable_target_window(App.window);
         which: s32 = 1;
         if sample.updates == HOTRELOAD_BAD_COMPILE_FRAME which = 2;
-        if sample.updates == HOTRELOAD_BAD_LINK_FRAME    which = 3;
+        if sample.updates == HOTRELOAD_BAD_LINK_FRAME which = 3;
 
         ok, error := sample_hotreload_try(device, target, which);
         if which == 1 sample.hr.ok_good = ok;
         // copy_string：ShaderPairTryReplace 返回的是 tprint 的**临时缓冲**，
         // 下一次 tprint 就会把它覆盖掉。直接存指针会在报告里打出毫无关系的
         // 另一行日志（第一次跑就是这样）。要留住内容就得自己复制。
-        if which == 2 { sample.hr.ok_syntax = ok; if !ok sample.hr.err_syntax = copy_string(error); }
-        if which == 3 { sample.hr.ok_link = ok;   if !ok sample.hr.err_link = copy_string(error); }
+        if which == 2 {
+            sample.hr.ok_syntax = ok;
+            if !ok sample.hr.err_syntax = copy_string(error);
+        }
+        if which == 3 {
+            sample.hr.ok_link = ok;
+            if !ok sample.hr.err_link = copy_string(error);
+        }
     }
 
     // ---- W6：内存 soak 的采样点（第 500/1000/…/3000 帧） ----
@@ -1784,7 +1802,7 @@ sample_update :: () {
 }
 
 sample_report :: () {
-    size   := window_size(App.window);
+    size := window_size(App.window);
     pixels := window_size_in_pixels(App.window);
     ms := input_mouse(App.input);
 

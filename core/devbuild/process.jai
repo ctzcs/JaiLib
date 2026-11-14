@@ -68,7 +68,7 @@ process_mutex_get :: () -> *THREAD.Mutex {
         return *process_mutex;
     }
     // 另一个线程正在建立（只有几条指令的窗口）：等它就绪。
-    while ATOMICS.atomic_read(*process_mutex_state) != 2 { }
+    while ATOMICS.atomic_read(*process_mutex_state) != 2 {}
     return *process_mutex;
 }
 //@endregion

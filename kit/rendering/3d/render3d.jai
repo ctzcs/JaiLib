@@ -74,7 +74,7 @@ Render3D :: struct {
     snapshots: [..] *F.Material;
     snapshot_count: int;
     queue: Render_Queue(int);
-    values: [..] [4] float32;
+    values: [..][4] float32;
     // 记录时复制的模型空间蒙皮矩阵，活到 clear/dispose；不同记录不共享可变姿态。
     joints: [..] W.Matrix4;
 
@@ -318,7 +318,7 @@ render3d_prepared :: (r: *Render3D, m: *mat.Material) -> (Render3D_Prepared, mat
     error := mat.material_select(m.shader.desc, m.bindings, .Model, "", null, *selection);
     if error != .None return Render3D_Prepared.{}, error;
     prepared := Render3D_Prepared.{ revision = m.revision, shader = m.shader, tables = r.tables.count };
-    uniforms: [sh.MAX_PASSES] [] u8;
+    uniforms: [sh.MAX_PASSES][] u8;
     for i: 0..selection.count - 1 {
         p := m.shader.desc.passes[selection.passes[i]];
         binding := m.bindings[selection.bindings[i]];
@@ -358,7 +358,7 @@ buffer :: (r: *Render3D, mesh: *F.Mesh, material: *mat.Material, buf: *Model_Buf
 // 同一材质、相同 uniform 与采样绑定共用快照；实例数值不作为快照键。
 // 哈希冲突再逐字段比较，不依赖指针所指的可变材质值。
 render3d_source :: (r: *Render3D, m: *mat.Material, selection: mat.Pass_Selection,
-                    uniforms: [] [] u8) -> int {
+                    uniforms: [][] u8) -> int {
     hash := cast(u64) m; // olib: u64(uintptr(m))
     for uniform: uniforms {
         for byte: uniform {
@@ -767,6 +767,7 @@ Model_Item :: struct {
     world: W.Matrix4;
     tint: [4] float32;
 }
+
 #assert(size_of(Model_Item) == 80, "Model_Item 必须是 80 字节（世界矩阵 64 + tint 16）");
 
 // 缓冲里每个实例按 世界矩阵(64B) + tint(16B) + slots × 16B 紧凑排列；

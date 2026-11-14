@@ -42,71 +42,71 @@ S_STRING :: #import "String";
 // odin 的 dynlib.Library 是不透明句柄；Jai 侧统一用 *void。
 // 打开失败返回 null，诊断由 session_library_error_text 给出。
 #if OS == .WINDOWS {
-SESSION_WU :: #import "Windows_Utf8";
+    SESSION_WU :: #import "Windows_Utf8";
 
-session_kernel32 :: #library,system "kernel32";
-session_load_library_w :: (path: *u16) -> *void #foreign session_kernel32 "LoadLibraryW";
-session_get_proc_address :: (library: *void, name: *u8) -> *void #foreign session_kernel32 "GetProcAddress";
-session_free_library :: (library: *void) -> s32 #foreign session_kernel32 "FreeLibrary";
-session_get_last_error :: () -> u32 #foreign session_kernel32 "GetLastError";
+    session_kernel32 :: #library,system "kernel32";
+    session_load_library_w :: (path: *u16) -> *void #foreign session_kernel32 "LoadLibraryW";
+    session_get_proc_address :: (library: *void, name: *u8) -> *void #foreign session_kernel32 "GetProcAddress";
+    session_free_library :: (library: *void) -> s32 #foreign session_kernel32 "FreeLibrary";
+    session_get_last_error :: () -> u32 #foreign session_kernel32 "GetLastError";
 
-session_library_open :: (path: string) -> *void {
-    wide := SESSION_WU.utf8_to_wide_new(path);
-    if wide == null return null;
-    defer free(wide);
-    return session_load_library_w(wide);
-}
+    session_library_open :: (path: string) -> *void {
+        wide := SESSION_WU.utf8_to_wide_new(path);
+        if wide == null return null;
+        defer free(wide);
+        return session_load_library_w(wide);
+    }
 
-session_library_symbol :: (library: *void, name: string) -> *void {
-    c_name := to_c_string(name);
-    defer free(c_name);
-    return session_get_proc_address(library, c_name);
-}
+    session_library_symbol :: (library: *void, name: string) -> *void {
+        c_name := to_c_string(name);
+        defer free(c_name);
+        return session_get_proc_address(library, c_name);
+    }
 
-session_library_close :: (library: *void) {
-    if library != null session_free_library(library);
-}
+    session_library_close :: (library: *void) {
+        if library != null session_free_library(library);
+    }
 
-// odin: dynlib.last_error()。这里只说「打不开」和 GetLastError 的编号，字符串用调用方的 allocator。
-session_library_error_text :: () -> string {
-    return sprint("Cannot load module (GetLastError=%)", session_get_last_error());
-}
+    // odin: dynlib.last_error()。这里只说「打不开」和 GetLastError 的编号，字符串用调用方的 allocator。
+    session_library_error_text :: () -> string {
+        return sprint("Cannot load module (GetLastError=%)", session_get_last_error());
+    }
 }
 
 // 非 Windows：odin 仍用 core:dynlib；Jai 侧按 POSIX dlopen 写一份对位实现。
 // 注意：这条分支在 Windows 上整块不类型检查，也没有在 CI 里跑过（验收平台是 Windows）。
 #if OS != .WINDOWS {
-#if OS == .LINUX || OS == .ANDROID session_dl :: #library,system "dl";
-#if OS != .LINUX && OS != .ANDROID session_dl :: #library,system "System";
+    #if OS == .LINUX || OS == .ANDROID session_dl :: #library,system "dl";
+    #if OS != .LINUX && OS != .ANDROID session_dl :: #library,system "System";
 
-RTLD_NOW : s32 : 2;
+    RTLD_NOW: s32 : 2;
 
-session_dlopen :: (path: *u8, mode: s32) -> *void #foreign session_dl "dlopen";
-session_dlsym :: (library: *void, name: *u8) -> *void #foreign session_dl "dlsym";
-session_dlclose :: (library: *void) -> s32 #foreign session_dl "dlclose";
-session_dlerror :: () -> *u8 #foreign session_dl "dlerror";
+    session_dlopen :: (path: *u8, mode: s32) -> *void #foreign session_dl "dlopen";
+    session_dlsym :: (library: *void, name: *u8) -> *void #foreign session_dl "dlsym";
+    session_dlclose :: (library: *void) -> s32 #foreign session_dl "dlclose";
+    session_dlerror :: () -> *u8 #foreign session_dl "dlerror";
 
-session_library_open :: (path: string) -> *void {
-    c_path := to_c_string(path);
-    defer free(c_path);
-    return session_dlopen(c_path, RTLD_NOW);
-}
+    session_library_open :: (path: string) -> *void {
+        c_path := to_c_string(path);
+        defer free(c_path);
+        return session_dlopen(c_path, RTLD_NOW);
+    }
 
-session_library_symbol :: (library: *void, name: string) -> *void {
-    c_name := to_c_string(name);
-    defer free(c_name);
-    return session_dlsym(library, c_name);
-}
+    session_library_symbol :: (library: *void, name: string) -> *void {
+        c_name := to_c_string(name);
+        defer free(c_name);
+        return session_dlsym(library, c_name);
+    }
 
-session_library_close :: (library: *void) {
-    if library != null session_dlclose(library);
-}
+    session_library_close :: (library: *void) {
+        if library != null session_dlclose(library);
+    }
 
-session_library_error_text :: () -> string {
-    message := session_dlerror();
-    if message == null return copy_string("Cannot load module");
-    return sprint("Cannot load module (%): %", "", to_string(message));
-}
+    session_library_error_text :: () -> string {
+        message := session_dlerror();
+        if message == null return copy_string("Cannot load module");
+        return sprint("Cannot load module (%): %", "", to_string(message));
+    }
 }
 //@endregion
 
@@ -135,8 +135,8 @@ session_create_shadow_copy :: (directory: string) -> (string, bool) {
 
 State_Policy :: enum u8 {
     Compatible; // state_version 不同则拒绝；默认不会静默丢失当前局面。
-    Migrate;    // 把旧快照交给新模块，由 load 明确接受或拒绝。
-    Reset;      // 不保存旧状态，明确启动新局。
+    Migrate; // 把旧快照交给新模块，由 load 明确接受或拒绝。
+    Reset; // 不保存旧状态，明确启动新局。
 }
 
 Result :: enum u8 {

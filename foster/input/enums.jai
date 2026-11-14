@@ -115,12 +115,12 @@ Keys :: enum u32 {
 }
 
 Mouse_Buttons :: enum u32 {
-    NONE  :: 0;
-    LEFT  :: 1;
+    NONE :: 0;
+    LEFT :: 1;
     MIDDLE :: 2;
     RIGHT :: 3;
-    X1    :: 4;
-    X2    :: 5;
+    X1 :: 4;
+    X2 :: 5;
 }
 
 Buttons :: enum u32 {

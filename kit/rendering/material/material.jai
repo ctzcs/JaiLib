@@ -35,7 +35,7 @@ Material :: struct {
     instance: sh.Instance;
     source: string;
     bindings: [] Material_Binding;
-    samplers: [] [sh.MAX_TEXTURES] F.Bound_Sampler;
+    samplers: [][sh.MAX_TEXTURES] F.Bound_Sampler;
     // 数值、贴图或重载每次成功修改都递增；绘制器据此判断已记录的参数与贴图快照能否继续合批。
     revision: u64;
 }

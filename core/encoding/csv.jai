@@ -44,7 +44,7 @@ Csv_Error :: enum u32 {
 // rows 内的字符串克隆自解析结果，随文档销毁释放。
 Csv_Document :: struct {
     headers: [] string;
-    rows:    [..] [] string;
+    rows: [..][] string;
 }
 
 // 文档缓存（path -> 文档）。文档由 manager 持有，销毁时统一释放。
@@ -59,7 +59,9 @@ csv_manager_init :: (m: *Csv_Manager) {
 csv_manager_destroy :: (m: *Csv_Manager) {
     for m.documents {
         doc := it;
-        for h: doc.headers { if h.count > 0 free(h); }
+        for h: doc.headers {
+            if h.count > 0 free(h);
+        }
         array_free(doc.headers);
         for row_index: 0..doc.rows.count - 1 {
             row := doc.rows[row_index];
@@ -80,7 +82,7 @@ csv_manager_destroy :: (m: *Csv_Manager) {
 
 Csv_Parser :: struct {
     text: string;
-    pos:  int;
+    pos: int;
 }
 
 csv_is_eol :: (p: *Csv_Parser) -> bool {
@@ -147,7 +149,7 @@ csv_parse_quoted_field :: (p: *Csv_Parser) -> (string, bool) {
     return "", false; // 不可达：循环只在 return 处退出
 }
 
-csv_free_records :: (records: *[..] [] string) {
+csv_free_records :: (records: *[..][] string) {
     all := records.*;
     for record_index: 0..all.count - 1 {
         record := all[record_index];
@@ -161,7 +163,7 @@ csv_free_records :: (records: *[..] [] string) {
 }
 
 // 解析整个 CSV。空行跳过；字段数与首条记录不一致算错。
-csv_parse :: (text: string) -> (records: [..] [] string, ok: bool) {
+csv_parse :: (text: string) -> (records: [..][] string, ok: bool) {
     p: Csv_Parser;
     p.text = text;
     expected := 0; // 0 = 还没定下字段数（Odin 的 fields_per_record = 0）
@@ -201,7 +203,9 @@ csv_parse :: (text: string) -> (records: [..] [] string, ok: bool) {
             break;
         }
         if !record_ok {
-            for field: fields { if field.count > 0 free(field); }
+            for field: fields {
+                if field.count > 0 free(field);
+            }
             array_free(fields);
             csv_free_records(*records);
             return records, false;
@@ -209,7 +213,9 @@ csv_parse :: (text: string) -> (records: [..] [] string, ok: bool) {
         if expected == 0 {
             expected = fields.count;
         } else if fields.count != expected {
-            for field: fields { if field.count > 0 free(field); }
+            for field: fields {
+                if field.count > 0 free(field);
+            }
             array_free(fields);
             csv_free_records(*records);
             return records, false;

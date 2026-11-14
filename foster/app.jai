@@ -1,5 +1,5 @@
 #scope_module
-using Basic;   // module-private
+using Basic; // module-private
 using Math;
 #scope_export
 
@@ -37,14 +37,14 @@ App_Flags :: enum_flags u32 {
 
 App_Config :: struct {
     application_name: string;
-    window_title:     string;
-    width:            s32 = 1280;
-    height:           s32 = 720;
-    fullscreen:       bool = false;
-    resizable:        bool = true;
-    update_mode:      Update_Mode;
+    window_title: string;
+    width: s32 = 1280;
+    height: s32 = 720;
+    fullscreen: bool = false;
+    resizable: bool = true;
+    update_mode: Update_Mode;
     preferred_graphics_driver: Graphics_Driver = .NONE;
-    flags:            App_Flags;
+    flags: App_Flags;
 }
 
 Main_Thread_Action :: struct {
@@ -55,26 +55,26 @@ Main_Thread_Action :: struct {
 App_State :: struct {
     name: string;
 
-    time:        Time;
-    now:         float64;    // real elapsed seconds since app_run started
+    time: Time;
+    now: float64; // real elapsed seconds since app_run started
     update_mode: Update_Mode;
 
-    window:  *Window;    // the main window
+    window: *Window; // the main window
     windows: [..] *Window;
 
-    input:  *Input;
+    input: *Input;
     device: *Graphics_Device;
     // file_system: *FileSystem   (M7)
 
-    running:  bool;
-    exiting:  bool;
+    running: bool;
+    exiting: bool;
     disposed: bool;
 
     // lifecycle callbacks (Foster: abstract Startup/Shutdown/Update/Render)
-    startup:  () = null;
+    startup: () = null;
     shutdown: () = null;
-    update:   () = null;
-    render:   () = null;
+    update: () = null;
+    render: () = null;
 
     // Application events (background/foreground); may fire from any thread
     on_event: (ev: App_Events) = null;
@@ -82,12 +82,12 @@ App_State :: struct {
     on_exit_requested: () = null;
 
     // internals
-    timer_start:        float64;
-    last_update_time:   float64;
-    fixed_accumulator:  float64;
-    main_thread_id:     u32;
-    main_thread_mutex:  Mutex;
-    main_thread_queue:  [..] Main_Thread_Action;
+    timer_start: float64;
+    last_update_time: float64;
+    fixed_accumulator: float64;
+    main_thread_id: u32;
+    main_thread_mutex: Mutex;
+    main_thread_queue: [..] Main_Thread_Action;
     window_destroy_queue: [..] *Window;
 }
 
@@ -104,8 +104,8 @@ App: App_State;
 app_run :: (config: App_Config) {
     assert(config.application_name.count > 0, "Invalid Application Name");
     assert(!App.disposed, "The Application is Disposed");
-    assert(!App.running,  "Application is already running");
-    assert(!App.exiting,  "Application is still exiting");
+    assert(!App.running, "Application is already running");
+    assert(!App.exiting, "Application is still exiting");
 
     App.name = config.application_name;
 
@@ -171,7 +171,9 @@ app_run :: (config: App_Config) {
     app_poll_events();
     input_update(App.input, App.time);
 
-    for w: App.windows { window_show(w); }
+    for w: App.windows {
+        window_show(w);
+    }
 
     if App.startup != null App.startup();
 
@@ -181,7 +183,9 @@ app_run :: (config: App_Config) {
     app_drain_main_thread_queue();
 
     if App.shutdown != null App.shutdown();
-    for w: App.windows { window_hide(w); }
+    for w: App.windows {
+        window_hide(w);
+    }
     input_close_devices(App.input);
 
     App.running = false;
@@ -193,7 +197,7 @@ app_destroy :: () {
     if App.disposed return;
     assert(!App.running, "Cannot dispose App while running");
 
-    for i: 0..App.windows.count-1 {
+    for i: 0..App.windows.count - 1 {
         window_destroy(App.windows[App.windows.count - 1 - i]);
     }
     app_destroy_waiting_windows();
@@ -211,7 +215,9 @@ app_destroy :: () {
 
 // Notifies the application to exit; it may finish the current frame first.
 app_exit :: () {
-    if App.running { App.exiting = true; }
+    if App.running {
+        App.exiting = true;
+    }
 }
 
 app_is_main_thread :: () -> bool {
@@ -237,7 +243,8 @@ app_user_path :: () -> string {
         org := to_cstr("");
         name := to_cstr(App.name);
         path := SDL_GetPrefPath(org, name);
-        free(org); free(name);
+        free(org);
+        free(name);
         app_cached_user_path = copy_string(cstr_to_string(path));
         SDL_free(path);
         app_user_path_cached = true;
@@ -255,7 +262,7 @@ app_cached_user_path: string;
 JFOSTER_VERSION :: "0.1.0";
 
 app_tick :: () {
-    update  := App.update_mode;
+    update := App.update_mode;
     current_time := platform_time_seconds() - App.timer_start;
     delta_time := current_time - App.last_update_time;
     App.last_update_time = current_time;
@@ -287,7 +294,9 @@ app_tick :: () {
             while App.fixed_accumulator >= update.FixedTargetTime {
                 App.fixed_accumulator -= update.FixedTargetTime;
                 app_step(update.FixedTargetTime);
-                if App.exiting { break; }
+                if App.exiting {
+                    break;
+                }
             }
 
         case .UNLOCKED;
@@ -325,24 +334,24 @@ app_step :: (delta: float64) {
 }
 
 app_is_input_event :: (t: SDL_EventType) -> bool {
-    if t == .SDL_EVENT_MOUSE_BUTTON_DOWN    || t == .SDL_EVENT_MOUSE_BUTTON_UP   ||
-       t == .SDL_EVENT_MOUSE_WHEEL          || t == .SDL_EVENT_KEY_DOWN          ||
-       t == .SDL_EVENT_KEY_UP               || t == .SDL_EVENT_TEXT_INPUT        ||
-       t == .SDL_EVENT_JOYSTICK_ADDED       || t == .SDL_EVENT_JOYSTICK_REMOVED  ||
+    if t == .SDL_EVENT_MOUSE_BUTTON_DOWN || t == .SDL_EVENT_MOUSE_BUTTON_UP ||
+       t == .SDL_EVENT_MOUSE_WHEEL || t == .SDL_EVENT_KEY_DOWN ||
+       t == .SDL_EVENT_KEY_UP || t == .SDL_EVENT_TEXT_INPUT ||
+       t == .SDL_EVENT_JOYSTICK_ADDED || t == .SDL_EVENT_JOYSTICK_REMOVED ||
        t == .SDL_EVENT_JOYSTICK_BUTTON_DOWN || t == .SDL_EVENT_JOYSTICK_BUTTON_UP ||
-       t == .SDL_EVENT_JOYSTICK_AXIS_MOTION || t == .SDL_EVENT_GAMEPAD_ADDED     ||
-       t == .SDL_EVENT_GAMEPAD_REMOVED      || t == .SDL_EVENT_GAMEPAD_BUTTON_DOWN ||
-       t == .SDL_EVENT_GAMEPAD_BUTTON_UP    || t == .SDL_EVENT_GAMEPAD_AXIS_MOTION {
+       t == .SDL_EVENT_JOYSTICK_AXIS_MOTION || t == .SDL_EVENT_GAMEPAD_ADDED ||
+       t == .SDL_EVENT_GAMEPAD_REMOVED || t == .SDL_EVENT_GAMEPAD_BUTTON_DOWN ||
+       t == .SDL_EVENT_GAMEPAD_BUTTON_UP || t == .SDL_EVENT_GAMEPAD_AXIS_MOTION {
         return true;
     }
     return false;
 }
 
 app_is_window_event :: (t: SDL_EventType) -> bool {
-    if t == .SDL_EVENT_WINDOW_FOCUS_GAINED   || t == .SDL_EVENT_WINDOW_FOCUS_LOST  ||
-       t == .SDL_EVENT_WINDOW_MOUSE_ENTER    || t == .SDL_EVENT_WINDOW_MOUSE_LEAVE ||
-       t == .SDL_EVENT_WINDOW_RESIZED        || t == .SDL_EVENT_WINDOW_RESTORED    ||
-       t == .SDL_EVENT_WINDOW_MAXIMIZED      || t == .SDL_EVENT_WINDOW_MINIMIZED   ||
+    if t == .SDL_EVENT_WINDOW_FOCUS_GAINED || t == .SDL_EVENT_WINDOW_FOCUS_LOST ||
+       t == .SDL_EVENT_WINDOW_MOUSE_ENTER || t == .SDL_EVENT_WINDOW_MOUSE_LEAVE ||
+       t == .SDL_EVENT_WINDOW_RESIZED || t == .SDL_EVENT_WINDOW_RESTORED ||
+       t == .SDL_EVENT_WINDOW_MAXIMIZED || t == .SDL_EVENT_WINDOW_MINIMIZED ||
        t == .SDL_EVENT_WINDOW_ENTER_FULLSCREEN || t == .SDL_EVENT_WINDOW_LEAVE_FULLSCREEN ||
        t == .SDL_EVENT_WINDOW_CLOSE_REQUESTED {
         return true;
@@ -378,9 +387,9 @@ app_poll_events :: () {
 app_event_watcher :: (userdata: *void, event: *SDL_Event) -> bool #c_call {
     type := event.type;
 
-    push_context {   // SDL may call us on any thread, without a Jai context
+    push_context { // SDL may call us on any thread, without a Jai context
         if type == .SDL_EVENT_DID_ENTER_FOREGROUND || type == .SDL_EVENT_WILL_ENTER_FOREGROUND ||
-           type == .SDL_EVENT_DID_ENTER_BACKGROUND  || type == .SDL_EVENT_WILL_ENTER_BACKGROUND {
+           type == .SDL_EVENT_DID_ENTER_BACKGROUND || type == .SDL_EVENT_WILL_ENTER_BACKGROUND {
             if App.device != null graphics_device_on_event(App.device, type);
         }
 

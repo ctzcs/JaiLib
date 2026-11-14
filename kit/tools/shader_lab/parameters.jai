@@ -176,7 +176,7 @@ parameters_panel :: (s: *Session, index: int) {
             if p.texture_picker == f.id texture_picker(s, index, i);
         }
         if count > 1 && f.kind != .Color && f.kind != .Texture {
-            components: [4] string = .[ "X", "Y", "Z", "W" ];
+            components: [4] string = .["X", "Y", "Z", "W"];
             for c: 0..count - 1 {
                 id := tprint("%:%:%", p.name, f.id, c);
                 field_label(components[c], label_width, true);

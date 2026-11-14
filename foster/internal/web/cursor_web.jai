@@ -59,7 +59,7 @@ Cursor :: struct {
 
     // The System Type used to create this cursor; only meaningful when
     // HasSystemType is true.
-    SystemType:    Cursor_System_Types;
+    SystemType: Cursor_System_Types;
     HasSystemType: bool;
 }
 
@@ -120,25 +120,25 @@ cursor_handle :: (c: Cursor) -> *SDL_Cursor {
 // 对应，所以这是一张纯查表。
 web_cursor_css_for_system :: (type: Cursor_System_Types) -> string {
     if type == {
-        case .TEXT;               return "text";
-        case .WAIT;               return "wait";
-        case .CROSSHAIR;          return "crosshair";
-        case .PROGRESS;           return "progress";
-        case .RESIZE_NWSE;        return "nwse-resize";
-        case .RESIZE_NESW;        return "nesw-resize";
-        case .RESIZE_HORIZONTAL;  return "ew-resize";
-        case .RESIZE_VERTICAL;    return "ns-resize";
-        case .MOVE;               return "move";
-        case .NOT_ALLOWED;        return "not-allowed";
-        case .POINTER;            return "pointer";
-        case .RESIZE_NW;          return "nw-resize";
-        case .RESIZE_N;           return "n-resize";
-        case .RESIZE_NE;          return "ne-resize";
-        case .RESIZE_E;           return "e-resize";
-        case .RESIZE_SE;          return "se-resize";
-        case .RESIZE_S;           return "s-resize";
-        case .RESIZE_SW;          return "sw-resize";
-        case .RESIZE_W;           return "w-resize";
+        case .TEXT; return "text";
+        case .WAIT; return "wait";
+        case .CROSSHAIR; return "crosshair";
+        case .PROGRESS; return "progress";
+        case .RESIZE_NWSE; return "nwse-resize";
+        case .RESIZE_NESW; return "nesw-resize";
+        case .RESIZE_HORIZONTAL; return "ew-resize";
+        case .RESIZE_VERTICAL; return "ns-resize";
+        case .MOVE; return "move";
+        case .NOT_ALLOWED; return "not-allowed";
+        case .POINTER; return "pointer";
+        case .RESIZE_NW; return "nw-resize";
+        case .RESIZE_N; return "n-resize";
+        case .RESIZE_NE; return "ne-resize";
+        case .RESIZE_E; return "e-resize";
+        case .RESIZE_SE; return "se-resize";
+        case .RESIZE_S; return "s-resize";
+        case .RESIZE_SW; return "sw-resize";
+        case .RESIZE_W; return "w-resize";
     }
     return "default";
 }

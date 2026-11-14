@@ -88,7 +88,7 @@ preset_file_save :: (schema: sh.Schema, values: [] sh.Value, path: string, textu
         relative, ok := sl_relative_path(directory, absolute);
         if value.texture.data != null free(value.texture.data);
         if ok value.texture = copy_string(relative);
-        else      value.texture = copy_string(absolute);
+        else value.texture = copy_string(absolute);
     }
     bytes, reason := sh.resource_encode(schema, owned);
     defer if bytes.data != null array_free(bytes);
@@ -158,7 +158,7 @@ material_file_save :: (instance: sh.Instance, path: string, texture_root := "") 
             relative, ok := sl_relative_path(directory, absolute);
             if value.texture.data != null free(value.texture.data);
             if ok value.texture = copy_string(relative);
-            else      value.texture = copy_string(absolute);
+            else value.texture = copy_string(absolute);
         }
     }
     bytes, reason := sh.instance_encode(copy_instance);

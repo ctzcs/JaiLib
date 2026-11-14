@@ -18,14 +18,14 @@
 //     二进制 f64 值做 ties-to-even 十进制舍入；短最短 'g' 的指数阈值 Jai 与 Odin 不同，由
 //     localization_g_layout 按 Odin 的规则（exp < -4 || exp >= 6）重排。
 //   - 表是调用方 allocator 上的一次整块分配，释放时按块大小归还；Odin 侧则是一棵节点树。
-#import "Basic";                     // Allocator / String_Builder / FormatFloat / memcpy
-#import "Math";                      // isnan / isinf
-#import "Extensions/Variant";        // Arg 的带标签联合
+#import "Basic"; // Allocator / String_Builder / FormatFloat / memcpy
+#import "Math"; // isnan / isinf
+#import "Extensions/Variant"; // Arg 的带标签联合
 
 //@region 字符串表与显式回退
 
 Table :: struct {
-    root: localization_Value;        // 只读；零值为空表，禁止复制后分别释放。
+    root: localization_Value; // 只读；零值为空表，禁止复制后分别释放。
 }
 
 Error :: enum {
@@ -49,7 +49,7 @@ load :: (table: *Table, data: string, allocator: Allocator) -> Error {
     kind, next, ok := localization_json_scan_value(data, 0, 0, *survey);
     if !ok return .Invalid_JSON;
     next = localization_json_skip_space(data, next);
-    if next != data.count return .Invalid_JSON;   // 尾随输入
+    if next != data.count return .Invalid_JSON; // 尾随输入
     if kind != .Object return .Invalid_Table;
     if !survey.all_strings return .Invalid_Table;
 
@@ -202,8 +202,7 @@ format :: (text: string, args: [] Arg, allocator: Allocator) -> (string, Error) 
 localization_write_arg :: (buffer: *localization_Buffer, arg: Arg, pattern: string) -> Error {
     precision: s64 = -1;
     optional := false;
-    if pattern == "" {
-    } else if pattern == "0" {
+    if pattern == "" {} else if pattern == "0" {
         precision = 0;
     } else if pattern == "0.#" {
         precision = 1;
@@ -271,7 +270,7 @@ localization_write_f64 :: (scratch: *[LOCALIZATION_FLOAT_TEXT] u8, value: float6
     builder: String_Builder;
     number: FormatFloat;
     number.value = value;
-    number.zero_removal = .NO;               // '#' 的收尾由本函数按 olib 的顺序做
+    number.zero_removal = .NO; // '#' 的收尾由本函数按 olib 的顺序做
     if precision < 0 {
         number.mode = .SHORTEST;
     } else {
@@ -364,7 +363,7 @@ localization_g_layout :: (text: string, out: *[LOCALIZATION_FLOAT_TEXT] u8) -> s
     }
     integer_count := point;
 
-    digits: [32] u8;              // 最短表示最多 17 位有效数字
+    digits: [32] u8; // 最短表示最多 17 位有效数字
     digit_count: s64;
     if mantissa.count > 0 {
         for 0..mantissa.count - 1 {
@@ -389,13 +388,13 @@ localization_g_layout :: (text: string, out: *[LOCALIZATION_FLOAT_TEXT] u8) -> s
         used += 1;
     }
 
-    if digit_count == leading {   // 0 与 -0：全部数字都是零
+    if digit_count == leading { // 0 与 -0：全部数字都是零
         out.*[used] = #char "0";
         return string.{ used + 1, out.data };
     }
 
     count := digit_count - leading;
-    single := decimal_point - 1;   // 首位有效数字的十进制指数
+    single := decimal_point - 1; // 首位有效数字的十进制指数
     if single < -4 || single >= 6 {
         out.*[used] = digits[leading];
         used += 1;
@@ -525,11 +524,11 @@ localization_Member :: struct {
 }
 
 localization_Value :: struct {
-    kind: localization_Kind;          // 表内只有 .Object（根）与 .String（成员值）
-    text: string;                     // .String 的解码文本
-    members: [] localization_Member;  // .Object 的有序成员，线性扫描
-    allocator: Allocator;             // 整块分配的分配器
-    block: *void;                     // 成员数组 + 字符串字节
+    kind: localization_Kind; // 表内只有 .Object（根）与 .String（成员值）
+    text: string; // .String 的解码文本
+    members: [] localization_Member; // .Object 的有序成员，线性扫描
+    allocator: Allocator; // 整块分配的分配器
+    block: *void; // 成员数组 + 字符串字节
     block_size: s64;
 }
 
@@ -837,7 +836,7 @@ localization_json_escape_byte :: (escape: u8) -> u8 {
     if escape == #char "n" return 0x0a;
     if escape == #char "r" return 0x0d;
     if escape == #char "t" return 0x09;
-    return escape;   // \" \\ \/ 原样
+    return escape; // \" \\ \/ 原样
 }
 //@endregion
 

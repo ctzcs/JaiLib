@@ -44,7 +44,7 @@ using Basic;
 
 // 一次读/列的静态缓冲区。存档文件（设置、存档槽）远小于这个；超了会截断并
 // 记一条警告（不静默）。
-WEB_STORAGE_BUF :: 262144;    // 256 KiB
+WEB_STORAGE_BUF :: 262144; // 256 KiB
 web_storage_buf: [WEB_STORAGE_BUF] u8;
 web_storage_truncated_warned: bool;
 
@@ -58,7 +58,7 @@ web_storage_key_buf: [WEB_STORAGE_KEY_MAX] u8;
 // 是字节数，所以直接写静态缓冲区 —— 顺便零分配，这个函数每帧都会被存档路径调到。
 web_storage_key :: (path: string) -> string {
     n: s32 = 0;
-    prev_slash := true;          // true 让前导 "/" 被吃掉
+    prev_slash := true; // true 让前导 "/" 被吃掉
     for c: path {
         ch := c;
         if ch == #char "\\" ch = #char "/";
@@ -94,8 +94,8 @@ web_storage_read_file :: (path: string) -> (string, bool) {
     if key.count <= 0 return "", false;
 
     declared := fw_storage_read(web_str_off(key), cast(s32) key.count, 0, 0);
-    if declared < 0 return "", false;            // 不存在
-    if declared == 0 return "", true;            // 存在但是空文件
+    if declared < 0 return "", false; // 不存在
+    if declared == 0 return "", true; // 存在但是空文件
 
     cap := declared;
     if cap > WEB_STORAGE_BUF {

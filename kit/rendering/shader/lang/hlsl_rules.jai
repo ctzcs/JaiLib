@@ -26,7 +26,7 @@
 
 hlsl_rules_check :: (p: *Parser, pass: sh.Pass_Desc, instanced, skinned: bool, shared, code: Hlsl_Code) {
     if p.error != "" return;
-    blocks: [2] Hlsl_Code = .[ hlsl_strip_comments(shared), hlsl_strip_comments(code) ];
+    blocks: [2] Hlsl_Code = .[hlsl_strip_comments(shared), hlsl_strip_comments(code)];
     vertex, vertex_ok := hlsl_entry(blocks, "vertex_main");
     if !vertex_ok return;
 

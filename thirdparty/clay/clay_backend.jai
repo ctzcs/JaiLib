@@ -25,10 +25,10 @@
 // olib: LayoutElementInfo
 // A copy of the layout identity and ancestry; valid after EndLayout.
 LayoutElementInfo :: struct {
-	id:          u32;
-	parentId:    u32;
-	clipId:      u32;
-	boundingBox: BoundingBox;
+    id: u32;
+    parentId: u32;
+    clipId: u32;
+    boundingBox: BoundingBox;
 }
 //@endregion
 
@@ -36,18 +36,18 @@ LayoutElementInfo :: struct {
 
 // olib: SetPointerHitTestFunction
 SetPointerHitTestFunction :: (callback: PointerHitTest, userData: *void) {
-	ctx := GetCurrentContext();
-	ctx.pointerHitTest = callback;
-	ctx.pointerHitTestUserData = userData;
+    ctx := GetCurrentContext();
+    ctx.pointerHitTest = callback;
+    ctx.pointerHitTestUserData = userData;
 }
 
 // olib: _BackendPointInside
 _BackendPointInside :: (id: u32, position: Vector2, bounds: BoundingBox, clip: bool) -> bool {
-	ctx := GetCurrentContext();
-	if ctx.pointerHitTest != null {
-		return ctx.pointerHitTest(id, position, bounds, clip, ctx.pointerHitTestUserData);
-	}
-	return _PointIsInsideRect(position, bounds);
+    ctx := GetCurrentContext();
+    if ctx.pointerHitTest != null {
+        return ctx.pointerHitTest(id, position, bounds, clip, ctx.pointerHitTestUserData);
+    }
+    return _PointIsInsideRect(position, bounds);
 }
 //@endregion
 
@@ -64,46 +64,46 @@ _BackendPointInside :: (id: u32, position: Vector2, bounds: BoundingBox, clip: b
 //     ⚠ olib 这里不检查 index 范围（布局保证合法）；Jai 的数组下标越界会 panic，
 //     这里保持同一假设，不做额外 clamp（与 olib 的越界行为不同，但合法输入一致）。
 GetLayoutElementInfo :: (output: [] LayoutElementInfo) -> s64 {
-	ctx := GetCurrentContext();
-	if ctx.booleanWarnings.maxElementsExceeded {
-		return 0;
-	}
-	count := ctx.layoutElements.length;
-	if output.count < count {
-		return cast(s64) count;
-	}
-	i : s32 = 0;
-	while i < count {
-		element := ctx.layoutElements.internalArray + i;
-		output[i] = .{
-			id = element.id,
-			clipId = _s32_to_u32(ctx.layoutElementClipElementIds.internalArray[i]),
-			boundingBox = GetElementData(.{ id = element.id }).boundingBox,
-		};
-		i += 1;
-	}
-	i = 0;
-	while i < count {
-		element := ctx.layoutElements.internalArray + i;
-		if _ElementHasConfig(element, CLAY__ELEMENT_CONFIG_TYPE_TEXT) {
-			i += 1;
-			continue;
-		}
-		children := element.childrenOrTextContent.children;
-		j : s32 = 0;
-		while j < children.length {
-			index := children.elements[j];
-			output[index].parentId = element.id;
-			j += 1;
-		}
-		i += 1;
-	}
-	i = 0;
-	while i < ctx.layoutElementTreeRoots.length {
-		root := ctx.layoutElementTreeRoots.internalArray[i];
-		output[root.layoutElementIndex].parentId = root.parentId;
-		i += 1;
-	}
-	return cast(s64) count;
+    ctx := GetCurrentContext();
+    if ctx.booleanWarnings.maxElementsExceeded {
+        return 0;
+    }
+    count := ctx.layoutElements.length;
+    if output.count < count {
+        return cast(s64) count;
+    }
+    i: s32 = 0;
+    while i < count {
+        element := ctx.layoutElements.internalArray + i;
+        output[i] = .{
+            id = element.id,
+            clipId = _s32_to_u32(ctx.layoutElementClipElementIds.internalArray[i]),
+            boundingBox = GetElementData(.{ id = element.id }).boundingBox,
+        };
+        i += 1;
+    }
+    i = 0;
+    while i < count {
+        element := ctx.layoutElements.internalArray + i;
+        if _ElementHasConfig(element, CLAY__ELEMENT_CONFIG_TYPE_TEXT) {
+            i += 1;
+            continue;
+        }
+        children := element.childrenOrTextContent.children;
+        j: s32 = 0;
+        while j < children.length {
+            index := children.elements[j];
+            output[index].parentId = element.id;
+            j += 1;
+        }
+        i += 1;
+    }
+    i = 0;
+    while i < ctx.layoutElementTreeRoots.length {
+        root := ctx.layoutElementTreeRoots.internalArray[i];
+        output[root.layoutElementIndex].parentId = root.parentId;
+        i += 1;
+    }
+    return cast(s64) count;
 }
 //@endregion

@@ -61,58 +61,58 @@ UI_Context :: struct {
     clay_context: *clay.Context;
 
     // fontId -> 字体元数据、GPU 纹理、渲染配置，三表平行。
-    fonts:          [..] *F.Msdf_Font;
-    font_textures:  [..] *F.Texture;
+    fonts: [..] *F.Msdf_Font;
+    font_textures: [..] *F.Texture;
     font_renderers: [..] UI_Font_Renderer;
-    image_pool:     [] UI_Image_Data;
-    image_len:      int;
-    ops:            [..] UI_Op;
+    image_pool: [] UI_Image_Data;
+    image_len: int;
+    ops: [..] UI_Op;
     visuals: Table(u32, UI_Visual);
     visual_elements: Table(u32, UI_Visual_Element);
     // EndLayout 之后 clay 导出的整棵元素树（id / parentId / clipId / boundingBox），
     // 视觉变换与命中回调都读它，见 ui_visual_snapshot。
     visual_layout: [..] clay.LayoutElementInfo;
     motions: Table(u32, UI_Motion_State);
-    presences:      Table(u32, UI_Presence_State);
-    inert:          Table(u32, u32); // 本帧退场中的 ID；快照时按子树继承
-    delta_time:     float32;         // ui_begin 传入，动效推进用
+    presences: Table(u32, UI_Presence_State);
+    inert: Table(u32, u32); // 本帧退场中的 ID；快照时按子树继承
+    delta_time: float32; // ui_begin 传入，动效推进用
 
     // 帧内 TextElementConfig bump 池：clay 把文本配置存裸指针、EndLayout 才回读，
     // 调用侧栈上 config 会悬垂，必须由 ctx 保活（同 olib）。
     text_config_pool: [] clay.TextElementConfig;
-    text_config_len:  int;
+    text_config_len: int;
 
     // 圆角渲染用的单位圆盘纹理（预乘 alpha），ui_render 首次调用时懒建。
-    corner_texture:    *F.Texture;
+    corner_texture: *F.Texture;
     corner_texture_ok: bool;
 
-    width, height:  float32;
-    scale:          float32;
+    width, height: float32;
+    scale: float32;
     viewport_origin: F.Vector2;
-    pointer_pixels:  F.Vector2;
+    pointer_pixels: F.Vector2;
     active_id, focused_id: u32;
-    modal_id, scope_id:    u32;
+    modal_id, scope_id: u32;
     modal_changed: bool;
-    active_seen:   bool;
-    widgets:          [..] UI_Focus_Entry;
+    active_seen: bool;
+    widgets: [..] UI_Focus_Entry;
     previous_widgets: [..] UI_Focus_Entry;
-    scrolls:          [..] UI_Scroll_Entry;
-    navigation:       UI_Navigation;
-    focus_scroll:     bool; // 焦点由导航或 ui_focus 改变：下一次 begin 把它滚进可见范围
-    focus_style:      UI_Focus_Style; // 焦点控件所用主题的焦点框样式，见 ui_focus_style
+    scrolls: [..] UI_Scroll_Entry;
+    navigation: UI_Navigation;
+    focus_scroll: bool; // 焦点由导航或 ui_focus 改变：下一次 begin 把它滚进可见范围
+    focus_style: UI_Focus_Style; // 焦点控件所用主题的焦点框样式，见 ui_focus_style
     focus_by_pointer, focus_ring_hidden: bool;
     dropdown_id: u32; // 当前展开的下拉框；同一时间只展开一个
-    drag:        UI_Drag;
-    text_edit:   UI_Text_Edit; // 宿主本帧传入的编辑输入，ui_end 清空
-    text:        UI_Text_State;
-    input:       UI_Input_Capture;
+    drag: UI_Drag;
+    text_edit: UI_Text_Edit; // 宿主本帧传入的编辑输入，ui_end 清空
+    text: UI_Text_State;
+    input: UI_Input_Capture;
     pool_overflow: bool;
-    error_count:   int;
-    last_error:    clay.ErrorType;
+    error_count: int;
+    last_error: clay.ErrorType;
 
     pointer_x, pointer_y: float32;
-    pointer_down:         bool;
-    pointer_down_prev:    bool; // 上一帧状态（点击边沿检测）
+    pointer_down: bool;
+    pointer_down_prev: bool; // 上一帧状态（点击边沿检测）
     pointer_edges_explicit: bool;
     pointer_pressed, pointer_released: bool; // 调用方收集的边沿，ui_end 消费
     pointer_press_owner: u32; // 显式边沿帧开始时的捕获者，禁止重按转交
@@ -126,7 +126,9 @@ UI_Context :: struct {
 //@region 生命周期
 
 // clay 的回调 userData 是 *void；这里直接放 UI_Context 指针（0.14 移植没有 u64 中间层）。
-ui_context_of :: (user: *void) -> *UI_Context #no_context { return cast(*UI_Context) user; }
+ui_context_of :: (user: *void) -> *UI_Context #no_context {
+    return cast(*UI_Context) user;
+}
 
 // clay.MinMemorySize() 依赖「当前 context」：没有 context 时按默认的
 // maxMeasureTextCacheWordCount（= 2 * maxElementCount）估算，有 context 时改用它的
@@ -150,9 +152,9 @@ ui_arena_capacity :: () -> u32 {
 ui_init :: (ctx: *UI_Context, width: float32, height: float32) -> bool {
     if ctx.clay_context != null ui_dispose(ctx);
     ctx.* = UI_Context.{
-        width  = width,
+        width = width,
         height = height,
-        scale  = 1,
+        scale = 1,
         callback_context = context,
         focus_style = UI_Focus_Style.{ color = UI_THEME_DARK.accent, width = 2 },
     };
@@ -163,9 +165,15 @@ ui_init :: (ctx: *UI_Context, width: float32, height: float32) -> bool {
     ctx.arena_memory = memory;
 
     ctx.text_config_pool = NewArray(UI_TEXT_CONFIG_CAP, clay.TextElementConfig, true);
-    if ctx.text_config_pool.data == null { ui_dispose(ctx); return false; }
+    if ctx.text_config_pool.data == null {
+        ui_dispose(ctx);
+        return false;
+    }
     ctx.image_pool = NewArray(UI_TEXT_CONFIG_CAP, UI_Image_Data, true);
-    if ctx.image_pool.data == null { ui_dispose(ctx); return false; }
+    if ctx.image_pool.data == null {
+        ui_dispose(ctx);
+        return false;
+    }
 
     arena := clay.CreateArenaWithCapacityAndMemory(capacity, memory.data);
     ctx.clay_context = clay.Initialize(arena, .{ width, height }, .{
@@ -284,7 +292,7 @@ ui_begin :: (ctx: *UI_Context, delta_time: float32) {
     ctx.text.blink += delta_time;
     ctx.focus_ring_hidden = false;
     ctx.input = UI_Input_Capture.{
-        pointer  = ctx.modal_id != 0 || ctx.active_id != 0,
+        pointer = ctx.modal_id != 0 || ctx.active_id != 0,
         keyboard = ctx.modal_id != 0,
     };
     ctx.pointer_x = (ctx.pointer_pixels.x - ctx.viewport_origin.x) / ctx.scale;
@@ -293,20 +301,20 @@ ui_begin :: (ctx: *UI_Context, delta_time: float32) {
     ui_focus_scroll(ctx);
     // SetPointerState 会用上一帧的布局重算 pointerOverIds（经 kit 的命中回调，见
     // SetPointerHitTestFunction），本帧 ui_interact 读到的悬停状态与 clay 的时序一致。
-    clay.SetPointerState(.[ ctx.pointer_x, ctx.pointer_y ], ctx.pointer_down);
+    clay.SetPointerState(.[ctx.pointer_x, ctx.pointer_y], ctx.pointer_down);
     // 拖动由控件捕获；列表使用滚轮，避免按按钮时同时拖动父滚动区。
     // 模态切换帧的命中仍基于旧布局，禁止滚轮穿过刚打开/关闭的遮罩。
     if !ctx.modal_changed {
-        clay.UpdateScrollContainers(false, .[ ctx.scroll_delta[0], ctx.scroll_delta[1] ], delta_time);
+        clay.UpdateScrollContainers(false, .[ctx.scroll_delta[0], ctx.scroll_delta[1]], delta_time);
     }
     ctx.modal_changed = false;
-    ctx.scroll_delta = .[ 0, 0 ];
+    ctx.scroll_delta = .[0, 0];
     // 在 BeginLayout/OpenElement 重建内部元素表之前快照滚动状态，使
     // clay.UI(ui_scroll_decl(...)) 的内联求值安全（声明时把 offset 写回 clip.childOffset）。
     for *scroll: ctx.scrolls {
         data := clay.GetScrollContainerData(.{ id = scroll.id });
         if data.found && data.scrollPosition != null scroll.offset = data.scrollPosition.*;
-        else scroll.offset = .[ 0, 0 ];
+        else scroll.offset = .[0, 0];
         scroll.seen = false;
     }
     clay.BeginLayout();
@@ -347,7 +355,7 @@ ui_end :: (ctx: *UI_Context) -> clay.ClayArray(clay.RenderCommand) {
     ctx.text_edit = .{};
     // 松开那帧的放置已由 ui_drop_target 读取，之后结束拖动。
     if !ctx.pointer_down ctx.drag = .{};
-    for i: ctx.scrolls.count - 1 .. 0 {
+    for i: ctx.scrolls.count - 1..0 {
         if i < 0 break;
         if !ctx.scrolls[i].seen {
             if i < ctx.scrolls.count - 1 ctx.scrolls[i] = ctx.scrolls[ctx.scrolls.count - 1];

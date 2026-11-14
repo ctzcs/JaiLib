@@ -3,7 +3,6 @@ using Basic;
 using Math;
 using Hash_Table;
 
-
 #scope_export
 
 // Port of Foster Framework/Graphics/Defaults/DefaultResources.cs.
@@ -13,10 +12,10 @@ using Hash_Table;
 Default_Resources :: struct {
     device: *Graphics_Device;
 
-    batch_material:     *Material = null;   // Batcher shader
-    textured_material:  *Material = null;   // PosTexColVertex shader
-    msdf_material:      *Material = null;
-    msdf_font:          *Msdf_Font = null;
+    batch_material: *Material = null; // Batcher shader
+    textured_material: *Material = null; // PosTexColVertex shader
+    msdf_material: *Material = null;
+    msdf_font: *Msdf_Font = null;
 }
 
 defaults_get :: (device: *Graphics_Device) -> *Default_Resources {
@@ -45,7 +44,7 @@ defaults_load_shader :: (device: *Graphics_Device, name: string, stage: Shader_S
         if name == "Msdf" uniform_count = 1;
     }
     return shader_create(device, stage, code,
-        sampler_count        = sampler_count,
+        sampler_count = sampler_count,
         uniform_buffer_count = uniform_count,
         entry_point = entry,
         name = name);

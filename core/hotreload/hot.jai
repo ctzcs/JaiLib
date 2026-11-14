@@ -27,14 +27,14 @@
 #import "Basic";
 
 Hot_Config :: struct {
-    source: string;         // 游戏模块的源码包目录，相对 working_directory
+    source: string; // 游戏模块的源码包目录，相对 working_directory
     collections: [] string; // "名字=路径"，如 {"olib=../olib"}，传给 -collection:
-    args: [] string;        // 额外的编译参数，如 {"-vet"}
+    args: [] string; // 额外的编译参数，如 {"-vet"}
     pre_command: [] string; // 每次编译前运行的命令，如代码生成器；见 Watch_Config
-    roots: [] string;       // 除 source 外还要监听的目录或文件（#load 的数据、共享包等）
+    roots: [] string; // 除 source 外还要监听的目录或文件（#load 的数据、共享包等）
     working_directory: string; // 空为当前目录
-    services: *void;           // 宿主服务，原样交给游戏模块；地址必须稳定
-    host_version: u64;         // 宿主协议版本，0 视为 1；协议或共享类型变化时加一
+    services: *void; // 宿主服务，原样交给游戏模块；地址必须稳定
+    host_version: u64; // 宿主协议版本，0 视为 1；协议或共享类型变化时加一
     // 新版本替换旧版本之前调用（帧开始，旧模块尚在）：通常在这里等 GPU 空闲。
     before_swap: (user_data: *void) -> void;
     user_data: *void;
@@ -76,13 +76,13 @@ hot_init :: (h: *Hot, config: Hot_Config) -> bool {
     command := hot_command(config);
     defer hot_command_free(*command);
     if !watch_init(*h.watch, Watch_Config.{
-            command = command,
-            pre_command = config.pre_command,
-            working_directory = config.working_directory,
-            roots = roots,
-            mode = config.mode,
-            trigger_file = config.trigger_file,
-        }) {
+        command = command,
+        pre_command = config.pre_command,
+        working_directory = config.working_directory,
+        roots = roots,
+        mode = config.mode,
+        trigger_file = config.trigger_file,
+    }) {
         _ = dispose(*h.session);
         return false;
     }

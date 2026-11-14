@@ -1,5 +1,5 @@
 #scope_module
-using Basic;   // module-private
+using Basic; // module-private
 using Math;
 #scope_export
 
@@ -8,20 +8,20 @@ using Math;
 // (Jai has no properties). Callback fields mirror the C# events.
 
 Window :: struct {
-    handle:       *SDL_Window;   // null once destroyed
-    id:           u32;
-    title:        string;
+    handle: *SDL_Window; // null once destroyed
+    id: u32;
+    title: string;
     is_destroyed: bool;
 
     // callbacks (Foster: OnFocusGain etc.)
-    on_focus_gain:      () = null;
-    on_focus_lost:      () = null;
-    on_mouse_enter:     () = null;
-    on_mouse_leave:     () = null;
-    on_resize:          () = null;
-    on_restore:         () = null;
-    on_maximize:        () = null;
-    on_minimize:        () = null;
+    on_focus_gain: () = null;
+    on_focus_lost: () = null;
+    on_mouse_enter: () = null;
+    on_mouse_leave: () = null;
+    on_resize: () = null;
+    on_restore: () = null;
+    on_maximize: () = null;
+    on_minimize: () = null;
     on_fullscreen_enter: () = null;
     on_fullscreen_exit: () = null;
 
@@ -35,9 +35,15 @@ window_create :: (title: string, width: s32, height: s32, fullscreen := false, r
     w.title = title;
 
     flags: SDL_WindowFlags = .SDL_WINDOW_HIGH_PIXEL_DENSITY;
-    if !App.running { flags |= .SDL_WINDOW_HIDDEN; }
-    if fullscreen   { flags |= .SDL_WINDOW_FULLSCREEN; }
-    if resizable    { flags |= .SDL_WINDOW_RESIZABLE; }
+    if !App.running {
+        flags |= .SDL_WINDOW_HIDDEN;
+    }
+    if fullscreen {
+        flags |= .SDL_WINDOW_FULLSCREEN;
+    }
+    if resizable {
+        flags |= .SDL_WINDOW_RESIZABLE;
+    }
 
     title_c := to_cstr(title);
     w.handle = SDL_CreateWindow(title_c, width, height, flags);
@@ -116,11 +122,23 @@ window_set_size :: (w: *Window, size: Point2) {
     SDL_SetWindowSize(w.handle, size.x, size.y);
 }
 
-window_width  :: (w: *Window) -> s32 { return window_size(w).x; }
-window_height :: (w: *Window) -> s32 { return window_size(w).y; }
+window_width :: (w: *Window) -> s32 {
+    return window_size(w).x;
+}
 
-window_set_width  :: (w: *Window, width: s32)  { s := window_size(w); window_set_size(w, .{ width, s.y }); }
-window_set_height :: (w: *Window, height: s32) { s := window_size(w); window_set_size(w, .{ s.x, height }); }
+window_height :: (w: *Window) -> s32 {
+    return window_size(w).y;
+}
+
+window_set_width :: (w: *Window, width: s32) {
+    s := window_size(w);
+    window_set_size(w, .{ width, s.y });
+}
+
+window_set_height :: (w: *Window, height: s32) {
+    s := window_size(w);
+    window_set_size(w, .{ s.x, height });
+}
 
 window_size_in_pixels :: (w: *Window) -> Point2 {
     assert(w.handle != null, "The Window has been Closed");
@@ -129,8 +147,13 @@ window_size_in_pixels :: (w: *Window) -> Point2 {
     return .{ width, height };
 }
 
-window_width_in_pixels  :: (w: *Window) -> s32 { return window_size_in_pixels(w).x; }
-window_height_in_pixels :: (w: *Window) -> s32 { return window_size_in_pixels(w).y; }
+window_width_in_pixels :: (w: *Window) -> s32 {
+    return window_size_in_pixels(w).x;
+}
+
+window_height_in_pixels :: (w: *Window) -> s32 {
+    return window_size_in_pixels(w).y;
+}
 
 // Size of the display the window is currently in.
 window_display_size :: (w: *Window) -> Point2 {
@@ -194,7 +217,7 @@ window_maximized :: (w: *Window) -> bool {
 
 window_set_maximized :: (w: *Window, maximized: bool) {
     assert(w.handle != null, "The Window has been Closed");
-    if maximized && !window_maximized(w)      SDL_MaximizeWindow(w.handle);
+    if maximized && !window_maximized(w) SDL_MaximizeWindow(w.handle);
     else if !maximized && window_maximized(w) SDL_RestoreWindow(w.handle);
 }
 
@@ -216,7 +239,7 @@ window_set_mouse_relative_mode :: (w: *Window, enabled: bool) {
 
 // Sets the mouse position within the window, in pixel coordinates.
 window_set_mouse_position :: (w: *Window, position: Vector2) {
-    size  := window_size(w);
+    size := window_size(w);
     psize := window_size_in_pixels(w);
     SDL_WarpMouseInWindow(
         w.handle,
@@ -228,7 +251,7 @@ window_set_mouse_position :: (w: *Window, position: Vector2) {
 // Enables/disables text input for this window (populates KeyboardState.text).
 window_set_text_input :: (w: *Window, enabled: bool) {
     if enabled window_start_text_input(w);
-    else       window_stop_text_input(w);
+    else window_stop_text_input(w);
 }
 
 window_start_text_input :: (w: *Window) {
@@ -247,8 +270,13 @@ window_stop_text_input :: (w: *Window) {
     }
 }
 
-window_start_text_input_mt :: (data: *void) { window_start_text_input(cast(*Window) data); }
-window_stop_text_input_mt  :: (data: *void) { window_stop_text_input(cast(*Window) data); }
+window_start_text_input_mt :: (data: *void) {
+    window_start_text_input(cast(*Window) data);
+}
+
+window_stop_text_input_mt :: (data: *void) {
+    window_stop_text_input(cast(*Window) data);
+}
 
 // [olib L-022] Tells the OS where the caret is, so an IME candidate window /
 // the on-screen keyboard follows it. `rect` is in render-target pixels — the
@@ -271,7 +299,7 @@ window_stop_text_input_mt  :: (data: *void) { window_stop_text_input(cast(*Windo
 window_set_text_input_area :: (w: *Window, rect: Rect) -> bool {
     if w == null || w.handle == null return false;
 
-    size   := window_size(w);
+    size := window_size(w);
     pixels := window_size_in_pixels(w);
 
     // A zero pixel size means SDL has not reported one yet -> scale 1 (no
@@ -299,10 +327,10 @@ window_set_text_input_area :: (w: *Window, rect: Rect) -> bool {
 // cast. They are clamped to a band no real window coordinate can exceed.
 text_input_area_coord :: (value: float, scale: float) -> s32 {
     v := cast(float64) value * cast(float64) scale;
-    if v != v return 0;                   // NaN never equals itself
+    if v != v return 0; // NaN never equals itself
     if v < -32768.0 return -32768;
-    if v >  32767.0 return  32767;
-    return cast(s32) floor(v + 0.5);      // round half up, like olib's math.round
+    if v > 32767.0 return 32767;
+    return cast(s32) floor(v + 0.5); // round half up, like olib's math.round
 }
 
 window_focus :: (w: *Window) {

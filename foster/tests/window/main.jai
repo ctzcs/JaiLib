@@ -28,7 +28,7 @@ main :: () {
                 case .SDL_EVENT_QUIT;
                     running = false;
                 case .SDL_EVENT_KEY_DOWN;
-                    if event.key.scancode == .SDL_SCANCODE_ESCAPE  running = false;
+                    if event.key.scancode == .SDL_SCANCODE_ESCAPE running = false;
                 case .SDL_EVENT_WINDOW_CLOSE_REQUESTED;
                     running = false;
             }

@@ -14,5 +14,5 @@ using SDL_LogPriority :: enum s32 {
 SDL_LogOutputFunction :: #type (userdata: *void, category: s32, priority: SDL_LogPriority, message: *u8) #c_call;
 
 #if OS != .WASM {
-SDL_SetLogOutputFunction :: (callback: SDL_LogOutputFunction, userdata: *void) #foreign SDL3;
+    SDL_SetLogOutputFunction :: (callback: SDL_LogOutputFunction, userdata: *void) #foreign SDL3;
 }

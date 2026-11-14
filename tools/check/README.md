@@ -6,6 +6,7 @@
 - `--only core` / `--only kit`：检查、构建并运行相关层。
 - `--only box2d` / `--only box3d`：校验五种目标的源码/二进制哈希和 Jai 声明，并在当前平台构建、运行 C ABI/符号及真实物理行为测试。支持 Windows x64、Linux/macOS x64 与 ARM64；跨目标声明检查不算运行验收。
 - `--only "test kit"`：只运行已构建的 kit 测试。
+- `--only "check format"`：检查 Jai 格式；用 `python tools/format/main.py --write` 修正。
 - `--list`：列出实际检查项。
 - `--web`：另构建 wasm 并运行 WebGL 真像素回归，需 Chrome/Edge。
 

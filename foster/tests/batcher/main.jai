@@ -10,13 +10,13 @@
 
 main :: () {
     App.startup = startup;
-    App.render  = render;
-    App.update  = update;
+    App.render = render;
+    App.update = update;
 
     app_run(.{
         application_name = "jfoster batcher sample",
-        window_title     = "jfoster batcher",
-        width  = 1280,
+        window_title = "jfoster batcher",
+        width = 1280,
         height = 720,
     });
 

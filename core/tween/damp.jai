@@ -18,7 +18,7 @@
 // 只在 T 为定长数组时实例化；标量由 tween_add / tween_sub / tween_scale 直接处理。
 _tween_array_add :: (a: $T, b: T) -> T {
     result: T;
-    for x, i : a {
+    for x, i: a {
         result[i] = x + b[i];
     }
     return result;
@@ -26,7 +26,7 @@ _tween_array_add :: (a: $T, b: T) -> T {
 
 _tween_array_sub :: (a: $T, b: T) -> T {
     result: T;
-    for x, i : a {
+    for x, i: a {
         result[i] = x - b[i];
     }
     return result;
@@ -34,7 +34,7 @@ _tween_array_sub :: (a: $T, b: T) -> T {
 
 _tween_array_scale :: (a: $T, s: float32) -> T {
     result: T;
-    for x, i : a {
+    for x, i: a {
         result[i] = x * s;
     }
     return result;

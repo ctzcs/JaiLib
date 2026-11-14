@@ -14,9 +14,9 @@ mz_int64 :: s64;
 
 MZ_ZIP_FLAG_CASE_SENSITIVE :: 0x0100;
 
-MZ_ZIP_MODE_INVALID   :: 0;
-MZ_ZIP_MODE_READING   :: 1;
-MZ_ZIP_MODE_WRITING   :: 2;
+MZ_ZIP_MODE_INVALID :: 0;
+MZ_ZIP_MODE_READING :: 1;
+MZ_ZIP_MODE_WRITING :: 2;
 MZ_ZIP_MODE_WRITING_HAS_BEEN_FINALIZED :: 3;
 
 Zip_Archive :: void;
@@ -46,15 +46,13 @@ MZ_ZIP_ARCHIVE_FILE_STAT :: struct {
     m_external_attr: mz_uint32;
     m_local_header_ofs: mz_uint64;
     m_comment_size: mz_uint32;
-    m_is_directory: u32;    // mz_bool is a 4-byte int in miniz, NOT 1-byte bool
+    m_is_directory: u32; // mz_bool is a 4-byte int in miniz, NOT 1-byte bool
     m_is_encrypted: u32;
     m_is_supported: u32;
     m_filename: [512] u8;
     m_comment: [512] u8;
     m_time: s64;
 }
-
-
 
 zip_open_archive :: (path: string) -> *Zip_Archive {
     size := jf_mz_zip_archive_size();
@@ -115,7 +113,7 @@ zip_list_files :: (archive: *Zip_Archive, dir_prefix: string) -> [] string {
     stat := cast(*MZ_ZIP_ARCHIVE_FILE_STAT) alloc(stat_size);
     defer free(stat);
 
-    for i: 0..(cast(s64) count)-1 {
+    for i: 0..(cast(s64) count) - 1 {
         if !mz_zip_reader_file_stat(archive, cast(u32) i, stat) continue;
         if stat.m_is_directory continue;
 

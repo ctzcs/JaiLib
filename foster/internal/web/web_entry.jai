@@ -131,7 +131,7 @@ fw_step :: (dt: float64) -> s32 #no_context {
 
     keep_going := web_run_frame(dt);
     if !keep_going {
-        web_frames_stepped += 1;    // 让 fw_stats 的帧数和宿主看到的一致
+        web_frames_stepped += 1; // 让 fw_stats 的帧数和宿主看到的一致
         web_log("fw_step: stop (app 请求退出)\n");
         return 0;
     }
@@ -207,7 +207,7 @@ fw_stats :: (which: s32) -> s32 #no_context {
         } else if which == 17 {
             if App.exiting value = 1;
         } else if which == 18 {
-            value = web_dom_rec.kind;   // 最近处理的事件种类（调试用）
+            value = web_dom_rec.kind; // 最近处理的事件种类（调试用）
         } else if which >= 200 {
             // [W6] 后端自己的计数（缓存表 / target / 读回拒绝 / 窗口 MSAA）：
             // 200 + i 转发到 web_gpu_stat(i)。和 100+ 的 GL 计数分两个号段，

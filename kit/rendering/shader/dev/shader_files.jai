@@ -28,7 +28,9 @@ parameters_compile :: (source_directory: string) -> (result: Parameter_Build) {
         result.error = copy_string("Cannot read shader source directory");
         return result;
     }
-    SORT.quick_sort(paths, (a: string, b: string) -> s64 { return SORT.compare_strings(a, b); });
+    SORT.quick_sort(paths, (a: string, b: string) -> s64 {
+        return SORT.compare_strings(a, b);
+    });
     defer {
         for path: paths if path.data != null free(path.data);
         if paths.data != null free(paths.data);

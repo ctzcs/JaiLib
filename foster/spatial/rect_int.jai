@@ -11,21 +11,53 @@ Rect_Int :: struct {
 
 Rect_Int_Empty :: Rect_Int.{ 0, 0, 0, 0 };
 
-rect_int_position :: (r: Rect_Int) -> Point2 { return .{ r.x, r.y }; }
-rect_int_size     :: (r: Rect_Int) -> Point2 { return .{ r.w, r.h }; }
+rect_int_position :: (r: Rect_Int) -> Point2 {
+    return .{ r.x, r.y };
+}
 
-rect_int_left   :: (r: Rect_Int) -> s32 { return r.x; }
-rect_int_right  :: (r: Rect_Int) -> s32 { return r.x + r.w; }
-rect_int_top    :: (r: Rect_Int) -> s32 { return r.y; }
-rect_int_bottom :: (r: Rect_Int) -> s32 { return r.y + r.h; }
+rect_int_size :: (r: Rect_Int) -> Point2 {
+    return .{ r.w, r.h };
+}
 
-rect_int_center :: (r: Rect_Int) -> Point2 { return .{ r.x + r.w / 2, r.y + r.h / 2 }; }
-rect_int_top_left :: (r: Rect_Int) -> Point2 { return .{ r.x, r.y }; }
-rect_int_top_right :: (r: Rect_Int) -> Point2 { return .{ r.x + r.w, r.y }; }
-rect_int_bottom_left :: (r: Rect_Int) -> Point2 { return .{ r.x, r.y + r.h }; }
-rect_int_bottom_right :: (r: Rect_Int) -> Point2 { return .{ r.x + r.w, r.y + r.h }; }
+rect_int_left :: (r: Rect_Int) -> s32 {
+    return r.x;
+}
 
-rect_int_is_empty :: (r: Rect_Int) -> bool { return r.w == 0 && r.h == 0; }
+rect_int_right :: (r: Rect_Int) -> s32 {
+    return r.x + r.w;
+}
+
+rect_int_top :: (r: Rect_Int) -> s32 {
+    return r.y;
+}
+
+rect_int_bottom :: (r: Rect_Int) -> s32 {
+    return r.y + r.h;
+}
+
+rect_int_center :: (r: Rect_Int) -> Point2 {
+    return .{ r.x + r.w / 2, r.y + r.h / 2 };
+}
+
+rect_int_top_left :: (r: Rect_Int) -> Point2 {
+    return .{ r.x, r.y };
+}
+
+rect_int_top_right :: (r: Rect_Int) -> Point2 {
+    return .{ r.x + r.w, r.y };
+}
+
+rect_int_bottom_left :: (r: Rect_Int) -> Point2 {
+    return .{ r.x, r.y + r.h };
+}
+
+rect_int_bottom_right :: (r: Rect_Int) -> Point2 {
+    return .{ r.x + r.w, r.y + r.h };
+}
+
+rect_int_is_empty :: (r: Rect_Int) -> bool {
+    return r.w == 0 && r.h == 0;
+}
 
 rect_int_contains :: (r: Rect_Int, px: s32, py: s32) -> bool {
     return px >= r.x && px < r.x + r.w && py >= r.y && py < r.y + r.h;
@@ -48,5 +80,10 @@ rect_int_get_intersection :: (a: Rect_Int, b: Rect_Int) -> Rect_Int {
     return .{ x1, y1, x2 - x1, y2 - y1 };
 }
 
-operator == :: (a: Rect_Int, b: Rect_Int) -> bool { return a.x == b.x && a.y == b.y && a.w == b.w && a.h == b.h; }
-operator != :: (a: Rect_Int, b: Rect_Int) -> bool { return !(a == b); }
+operator == :: (a: Rect_Int, b: Rect_Int) -> bool {
+    return a.x == b.x && a.y == b.y && a.w == b.w && a.h == b.h;
+}
+
+operator != :: (a: Rect_Int, b: Rect_Int) -> bool {
+    return !(a == b);
+}

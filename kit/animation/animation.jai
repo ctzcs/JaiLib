@@ -79,25 +79,35 @@ operator == :: (a: Joint_Pose, b: Joint_Pose) -> bool {
 // clip 为 nil 时输出纯 bind pose。
 sample_pose :: (
     skeleton: *dasset.Dasset_Skeleton,
-    clip:     *dasset.Dasset_Animation_Clip,
-    time:     float32,
-    pose:     [] Joint_Pose,
+    clip: *dasset.Dasset_Animation_Clip,
+    time: float32,
+    pose: [] Joint_Pose,
 ) {
-    if pose.count == 0 { return; }
+    if pose.count == 0 {
+        return;
+    }
     for i: 0..skeleton.joints.count - 1 {
-        if i >= pose.count { break; }
+        if i >= pose.count {
+            break;
+        }
         // olib 的 `joint := &skeleton.joints[i]`：只读，直接取字段即可。
         pose[i] = Joint_Pose.{
             translation = skeleton.joints[i].bind_translation,
-            rotation    = skeleton.joints[i].bind_rotation,
-            scale       = skeleton.joints[i].bind_scale,
+            rotation = skeleton.joints[i].bind_rotation,
+            scale = skeleton.joints[i].bind_scale,
         };
     }
-    if clip == null { return; }
+    if clip == null {
+        return;
+    }
 
     for *channel: clip.channels {
-        if channel.joint_index < 0 || cast(int) channel.joint_index >= skeleton.joints.count { continue; }
-        if cast(int) channel.joint_index >= pose.count { continue; }
+        if channel.joint_index < 0 || cast(int) channel.joint_index >= skeleton.joints.count {
+            continue;
+        }
+        if cast(int) channel.joint_index >= pose.count {
+            continue;
+        }
         value := sample_channel(channel, time);
         joint_pose := *pose[cast(int) channel.joint_index];
         if channel.path == {
@@ -118,7 +128,9 @@ sample_channel :: (channel: *dasset.Dasset_Animation_Channel, time: float32) -> 
     values := channel.values;
     if times.count == 0 {
         // olib 的三元 `path == .Rotation ? {0,0,0,1} : {0,0,0,0}`
-        if channel.path == .Rotation { return .[0, 0, 0, 1]; }
+        if channel.path == .Rotation {
+            return .[0, 0, 0, 1];
+        }
         return .[0, 0, 0, 0];
     }
 
@@ -137,7 +149,11 @@ sample_channel :: (channel: *dasset.Dasset_Animation_Channel, time: float32) -> 
     }
     dt := times[segment + 1] - times[segment];
     t: float32;
-    if dt > 0 { t = (time - times[segment]) / dt; } else { t = 0; }
+    if dt > 0 {
+        t = (time - times[segment]) / dt;
+    } else {
+        t = 0;
+    }
 
     // olib 这里是 #partial switch（Linear 不列分支，落到末尾的线性实现）；
     // Jai 的 if-switch 不写 `case;` 即同样落空。
@@ -182,8 +198,14 @@ compute_palette :: (skeleton: *dasset.Dasset_Skeleton, pose: [] Joint_Pose, pale
     count := min(skeleton.joints.count, palette.count);
     // olib 的 make([dynamic]world.Matrix4, 0, len(skeleton.joints))
     globals: [..] world.Matrix4;
-    if count > 0 { array_reserve(*globals, count); }
-    defer { if globals.data != null { array_free(globals); } }
+    if count > 0 {
+        array_reserve(*globals, count);
+    }
+    defer {
+        if globals.data != null {
+            array_free(globals);
+        }
+    }
 
     for i: 0..count - 1 {
         local := world.matrix4_multiply(
@@ -209,14 +231,20 @@ compute_palette :: (skeleton: *dasset.Dasset_Skeleton, pose: [] Joint_Pose, pale
 // 一步到位：采样 + 传播 + palette。返回实际写入的矩阵数。
 compute_palette_sampled :: (
     skeleton: *dasset.Dasset_Skeleton,
-    clip:     *dasset.Dasset_Animation_Clip,
-    time:     float32,
-    palette:  [] world.Matrix4,
+    clip: *dasset.Dasset_Animation_Clip,
+    time: float32,
+    palette: [] world.Matrix4,
 ) -> int {
     // olib 的 make([]Joint_Pose, len(skeleton.joints)) + defer delete(pose)
     pose: [..] Joint_Pose;
-    if skeleton.joints.count > 0 { array_resize(*pose, skeleton.joints.count); }
-    defer { if pose.data != null { array_free(pose); } }
+    if skeleton.joints.count > 0 {
+        array_resize(*pose, skeleton.joints.count);
+    }
+    defer {
+        if pose.data != null {
+            array_free(pose);
+        }
+    }
 
     sample_pose(skeleton, clip, time, pose);
     compute_palette(skeleton, pose, palette);
@@ -231,7 +259,9 @@ compute_palette_sampled :: (
 advance_time :: (time_: float32, delta: float32, speed: float32, loop: bool, duration: float32) -> float32 {
     time := time_;
     time += delta * speed;
-    if duration <= cast(float32) 1.0e-6 { return time; }
+    if duration <= cast(float32) 1.0e-6 {
+        return time;
+    }
     if loop {
         return time - math.floor(time / duration) * duration;
     }
@@ -240,13 +270,15 @@ advance_time :: (time_: float32, delta: float32, speed: float32, loop: bool, dur
 
 // 两姿态线性混合（旋转走最短弧 slerp）。t 钳到 [0,1]。
 blend_poses :: (a_: [] Joint_Pose, b_: [] Joint_Pose, t_: float32, result: [] Joint_Pose) {
-    if a_.count != b_.count || result.count < a_.count { return; }
+    if a_.count != b_.count || result.count < a_.count {
+        return;
+    }
     t := clamp(t_, 0, 1);
     for i: 0..a_.count - 1 {
         result[i] = Joint_Pose.{
             translation = animation_v3_lerp(a_[i].translation, b_[i].translation, t),
-            scale       = animation_v3_lerp(a_[i].scale, b_[i].scale, t),
-            rotation    = animation_quat_shortest_slerp(a_[i].rotation, b_[i].rotation, t),
+            scale = animation_v3_lerp(a_[i].scale, b_[i].scale, t),
+            rotation = animation_quat_shortest_slerp(a_[i].rotation, b_[i].rotation, t),
         };
     }
 }
@@ -257,7 +289,9 @@ blend_poses :: (a_: [] Joint_Pose, b_: [] Joint_Pose, t_: float32, result: [] Jo
 // 保守包围当前蒙皮姿态：非负归一化混权是各关节变换点的凸组合，
 // 落在联合 AABB 内。
 skinned_bounds :: (bind_bounds: dasset.Dasset_Bounds, palette: [] world.Matrix4) -> dasset.Dasset_Bounds {
-    if palette.count == 0 { return bind_bounds; }
+    if palette.count == 0 {
+        return bind_bounds;
+    }
     result := dasset.DASSET_BOUNDS_EMPTY;
     for *m: palette {
         result = animation_bounds_encapsulate(result, animation_bounds_transformed(bind_bounds, m));
@@ -270,7 +304,9 @@ skinned_bounds :: (bind_bounds: dasset.Dasset_Bounds, palette: [] world.Matrix4)
 
 // olib 里 sample_channel 内部嵌套的 proc finish（Jai 不能嵌套过程）。
 animation_finish_sample :: (v: [4] float32, is_rotation: bool) -> [4] float32 {
-    if !is_rotation { return v; }
+    if !is_rotation {
+        return v;
+    }
     return animation_quat_normalize(v);
 }
 
@@ -330,9 +366,21 @@ animation_bounds_transformed :: (b: dasset.Dasset_Bounds, m: world.Matrix4) -> d
     for i: 0..7 {
         // olib 的 `(i & 1) == 0 ? b.min[0] : b.max[0]`（无三元运算）
         corner: [3] float32;
-        if (i & 1) == 0 { corner[0] = b.min[0]; } else { corner[0] = b.max[0]; }
-        if (i & 2) == 0 { corner[1] = b.min[1]; } else { corner[1] = b.max[1]; }
-        if (i & 4) == 0 { corner[2] = b.min[2]; } else { corner[2] = b.max[2]; }
+        if (i & 1) == 0 {
+            corner[0] = b.min[0];
+        } else {
+            corner[0] = b.max[0];
+        }
+        if (i & 2) == 0 {
+            corner[1] = b.min[1];
+        } else {
+            corner[1] = b.max[1];
+        }
+        if (i & 4) == 0 {
+            corner[2] = b.min[2];
+        } else {
+            corner[2] = b.max[2];
+        }
         p, ok := world.matrix4_transform_point(m, world.Vec3.{ corner[0], corner[1], corner[2] });
         if ok {
             point := dasset.Dasset_Bounds.{ min = .[p.x, p.y, p.z], max = .[p.x, p.y, p.z] };

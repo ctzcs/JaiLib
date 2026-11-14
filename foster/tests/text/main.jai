@@ -10,13 +10,13 @@
 
 main :: () {
     App.startup = startup;
-    App.render  = render;
-    App.update  = update;
+    App.render = render;
+    App.update = update;
 
     app_run(.{
         application_name = "jfoster text sample",
-        window_title     = "jfoster text (ESC to quit)",
-        width  = 1280,
+        window_title = "jfoster text (ESC to quit)",
+        width = 1280,
         height = 720,
     });
 
@@ -25,7 +25,7 @@ main :: () {
 
 State :: struct {
     batcher: *Batcher;
-    font:    *Sprite_Font;
+    font: *Sprite_Font;
 }
 
 S: State;
@@ -77,7 +77,7 @@ render :: () {
 
     // wave text (per-char advance)
     x := 100.0;
-    for i: 0..WAVE_TEXT.count-1 {
+    for i: 0..WAVE_TEXT.count - 1 {
         ch := WAVE_TEXT[i];
         y := cast(float) (380 + sin(t * 3.0 + cast(float) i * 0.4) * 20);
         sprite_font_draw(S.font, b, char_str(ch), Vector2.{ x, y }, Color.{ 255, 200, 120, 255 });

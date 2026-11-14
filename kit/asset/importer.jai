@@ -39,10 +39,10 @@
 // Importer 的产出。data 所有权归导入器（分配于传入 allocator），
 // import_all 打包进 blob 后立即释放；调用方无需长期持有。
 Payload_Builder :: struct {
-    width:  u32;  // 仅 .Texture
-    height: u32;  // 仅 .Texture
-    format: u32;  // 仅 .Texture（TEXTURE_FORMAT_*）
-    data:   [] u8; // .Texture: 纯像素；.Json/.Raw: payload 全量字节
+    width: u32; // 仅 .Texture
+    height: u32; // 仅 .Texture
+    format: u32; // 仅 .Texture（TEXTURE_FORMAT_*）
+    data: [] u8; // .Texture: 纯像素；.Json/.Raw: payload 全量字节
 }
 
 // 自定义导入器签名。source 是源文件字节，ext 是小写含点扩展名（".aseprite"），
@@ -50,15 +50,15 @@ Payload_Builder :: struct {
 Import_Proc :: #type (source: [] u8, ext: string, out: *Payload_Builder, allocator: Allocator) -> Asset_Error;
 
 Importer :: struct {
-    kind:    Asset_Kind; // 产出 blob 的 kind
-    version: u32;        // 导入逻辑版本：改了导入算法就 +1，旧缓存自动过期
-    run:     Import_Proc;
+    kind: Asset_Kind; // 产出 blob 的 kind
+    version: u32; // 导入逻辑版本：改了导入算法就 +1，旧缓存自动过期
+    run: Import_Proc;
 }
 
 // 内建导入器的当前版本。
-BUILTIN_VERSION_TEXTURE : u32 : 1;
-BUILTIN_VERSION_JSON    : u32 : 1;
-BUILTIN_VERSION_RAW     : u32 : 1;
+BUILTIN_VERSION_TEXTURE: u32 : 1;
+BUILTIN_VERSION_JSON: u32 : 1;
+BUILTIN_VERSION_RAW: u32 : 1;
 
 // 模块级注册表（key 小写含点，如 ".aseprite"）。
 custom_importers: Table(string, Importer);
@@ -107,10 +107,10 @@ import_texture :: (source: [] u8, ext: string, out: *Payload_Builder, allocator:
     // 注意：transmute 切片保留的是元素个数而非字节数，这里一律按 rawptr+字节数拷。
     memcpy(data.data, image.Data.data, byte_count);
 
-    out.width  = cast(u32) image.Width;
+    out.width = cast(u32) image.Width;
     out.height = cast(u32) image.Height;
     out.format = TEXTURE_FORMAT_RGBA8;
-    out.data   = data;
+    out.data = data;
     return .None;
 }
 
@@ -127,11 +127,11 @@ import_passthrough :: (source: [] u8, ext: string, out: *Payload_Builder, alloca
 //@region import_all
 
 Import_Stats :: struct {
-    scanned:        int; // 源文件数（不含 .meta）
-    imported:       int;
-    skipped:        int;
+    scanned: int; // 源文件数（不含 .meta）
+    imported: int;
+    skipped: int;
     guid_generated: int; // 本次新发 GUID 的资产数
-    orphaned_meta:  int; // 孤儿 .meta 数（只警告）
+    orphaned_meta: int; // 孤儿 .meta 数（只警告）
 }
 
 import_all :: (assets_root: string, library_root: string) -> (Import_Stats, Asset_Error) {
@@ -151,7 +151,7 @@ import_all :: (assets_root: string, library_root: string) -> (Import_Stats, Asse
     // 收集源文件与 .meta 的相对路径（一次递归扫描；字符串归 sources/metas 所有，
     // 末尾统一释放）。
     sources: [..] string;
-    metas:   [..] string;
+    metas: [..] string;
     defer {
         for sources free(it);
         array_free(sources);
@@ -293,9 +293,9 @@ import_all :: (assets_root: string, library_root: string) -> (Import_Stats, Asse
 
 // 一次递归扫描的结果：sources / metas 里的字符串由本过程分配，调用方负责释放。
 Asset_Walk :: struct {
-    root:    string;
+    root: string;
     sources: *[..] string;
-    metas:   *[..] string;
+    metas: *[..] string;
 }
 
 // FU.visit_files 的回调（visit_directories 默认 false，所以只会拿到文件）。

@@ -15,25 +15,25 @@ Batcher_Modes :: enum {
 }
 
 Batcher_Stencil :: struct {
-    Enabled:       bool = false;
-    State:         Stencil_State = .{ FailOp = .KEEP, PassOp = .KEEP, DepthFailOp = .KEEP, CompareOp = .ALWAYS };
+    Enabled: bool = false;
+    State: Stencil_State = .{ FailOp = .KEEP, PassOp = .KEEP, DepthFailOp = .KEEP, CompareOp = .ALWAYS };
     ReferenceValue: u8 = 0;
-    CompareMask:   u8 = 0xFF;
-    WriteMask:     u8 = 0xFF;
+    CompareMask: u8 = 0xFF;
+    WriteMask: u8 = 0xFF;
 }
 
 Batcher_Batch :: struct {
-    Layer:    s32 = 0;
-    Mat: *Material = null;      // renamed from Material (field name shadows the type)
-    Blend:    Blend_Mode = Blend_Mode_Premultiply;
-    Tex:  *Texture = null;      // renamed from Texture (field name shadows the type)
+    Layer: s32 = 0;
+    Mat: *Material = null; // renamed from Material (field name shadows the type)
+    Blend: Blend_Mode = Blend_Mode_Premultiply;
+    Tex: *Texture = null; // renamed from Texture (field name shadows the type)
     HasScissor: bool = false;
-    Scissor:  Rect_Int;
-    Sampler:  Texture_Sampler;
-    Stencil:  Batcher_Stencil;
+    Scissor: Rect_Int;
+    Sampler: Texture_Sampler;
+    Stencil: Batcher_Stencil;
     HasStencil: bool = false;
-    Offset:   s32 = 0;   // first triangle
-    Elements: s32 = 0;   // triangle count
+    Offset: s32 = 0; // first triangle
+    Elements: s32 = 0; // triangle count
 }
 
 STACK_DEPTH :: 32;
@@ -45,25 +45,37 @@ Batcher :: struct {
     // only submitted together at flush — re-using one mesh would let a later
     // render's upload overwrite the vertex data earlier recorded draws read.
     // Slot k receives the k-th render of each frame, so capacities stay stable.
-    meshes:      [..] *Mesh;
+    meshes: [..] *Mesh;
     mesh_cursor: s32 = 0;
     mesh_present_serial: u64;
-    mesh_name:   string = "";
+    mesh_name: string = "";
 
     Matrix: Matrix3x2 = Matrix3x2_Identity;
 
-    VertexStorageBuffers:   [4] *Graphics_Buffer;  VertexStorageBufferCount:   s32 = 0;
-    FragmentStorageBuffers: [4] *Graphics_Buffer;  FragmentStorageBufferCount: s32 = 0;
+    VertexStorageBuffers: [4] *Graphics_Buffer;
+    VertexStorageBufferCount: s32 = 0;
+    FragmentStorageBuffers: [4] *Graphics_Buffer;
+    FragmentStorageBufferCount: s32 = 0;
 
     // state stacks
-    matrixStack:   [STACK_DEPTH] Matrix3x2;      matrixDepth:   s32 = 0;
-    scissorStack:  [STACK_DEPTH] Rect_Int;       scissorHas:    [STACK_DEPTH] bool; scissorDepth: s32 = 0;
-    blendStack:    [STACK_DEPTH] Blend_Mode;     blendDepth:    s32 = 0;
-    samplerStack:  [STACK_DEPTH] Texture_Sampler; samplerDepth: s32 = 0;
-    materialStack: [STACK_DEPTH] *Material;      materialDepth: s32 = 0;
-    layerStack:    [STACK_DEPTH] s32;            layerDepth:    s32 = 0;
-    modeStack:     [STACK_DEPTH] Color;          modeDepth:     s32 = 0;
-    stencilStack:  [STACK_DEPTH] Batcher_Stencil; stencilHas: [STACK_DEPTH] bool; stencilDepth: s32 = 0;
+    matrixStack: [STACK_DEPTH] Matrix3x2;
+    matrixDepth: s32 = 0;
+    scissorStack: [STACK_DEPTH] Rect_Int;
+    scissorHas: [STACK_DEPTH] bool;
+    scissorDepth: s32 = 0;
+    blendStack: [STACK_DEPTH] Blend_Mode;
+    blendDepth: s32 = 0;
+    samplerStack: [STACK_DEPTH] Texture_Sampler;
+    samplerDepth: s32 = 0;
+    materialStack: [STACK_DEPTH] *Material;
+    materialDepth: s32 = 0;
+    layerStack: [STACK_DEPTH] s32;
+    layerDepth: s32 = 0;
+    modeStack: [STACK_DEPTH] Color;
+    modeDepth: s32 = 0;
+    stencilStack: [STACK_DEPTH] Batcher_Stencil;
+    stencilHas: [STACK_DEPTH] bool;
+    stencilDepth: s32 = 0;
 
     batches: [..] Batcher_Batch;
     materials_used: [..] *Material;
@@ -75,9 +87,9 @@ Batcher :: struct {
 
     current_batch: Batcher_Batch;
     vertex_buffer: [..] Batcher_Vertex;
-    index_buffer:  [..] s32;
+    index_buffer: [..] s32;
     vertex_count: s32 = 0;
-    index_count:  s32 = 0;
+    index_count: s32 = 0;
     current_batch_insert: s32 = 0;
     mesh_dirty: bool = false;
 }
@@ -114,15 +126,27 @@ batcher_destroy :: (b: *Batcher) {
 // properties
 //
 
-batcher_triangle_count :: (b: *Batcher) -> s32 { return b.index_count / 3; }
-batcher_vertex_count   :: (b: *Batcher) -> s32 { return b.vertex_count; }
-batcher_index_count    :: (b: *Batcher) -> s32 { return b.index_count; }
-batcher_batch_count    :: (b: *Batcher) -> s32 {
+batcher_triangle_count :: (b: *Batcher) -> s32 {
+    return b.index_count / 3;
+}
+
+batcher_vertex_count :: (b: *Batcher) -> s32 {
+    return b.vertex_count;
+}
+
+batcher_index_count :: (b: *Batcher) -> s32 {
+    return b.index_count;
+}
+
+batcher_batch_count :: (b: *Batcher) -> s32 {
     extra: s32 = 0;
     if b.current_batch.Elements > 0 extra = 1;
     return cast(s32) b.batches.count + extra;
 }
-batcher_scissor        :: (b: *Batcher) -> Rect_Int { return b.current_batch.Scissor; }
+
+batcher_scissor :: (b: *Batcher) -> Rect_Int {
+    return b.current_batch.Scissor;
+}
 
 //
 // upload / clear
@@ -176,11 +200,11 @@ batcher_render :: (b: *Batcher, target: Drawable_Target, viewport: Rect_Int = .{
     }
     // Matrix4x4.CreateOrthographicOffCenter(0, w, h, 0, 0, float.MaxValue)
     m: Matrix4;
-    m._11 = cast(float) ( 2.0 / cast(float) size.x);
+    m._11 = cast(float) (2.0 / cast(float) size.x);
     m._22 = cast(float) (-2.0 / cast(float) size.y);
     m._33 = cast(float) (1.0 / 3.4028235e38);
     m._41 = -1;
-    m._42 =  1;
+    m._42 = 1;
     m._43 = -1;
     m._44 = 1;
     batcher_render_matrix(b, target, m, viewport, has_viewport, scissor, has_scissor);
@@ -207,7 +231,7 @@ batcher_render_matrix :: (b: *Batcher, target: Drawable_Target, matrix: Matrix4,
         b.default_material = material_clone(defaults_batch_material(b.device));
     }
 
-    for i: 0..b.batches.count-1 {
+    for i: 0..b.batches.count - 1 {
         if b.current_batch_insert == i && b.current_batch.Elements > 0 {
             batcher_render_batch(b, target, b.current_batch, matrix, viewport, has_viewport, scissor, has_scissor);
         }
@@ -246,8 +270,14 @@ batcher_render_batch :: (b: *Batcher, target: Drawable_Target, batch: Batcher_Ba
     material_stage_set_uniform_value(*mat.Vertex, 0, matrix);
 
     cmd := draw_command_from_mesh(target, b.meshes[b.mesh_cursor], mat);
-    if has_viewport { cmd.Viewport = viewport; cmd.HasViewport = true; }
-    if trimmed_has  { cmd.Scissor = trimmed;  cmd.HasScissor = true; }
+    if has_viewport {
+        cmd.Viewport = viewport;
+        cmd.HasViewport = true;
+    }
+    if trimmed_has {
+        cmd.Scissor = trimmed;
+        cmd.HasScissor = true;
+    }
     cmd.BlendMode = batch.Blend;
     cmd.IndexOffset = batch.Offset * 3;
     cmd.IndexCount = batch.Elements * 3;
@@ -260,9 +290,9 @@ batcher_render_batch :: (b: *Batcher, target: Drawable_Target, batch: Batcher_Ba
     cmd.StencilCompareMask = batch.Stencil.CompareMask;
     cmd.StencilReferenceValue = batch.Stencil.ReferenceValue;
     cmd.CullMode = .NONE;
-    for i: 0..b.VertexStorageBufferCount-1   cmd.VertexStorageBuffers[i]   = b.VertexStorageBuffers[i];
-    cmd.VertexStorageBufferCount   = b.VertexStorageBufferCount;
-    for i: 0..b.FragmentStorageBufferCount-1 cmd.FragmentStorageBuffers[i] = b.FragmentStorageBuffers[i];
+    for i: 0..b.VertexStorageBufferCount - 1 cmd.VertexStorageBuffers[i] = b.VertexStorageBuffers[i];
+    cmd.VertexStorageBufferCount = b.VertexStorageBufferCount;
+    for i: 0..b.FragmentStorageBufferCount - 1 cmd.FragmentStorageBuffers[i] = b.FragmentStorageBuffers[i];
     cmd.FragmentStorageBufferCount = b.FragmentStorageBufferCount;
 
     graphics_device_draw(b.device, cmd);
@@ -401,7 +431,8 @@ batcher_try_to_merge :: (b: *Batcher) {
 //
 
 batcher_push_layer :: (b: *Batcher, delta: s32) {
-    b.layerStack[b.layerDepth] = b.current_batch.Layer; b.layerDepth += 1;
+    b.layerStack[b.layerDepth] = b.current_batch.Layer;
+    b.layerDepth += 1;
     batcher_set_layer(b, b.current_batch.Layer + delta);
 }
 
@@ -413,7 +444,8 @@ batcher_pop_layer :: (b: *Batcher) {
 batcher_push_material :: (b: *Batcher, material: *Material) {
     assert(material.Fragment.shader != null, "Material must have a Fragment assigned");
 
-    b.materialStack[b.materialDepth] = b.current_batch.Mat; b.materialDepth += 1;
+    b.materialStack[b.materialDepth] = b.current_batch.Mat;
+    b.materialDepth += 1;
 
     // get a pooled copy
     copy: *Material;
@@ -442,7 +474,8 @@ batcher_pop_material :: (b: *Batcher) {
 }
 
 batcher_push_sampler :: (b: *Batcher, sampler: Texture_Sampler) {
-    b.samplerStack[b.samplerDepth] = b.current_batch.Sampler; b.samplerDepth += 1;
+    b.samplerStack[b.samplerDepth] = b.current_batch.Sampler;
+    b.samplerDepth += 1;
     batcher_set_sampler(b, sampler);
 }
 
@@ -452,7 +485,8 @@ batcher_pop_sampler :: (b: *Batcher) {
 }
 
 batcher_push_blend :: (b: *Batcher, blend: Blend_Mode) {
-    b.blendStack[b.blendDepth] = b.current_batch.Blend; b.blendDepth += 1;
+    b.blendStack[b.blendDepth] = b.current_batch.Blend;
+    b.blendDepth += 1;
     batcher_set_blend(b, blend);
 }
 
@@ -486,9 +520,10 @@ batcher_pop_stencil :: (b: *Batcher) {
 }
 
 batcher_push_matrix :: (b: *Batcher, matrix: Matrix3x2, relative := true) -> Matrix3x2 {
-    b.matrixStack[b.matrixDepth] = b.Matrix; b.matrixDepth += 1;
+    b.matrixStack[b.matrixDepth] = b.Matrix;
+    b.matrixDepth += 1;
     if relative b.Matrix = matrix * b.Matrix;
-    else        b.Matrix = matrix;
+    else b.Matrix = matrix;
     return b.Matrix;
 }
 
@@ -507,15 +542,17 @@ batcher_push_mode :: (b: *Batcher, mode_enum: Batcher_Modes) {
     value := Batcher_Mode_Normal;
     if mode_enum == {
         case .NORMAL; value = Batcher_Mode_Normal;
-        case .WASH;   value = Batcher_Mode_Wash;
-        case .FILL;   value = Batcher_Mode_Fill;
+        case .WASH; value = Batcher_Mode_Wash;
+        case .FILL; value = Batcher_Mode_Fill;
     };
-    b.modeStack[b.modeDepth] = b.mode; b.modeDepth += 1;
+    b.modeStack[b.modeDepth] = b.mode;
+    b.modeDepth += 1;
     b.mode = value;
 }
 
 batcher_push_mode_color :: (b: *Batcher, mode_color: Color) {
-    b.modeStack[b.modeDepth] = b.mode; b.modeDepth += 1;
+    b.modeStack[b.modeDepth] = b.mode;
+    b.modeDepth += 1;
     b.mode = mode_color;
 }
 
@@ -545,7 +582,7 @@ batcher_request :: (b: *Batcher, vertex_append: s32, index_append: s32) -> ([] B
     }
 
     vertices := array_view(b.vertex_buffer, b.vertex_count, vertex_append);
-    indices  := array_view(b.index_buffer, b.index_count, index_append);
+    indices := array_view(b.index_buffer, b.index_count, index_append);
 
     b.index_count += index_append;
     b.vertex_count += vertex_append;
@@ -602,13 +639,21 @@ batcher_quad :: (b: *Batcher, v0: Vector2, v1: Vector2, v2: Vector2, v3: Vector2
     vertices[1].pos = vector2_transform(v1, b.Matrix);
     vertices[2].pos = vector2_transform(v2, b.Matrix);
     vertices[3].pos = vector2_transform(v3, b.Matrix);
-    vertices[0].col = color; vertices[1].col = color;
-    vertices[2].col = color; vertices[3].col = color;
-    vertices[0].mode = Batcher_Mode_Fill; vertices[1].mode = Batcher_Mode_Fill;
-    vertices[2].mode = Batcher_Mode_Fill; vertices[3].mode = Batcher_Mode_Fill;
+    vertices[0].col = color;
+    vertices[1].col = color;
+    vertices[2].col = color;
+    vertices[3].col = color;
+    vertices[0].mode = Batcher_Mode_Fill;
+    vertices[1].mode = Batcher_Mode_Fill;
+    vertices[2].mode = Batcher_Mode_Fill;
+    vertices[3].mode = Batcher_Mode_Fill;
 
-    indices[0] = offset + 0; indices[1] = offset + 1; indices[2] = offset + 2;
-    indices[3] = offset + 0; indices[4] = offset + 2; indices[5] = offset + 3;
+    indices[0] = offset + 0;
+    indices[1] = offset + 1;
+    indices[2] = offset + 2;
+    indices[3] = offset + 0;
+    indices[4] = offset + 2;
+    indices[5] = offset + 3;
 }
 
 batcher_quad_gradient :: (b: *Batcher, v0: Vector2, v1: Vector2, v2: Vector2, v3: Vector2, c0: Color, c1: Color, c2: Color, c3: Color) {
@@ -618,13 +663,21 @@ batcher_quad_gradient :: (b: *Batcher, v0: Vector2, v1: Vector2, v2: Vector2, v3
     vertices[1].pos = vector2_transform(v1, b.Matrix);
     vertices[2].pos = vector2_transform(v2, b.Matrix);
     vertices[3].pos = vector2_transform(v3, b.Matrix);
-    vertices[0].col = c0; vertices[1].col = c1;
-    vertices[2].col = c2; vertices[3].col = c3;
-    vertices[0].mode = Batcher_Mode_Fill; vertices[1].mode = Batcher_Mode_Fill;
-    vertices[2].mode = Batcher_Mode_Fill; vertices[3].mode = Batcher_Mode_Fill;
+    vertices[0].col = c0;
+    vertices[1].col = c1;
+    vertices[2].col = c2;
+    vertices[3].col = c3;
+    vertices[0].mode = Batcher_Mode_Fill;
+    vertices[1].mode = Batcher_Mode_Fill;
+    vertices[2].mode = Batcher_Mode_Fill;
+    vertices[3].mode = Batcher_Mode_Fill;
 
-    indices[0] = offset + 0; indices[1] = offset + 1; indices[2] = offset + 2;
-    indices[3] = offset + 0; indices[4] = offset + 2; indices[5] = offset + 3;
+    indices[0] = offset + 0;
+    indices[1] = offset + 1;
+    indices[2] = offset + 2;
+    indices[3] = offset + 0;
+    indices[4] = offset + 2;
+    indices[5] = offset + 3;
 }
 
 batcher_quad_textured :: (b: *Batcher, texture: *Texture, v0: Vector2, v1: Vector2, v2: Vector2, v3: Vector2, t0: Vector2, t1: Vector2, t2: Vector2, t3: Vector2, color: Color) {
@@ -639,15 +692,25 @@ batcher_quad_textured_gradient :: (b: *Batcher, texture: *Texture, v0: Vector2, 
     vertices[1].pos = vector2_transform(v1, b.Matrix);
     vertices[2].pos = vector2_transform(v2, b.Matrix);
     vertices[3].pos = vector2_transform(v3, b.Matrix);
-    vertices[0].tex = t0; vertices[1].tex = t1;
-    vertices[2].tex = t2; vertices[3].tex = t3;
-    vertices[0].col = c0; vertices[1].col = c1;
-    vertices[2].col = c2; vertices[3].col = c3;
-    vertices[0].mode = b.mode; vertices[1].mode = b.mode;
-    vertices[2].mode = b.mode; vertices[3].mode = b.mode;
+    vertices[0].tex = t0;
+    vertices[1].tex = t1;
+    vertices[2].tex = t2;
+    vertices[3].tex = t3;
+    vertices[0].col = c0;
+    vertices[1].col = c1;
+    vertices[2].col = c2;
+    vertices[3].col = c3;
+    vertices[0].mode = b.mode;
+    vertices[1].mode = b.mode;
+    vertices[2].mode = b.mode;
+    vertices[3].mode = b.mode;
 
-    indices[0] = offset + 0; indices[1] = offset + 1; indices[2] = offset + 2;
-    indices[3] = offset + 0; indices[4] = offset + 2; indices[5] = offset + 3;
+    indices[0] = offset + 0;
+    indices[1] = offset + 1;
+    indices[2] = offset + 2;
+    indices[3] = offset + 0;
+    indices[4] = offset + 2;
+    indices[5] = offset + 3;
 }
 
 //
@@ -660,10 +723,16 @@ batcher_triangle :: (b: *Batcher, v0: Vector2, v1: Vector2, v2: Vector2, color: 
     vertices[0].pos = vector2_transform(v0, b.Matrix);
     vertices[1].pos = vector2_transform(v1, b.Matrix);
     vertices[2].pos = vector2_transform(v2, b.Matrix);
-    vertices[0].col = color; vertices[1].col = color; vertices[2].col = color;
-    vertices[0].mode = Batcher_Mode_Fill; vertices[1].mode = Batcher_Mode_Fill; vertices[2].mode = Batcher_Mode_Fill;
+    vertices[0].col = color;
+    vertices[1].col = color;
+    vertices[2].col = color;
+    vertices[0].mode = Batcher_Mode_Fill;
+    vertices[1].mode = Batcher_Mode_Fill;
+    vertices[2].mode = Batcher_Mode_Fill;
 
-    indices[0] = offset + 0; indices[1] = offset + 1; indices[2] = offset + 2;
+    indices[0] = offset + 0;
+    indices[1] = offset + 1;
+    indices[2] = offset + 2;
 }
 
 batcher_triangle_gradient :: (b: *Batcher, v0: Vector2, v1: Vector2, v2: Vector2, c0: Color, c1: Color, c2: Color) {
@@ -672,10 +741,16 @@ batcher_triangle_gradient :: (b: *Batcher, v0: Vector2, v1: Vector2, v2: Vector2
     vertices[0].pos = vector2_transform(v0, b.Matrix);
     vertices[1].pos = vector2_transform(v1, b.Matrix);
     vertices[2].pos = vector2_transform(v2, b.Matrix);
-    vertices[0].col = c0; vertices[1].col = c1; vertices[2].col = c2;
-    vertices[0].mode = Batcher_Mode_Fill; vertices[1].mode = Batcher_Mode_Fill; vertices[2].mode = Batcher_Mode_Fill;
+    vertices[0].col = c0;
+    vertices[1].col = c1;
+    vertices[2].col = c2;
+    vertices[0].mode = Batcher_Mode_Fill;
+    vertices[1].mode = Batcher_Mode_Fill;
+    vertices[2].mode = Batcher_Mode_Fill;
 
-    indices[0] = offset + 0; indices[1] = offset + 1; indices[2] = offset + 2;
+    indices[0] = offset + 0;
+    indices[1] = offset + 1;
+    indices[2] = offset + 2;
 }
 
 batcher_triangle_textured :: (b: *Batcher, texture: *Texture, v0: Vector2, v1: Vector2, v2: Vector2, t0: Vector2, t1: Vector2, t2: Vector2, color: Color) {
@@ -685,11 +760,19 @@ batcher_triangle_textured :: (b: *Batcher, texture: *Texture, v0: Vector2, v1: V
     vertices[0].pos = vector2_transform(v0, b.Matrix);
     vertices[1].pos = vector2_transform(v1, b.Matrix);
     vertices[2].pos = vector2_transform(v2, b.Matrix);
-    vertices[0].tex = t0; vertices[1].tex = t1; vertices[2].tex = t2;
-    vertices[0].col = color; vertices[1].col = color; vertices[2].col = color;
-    vertices[0].mode = b.mode; vertices[1].mode = b.mode; vertices[2].mode = b.mode;
+    vertices[0].tex = t0;
+    vertices[1].tex = t1;
+    vertices[2].tex = t2;
+    vertices[0].col = color;
+    vertices[1].col = color;
+    vertices[2].col = color;
+    vertices[0].mode = b.mode;
+    vertices[1].mode = b.mode;
+    vertices[2].mode = b.mode;
 
-    indices[0] = offset + 0; indices[1] = offset + 1; indices[2] = offset + 2;
+    indices[0] = offset + 0;
+    indices[1] = offset + 1;
+    indices[2] = offset + 2;
 }
 
 //
@@ -750,46 +833,46 @@ batcher_rect_rounded_corners :: (b: *Batcher, r: Rect, r0: float, r1: float, r2:
 
     // corner points
     r0_tl := rect_top_left(r);
-    r0_tr := r0_tl + .{  r0, 0 };
-    r0_br := r0_tl + .{  r0, r0 };
-    r0_bl := r0_tl + .{  0, r0 };
+    r0_tr := r0_tl + .{ r0, 0 };
+    r0_br := r0_tl + .{ r0, r0 };
+    r0_bl := r0_tl + .{ 0, r0 };
 
     r1_tl := rect_top_right(r) + .{ -r1, 0 };
-    r1_tr := r1_tl + .{  r1, 0 };
-    r1_br := r1_tl + .{  r1, r1 };
-    r1_bl := r1_tl + .{  0, r1 };
+    r1_tr := r1_tl + .{ r1, 0 };
+    r1_br := r1_tl + .{ r1, r1 };
+    r1_bl := r1_tl + .{ 0, r1 };
 
     r2_tl := rect_bottom_right(r) + .{ -r2, -r2 };
-    r2_tr := r2_tl + .{  r2, 0 };
-    r2_bl := r2_tl + .{  0, r2 };
-    r2_br := r2_tl + .{  r2, r2 };
+    r2_tr := r2_tl + .{ r2, 0 };
+    r2_bl := r2_tl + .{ 0, r2 };
+    r2_br := r2_tl + .{ r2, r2 };
 
-    r3_tl := rect_bottom_left(r) + .{  0, -r3 };
-    r3_tr := r3_tl + .{  r3, 0 };
-    r3_bl := r3_tl + .{  0, r3 };
-    r3_br := r3_tl + .{  r3, r3 };
+    r3_tl := rect_bottom_left(r) + .{ 0, -r3 };
+    r3_tr := r3_tl + .{ r3, 0 };
+    r3_bl := r3_tl + .{ 0, r3 };
+    r3_br := r3_tl + .{ r3, r3 };
 
     // fill inner cross with two rectangles + center quad
     batcher_rect(b, .{ r.x + r0, r.y, cast(float) max(0.0, r.w - r0 - r1), r0 }, color);
     batcher_rect(b, .{ r.x + r3, r.y + r.h - r3, cast(float) max(0.0, r.w - r2 - r3), r3 }, color);
     batcher_rect(b, .{ r.x, r.y + r0, r.w, cast(float) max(0.0, r.h - r0 - r3) }, color);
 
-    left  := PI;
+    left := PI;
     right := 0.0;
-    up    := -PI / 2.0;
-    down  := PI / 2.0;
+    up := -PI / 2.0;
+    down := PI / 2.0;
 
     if r0 > 0 batcher_semicircle(b, r0_br, up, -left, r0, cast(s32) max(3.0, r0 / 4.0), color);
-    else       batcher_quad(b, r0_tl, r0_tr, r0_br, r0_bl, color);
+    else batcher_quad(b, r0_tl, r0_tr, r0_br, r0_bl, color);
 
     if r1 > 0 batcher_semicircle(b, r1_bl, up, right, r1, cast(s32) max(3.0, r1 / 4.0), color);
-    else       batcher_quad(b, r1_tl, r1_tr, r1_br, r1_bl, color);
+    else batcher_quad(b, r1_tl, r1_tr, r1_br, r1_bl, color);
 
     if r2 > 0 batcher_semicircle(b, r2_tl, right, down, r2, cast(s32) max(3.0, r2 / 4.0), color);
-    else       batcher_quad(b, r2_tl, r2_tr, r2_br, r2_bl, color);
+    else batcher_quad(b, r2_tl, r2_tr, r2_br, r2_bl, color);
 
     if r3 > 0 batcher_semicircle(b, r3_tr, down, left, r3, cast(s32) max(3.0, r3 / 4.0), color);
-    else       batcher_quad(b, r3_tl, r3_tr, r3_br, r3_bl, color);
+    else batcher_quad(b, r3_tl, r3_tr, r3_br, r3_bl, color);
 }
 
 batcher_rect_rounded_line :: (b: *Batcher, r: Rect, rounding: float, t: float, color: Color) {
@@ -810,9 +893,9 @@ batcher_rect_rounded_line_corners :: (b: *Batcher, r: Rect, rtl: float, rtr: flo
         rbr_steps := cast(s32) cast(s32) max(3.0, rbr / 4.0);
         rbl_steps := cast(s32) cast(s32) max(3.0, rbl / 4.0);
 
-        up    := -PI / 2.0;
-        down  := PI / 2.0;
-        left  := PI;
+        up := -PI / 2.0;
+        down := PI / 2.0;
+        left := PI;
 
         batcher_semicircle_line(b, .{ r.x + rtl, r.y + rtl }, up, -left, rtl, rtl_steps, t, color);
         batcher_semicircle_line(b, .{ r.x + r.w - rtr, r.y + rtr }, up, up + TAU * 0.25, rtr, rtr_steps, t, color);
@@ -872,13 +955,13 @@ batcher_circle_gradient :: (b: *Batcher, center: Vector2, radius: float, steps: 
     vertices[0].mode = Batcher_Mode_Fill;
 
     i := 0;
-    for n: 0..steps-1 {
+    for n: 0..steps - 1 {
         next := angle_to_vector(cast(float) n / cast(float) steps * TAU, radius);
         vertices[n + 1].pos = vector2_transform(center + next, b.Matrix);
         vertices[n + 1].col = edge_color;
         vertices[n + 1].mode = Batcher_Mode_Fill;
 
-        indices[i + 0] = vertex_start;                       // center
+        indices[i + 0] = vertex_start; // center
         indices[i + 1] = vertex_start + 1 + n;
         indices[i + 2] = vertex_start + 1 + (n + 1) % steps;
         i += 3;
@@ -925,7 +1008,7 @@ batcher_radial_bar :: (b: *Batcher, position: Vector2, percent: float, inner_rad
         scale := percent / single_segment;
         batcher_circle(b, .{ (inner_radius + outer_radius) / 2.0, 0 }, bar_radius * scale, 16, color);
     } else {
-        for i: 0..segments-1 {
+        for i: 0..segments - 1 {
             prev := cast(float) i / segments;
             next := min(percent, cast(float) (i + 1) / segments);
             prev_angle := angle_to_vector(prev * TAU, 1.0);
@@ -978,8 +1061,10 @@ batcher_image_trs :: (b: *Batcher, texture: *Texture, position: Vector2, origin:
 batcher_image_clip :: (b: *Batcher, texture: *Texture, clip: Rect, position: Vector2, color: Color) {
     tw := cast(float) texture.Width;
     th := cast(float) texture.Height;
-    tx0 := clip.x / tw;   ty0 := clip.y / th;
-    tx1 := rect_right(clip) / tw;   ty1 := rect_bottom(clip) / th;
+    tx0 := clip.x / tw;
+    ty0 := clip.y / th;
+    tx1 := rect_right(clip) / tw;
+    ty1 := rect_bottom(clip) / th;
     batcher_quad_textured(b, texture,
         position, position + .{ clip.w, 0 }, position + .{ clip.w, clip.h }, position + .{ 0, clip.h },
         .{ tx0, ty0 }, .{ tx1, ty0 }, .{ tx1, ty1 }, .{ tx0, ty1 },
@@ -997,7 +1082,7 @@ batcher_subtexture :: (b: *Batcher, subtex: Subtexture, color: Color) {
     if subtex.Tex == null return;
     batcher_quad_textured(b, subtex.Tex,
         subtex.DrawCoords[0], subtex.DrawCoords[1], subtex.DrawCoords[2], subtex.DrawCoords[3],
-        subtex.TexCoords[0],  subtex.TexCoords[1],  subtex.TexCoords[2],  subtex.TexCoords[3],
+        subtex.TexCoords[0], subtex.TexCoords[1], subtex.TexCoords[2], subtex.TexCoords[3],
         color);
 }
 
@@ -1006,7 +1091,7 @@ batcher_subtexture_at :: (b: *Batcher, subtex: Subtexture, position: Vector2, co
     batcher_quad_textured(b, subtex.Tex,
         position + subtex.DrawCoords[0], position + subtex.DrawCoords[1],
         position + subtex.DrawCoords[2], position + subtex.DrawCoords[3],
-        subtex.TexCoords[0],  subtex.TexCoords[1],  subtex.TexCoords[2],  subtex.TexCoords[3],
+        subtex.TexCoords[0], subtex.TexCoords[1], subtex.TexCoords[2], subtex.TexCoords[3],
         color);
 }
 

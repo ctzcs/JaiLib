@@ -24,16 +24,60 @@
 MAX_PASSES :: 32;
 MAX_TARGET_SIZE :: 8192;
 
-Pass_Draw :: enum { Fullscreen; Preview_Model; Model; Sprite; }
-Pass_Frame :: enum { Current; Previous; }
-Target_Format :: enum { Color; Float16; Float32; }
+Pass_Draw :: enum {
+    Fullscreen;
+    Preview_Model;
+    Model;
+    Sprite;
+}
+
+Pass_Frame :: enum {
+    Current;
+    Previous;
+}
+
+Target_Format :: enum {
+    Color;
+    Float16;
+    Float32;
+}
 
 // Default 保留调用方状态；Model 默认不透明、背面剔除、Less 深度读写。
-Pass_Cull :: enum { Default; None; Front; Back; }
-Pass_Blend :: enum { Default; Opaque; Alpha; Additive; Premultiplied; }
+Pass_Cull :: enum {
+    Default;
+    None;
+    Front;
+    Back;
+}
+
+Pass_Blend :: enum {
+    Default;
+    Opaque;
+    Alpha;
+    Additive;
+    Premultiplied;
+}
+
 // Off 关闭深度测试；Always 开启测试但总是通过。新值只追加在末尾：编译清单按整数保存枚举。
-Pass_Depth :: enum { Default; Off; Less; Less_Equal; Equal; Always; Greater; Greater_Equal; Not_Equal; Never; }
-Pass_Write :: enum { Default; On; Off; }
+Pass_Depth :: enum {
+    Default;
+    Off;
+    Less;
+    Less_Equal;
+    Equal;
+    Always;
+    Greater;
+    Greater_Equal;
+    Not_Equal;
+    Never;
+}
+
+Pass_Write :: enum {
+    Default;
+    On;
+    Off;
+}
+
 Pass_State :: struct {
     cull: Pass_Cull;
     blend: Pass_Blend;
@@ -109,7 +153,10 @@ Shader_Desc :: struct {
     uniforms: Uniform_Layout;
 }
 
-Uniform_Layout :: enum { Olib; Foster; }
+Uniform_Layout :: enum {
+    Olib;
+    Foster;
+}
 
 // Shader 使用的 per-instance 接口种类，供 hlsl 与绘制路径选择。
 shader_instancing :: (e: Shader_Desc) -> Instancing {

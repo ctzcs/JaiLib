@@ -23,16 +23,28 @@
 // olib: `log.info(fmt, …)` / `log.error(fmt, …)`。jfoster 的 log_info / log_error 只接受**已格式化**的
 // string，并且自己补一个换行（log_append 追加 "\n"，print 用 "%\n"），所以这里用 tprint 做格式化
 // （temp 分配器，调用作用域结束自动回收），格式串里不再写尾部 "\n"。
-sl_log_info  :: (format: string, args: ..Any) { F.log_info(tprint(format, ..args)); }
-sl_log_error :: (format: string, args: ..Any) { F.log_error(tprint(format, ..args)); }
+sl_log_info :: (format: string, args: ..Any) {
+    F.log_info(tprint(format, ..args));
+}
+
+sl_log_error :: (format: string, args: ..Any) {
+    F.log_error(tprint(format, ..args));
+}
 
 // jacket 的 File.read_entire_file / write_entire_file 走 `string`（count/data），而 kit 的
 // shader.resource_decode / resource_encode 走 `[] u8`。这里做零拷贝互转，所有权仍归调用方。
-sl_bytes_view  :: (s: string) -> [] u8 { return [] u8.{ s.count, s.data }; }
-sl_string_view :: (b: [] u8) -> string { return string.{ b.count, cast(*u8) b.data }; }
+sl_bytes_view :: (s: string) -> [] u8 {
+    return [] u8.{ s.count, s.data };
+}
+
+sl_string_view :: (b: [] u8) -> string {
+    return string.{ b.count, cast(*u8) b.data };
+}
 
 // olib: math.round（就近取整，结果仍是浮点）。jacket 的 Math 只有 floor / ceil。
-sl_round :: (x: float32) -> float32 { return JM.floor(x + 0.5); }
+sl_round :: (x: float32) -> float32 {
+    return JM.floor(x + 0.5);
+}
 
 //@region 总类型
 
@@ -107,7 +119,10 @@ Vertex2D :: struct {
 
 // olib 的 `using bank: ^Parameter_Bank` 在 Jai 里没有等价物：这些访问器保持 `s.program_count` 式的
 // 读法在移植代码里可用（同名过程调用），语义就是 bank 字段的转发。
-sl_bank_program_count :: (s: *Session) -> int { if s.bank == null return 0; return s.bank.program_count; }
+sl_bank_program_count :: (s: *Session) -> int {
+    if s.bank == null return 0;
+    return s.bank.program_count;
+}
 //@endregion
 
 //@region 生命周期
@@ -137,7 +152,9 @@ init :: (s: *Session, device: *F.Graphics_Device, config: Config) -> bool {
         if i == 1 w.mode = 2;
         w.paused = s.paused;
         w.custom_preview = s.custom_preview;
-        w.yaw = s.yaw; w.pitch = s.pitch; w.distance = s.distance;
+        w.yaw = s.yaw;
+        w.pitch = s.pitch;
+        w.distance = s.distance;
     }
     s.clock = 1;
     dev.parameters_init(*s.parameter_watch, s.source_root);
@@ -164,13 +181,17 @@ init :: (s: *Session, device: *F.Graphics_Device, config: Config) -> bool {
     format := F.vertex_format_make(quad_elements, size_of(Vertex2D));
     s.meshes[0] = F.mesh_create(device, format, .THIRTY_TWO, "preview quad");
     vertices: [4] Vertex2D;
-    vertices[0] = .{ position = .[-1, 1],  uv = .[0, 0] };
-    vertices[1] = .{ position = .[1, 1],   uv = .[1, 0] };
-    vertices[2] = .{ position = .[1, -1],  uv = .[1, 1] };
+    vertices[0] = .{ position = .[-1, 1], uv = .[0, 0] };
+    vertices[1] = .{ position = .[1, 1], uv = .[1, 0] };
+    vertices[2] = .{ position = .[1, -1], uv = .[1, 1] };
     vertices[3] = .{ position = .[-1, -1], uv = .[0, 1] };
     indices: [6] u32;
-    indices[0] = 0; indices[1] = 1; indices[2] = 2;
-    indices[3] = 0; indices[4] = 2; indices[5] = 3;
+    indices[0] = 0;
+    indices[1] = 1;
+    indices[2] = 2;
+    indices[3] = 0;
+    indices[4] = 2;
+    indices[5] = 3;
     F.mesh_set_vertices(s.meshes[0], vertices);
     F.mesh_set_indices(s.meshes[0], indices);
     sphere := make_sphere(1.15, 48, 64, DA.DASSET_MATERIAL_DEFAULT);
@@ -201,7 +222,7 @@ init :: (s: *Session, device: *F.Graphics_Device, config: Config) -> bool {
         for x: 0..511 {
             color: F.Color;
             if (x / 64 + y / 64) % 2 == 0 color = F.Color.{ 240, 245, 255, 255 };
-            else                        color = F.Color.{ 100, 120, 155, 255 };
+            else color = F.Color.{ 100, 120, 155, 255 };
             dx := cast(float32) x - 255.5;
             dy := cast(float32) y - 255.5;
             color.a = cast(u8) (clamp(240 - JM.sqrt(dx * dx + dy * dy), 0, 1) * 255);

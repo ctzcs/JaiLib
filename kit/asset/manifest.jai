@@ -29,12 +29,12 @@
 //   注：manifest 的对象键顺序（本仓库的 Table 遍历序）与 olib 的字段声明序不同，
 //   字段名与条目排序（按 path）一致，import_all 两次输出的 manifest 仍然稳定。
 
-MANIFEST_VERSION : u32 : 1;
+MANIFEST_VERSION: u32 : 1;
 
 // 保留 GUID（前缀 "manifest"）。128-bit 随机生成撞上它的概率可忽略；
 // 它没有 .meta，不会参与 import_all 的 Duplicate_Guid 检查。
-GUID_MANIFEST :: u8.[ #char "m", #char "a", #char "n", #char "i", #char "f", #char "e", #char "s", #char "t",
-                      0, 0, 0, 0, 0, 0, 0, 1 ];
+GUID_MANIFEST :: u8.[#char "m", #char "a", #char "n", #char "i", #char "f", #char "e", #char "s", #char "t",
+                      0, 0, 0, 0, 0, 0, 0, 1];
 
 Manifest_Entry :: struct {
     path: string; // 相对 assets_root，'/' 分隔

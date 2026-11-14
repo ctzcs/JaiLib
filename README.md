@@ -71,6 +71,7 @@ bindings instead of declarations from the compiler's global ImGui module.
 
 ## Tools
 
+- [tools/format](tools/format/README.md): consistent Jai formatting with `jaifmt`; use `--write` to format or `--check` to verify.
 - [tools/check](tools/check/README.md): module checks, core/kit/onet/voice/Box2D/Box3D behavior tests, and optional Web validation.
 - [tools/physics-bindings](tools/physics-bindings/README.md): regenerate physics bindings, native libraries, and C ABI probes from pinned sources.
 - [tools/new-game](tools/new-game/README.md): standalone Jai game scaffolding with core/core_editor/editor/game modules, state tests, and a build entry point.

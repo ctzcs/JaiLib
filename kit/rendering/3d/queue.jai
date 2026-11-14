@@ -22,14 +22,14 @@
 
 //@region 类型
 
-Render_Item :: struct (T: Type) {
+Render_Item :: struct(T: Type) {
     payload: T;
     view_depth: float32; // 排序键：到相机的视空间深度（submit 时算好）
-    transparent: bool;   // true 进透明桶（后到前）
-    group: int;          // 可选的不透明分组；同深度组按此键排序
+    transparent: bool; // true 进透明桶（后到前）
+    group: int; // 可选的不透明分组；同深度组按此键排序
 }
 
-Render_Queue :: struct (T: Type) {
+Render_Queue :: struct(T: Type) {
     items: [..] Render_Item(T);
     scratch: [..] Render_Item(T);
     group_depths: HASH.Table(int, float32);

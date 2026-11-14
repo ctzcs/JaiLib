@@ -1,5 +1,5 @@
 #scope_module
-using Basic;   // module-private
+using Basic; // module-private
 using Math;
 #scope_export
 
@@ -45,8 +45,8 @@ using Math;
 APP_EXT_USER_DATA_SLOTS :: 8;
 
 App_Ext_User_Data :: struct {
-    owner: *App_State;   // null == free slot
-    data:  *void;
+    owner: *App_State; // null == free slot
+    data: *void;
 }
 
 app_ext_user_data: [APP_EXT_USER_DATA_SLOTS] App_Ext_User_Data;
@@ -74,7 +74,7 @@ app_ext_user_data_slot :: (app: *App_State, create: bool) -> *App_Ext_User_Data 
 
 // olib: AppSetUserData. Attaches `data` (pass null to clear) to `app`.
 app_set_user_data :: (app: *App_State, data: *void) {
-    if app == null return;   // olib ignores a nil app the same way
+    if app == null return; // olib ignores a nil app the same way
     slot := app_ext_user_data_slot(app, create = true);
     slot.data = data;
 }
@@ -147,7 +147,7 @@ logical_round :: (v: float64) -> float64 {
     return floor(v + 0.5);
 }
 
-SDL_INT_MAX :: 2147483647.0;   // max(c.int) in olib's Odin version
+SDL_INT_MAX :: 2147483647.0; // max(c.int) in olib's Odin version
 
 // [olib L-023] Pure conversion: logical units * display scale / pixel density,
 // rounded to SDL window coordinates.
@@ -172,7 +172,7 @@ logical_to_window_size :: (value: Point2, display_scale: float, pixel_density: f
     factor := cast(float64) display_scale / cast(float64) pixel_density;
     w := logical_round(cast(float64) value.x * factor);
     h := logical_round(cast(float64) value.y * factor);
-    if w < 1.0 w = 1.0;   // a positive logical size never collapses to 0
+    if w < 1.0 w = 1.0; // a positive logical size never collapses to 0
     if h < 1.0 h = 1.0;
 
     if usable_size.x > 0 w = min(w, cast(float64) usable_size.x);
@@ -192,45 +192,45 @@ logical_to_window_size :: (value: Point2, display_scale: float, pixel_density: f
 // or SDL rejects the request — true only means SDL accepted it (the window
 // system may still adjust the final size asynchronously).
 #if OS != .WASM {
-window_set_logical_size :: (w: *Window, value: Point2) -> bool {
-    if w == null || w.handle == null || window_fullscreen(w) return false;
+    window_set_logical_size :: (w: *Window, value: Point2) -> bool {
+        if w == null || w.handle == null || window_fullscreen(w) return false;
 
-    display := SDL_GetDisplayForWindow(w.handle);
-    usable: SDL_Rect;
-    bounds := Point2_Zero;
-    if SDL_GetDisplayUsableBounds(display, *usable) {
-        // A negative usable size means "the platform did not report one"; it
-        // must not become a clamp of 0, so it is dropped here (olib: max(0, w)).
-        bw := usable.w;
-        bh := usable.h;
-        if bw < 0 bw = 0;
-        if bh < 0 bh = 0;
-        bounds = .{ bw, bh };
+        display := SDL_GetDisplayForWindow(w.handle);
+        usable: SDL_Rect;
+        bounds := Point2_Zero;
+        if SDL_GetDisplayUsableBounds(display, *usable) {
+            // A negative usable size means "the platform did not report one"; it
+            // must not become a clamp of 0, so it is dropped here (olib: max(0, w)).
+            bw := usable.w;
+            bh := usable.h;
+            if bw < 0 bw = 0;
+            if bh < 0 bh = 0;
+            bounds = .{ bw, bh };
+        }
+
+        size, ok := logical_to_window_size(value, SDL_GetWindowDisplayScale(w.handle),
+                                           SDL_GetWindowPixelDensity(w.handle), bounds);
+        if !ok return false;
+        return SDL_SetWindowSize(w.handle, size.x, size.y);
     }
-
-    size, ok := logical_to_window_size(value, SDL_GetWindowDisplayScale(w.handle),
-                                       SDL_GetWindowPixelDensity(w.handle), bounds);
-    if !ok return false;
-    return SDL_SetWindowSize(w.handle, size.x, size.y);
-}
 } else {
-// [W1] Web: there is no OS window to resize and no display to query, so the
-// logical size is applied to the framework's own window record. The conversion
-// itself is the same pure `logical_to_window_size`, fed with the canvas'
-// device-pixel ratio (web_pixel_ratio, the role SDL_GetWindowDisplayScale plays
-// on desktop) and with no usable-area clamp — a canvas is not constrained by a
-// taskbar. The real CSS resize is W2.
-window_set_logical_size :: (w: *Window, value: Point2) -> bool {
-    if w == null || w.handle == null || window_fullscreen(w) return false;
+    // [W1] Web: there is no OS window to resize and no display to query, so the
+    // logical size is applied to the framework's own window record. The conversion
+    // itself is the same pure `logical_to_window_size`, fed with the canvas'
+    // device-pixel ratio (web_pixel_ratio, the role SDL_GetWindowDisplayScale plays
+    // on desktop) and with no usable-area clamp — a canvas is not constrained by a
+    // taskbar. The real CSS resize is W2.
+    window_set_logical_size :: (w: *Window, value: Point2) -> bool {
+        if w == null || w.handle == null || window_fullscreen(w) return false;
 
-    ratio := web_pixel_ratio;
-    if ratio <= 0 ratio = 1.0;
+        ratio := web_pixel_ratio;
+        if ratio <= 0 ratio = 1.0;
 
-    size, ok := logical_to_window_size(value, ratio, 1.0, Point2_Zero);
-    if !ok return false;
-    window_set_size(w, size);
-    return true;
-}
+        size, ok := logical_to_window_size(value, ratio, 1.0, Point2_Zero);
+        if !ok return false;
+        window_set_size(w, size);
+        return true;
+    }
 }
 
 // [olib L-023] Creation path: same conversion as the runtime resize, plus the
@@ -251,21 +251,21 @@ window_set_logical_size :: (w: *Window, value: Point2) -> bool {
 //
 // `config.fullscreen` disables it, like olib's AppConfig.Fullscreen check.
 #if OS != .WASM {
-window_apply_logical_size :: (w: *Window, config: App_Config) -> bool {
-    if config.fullscreen return false;
-    if !window_set_logical_size(w, .{ config.width, config.height }) return false;
+    window_apply_logical_size :: (w: *Window, config: App_Config) -> bool {
+        if config.fullscreen return false;
+        if !window_set_logical_size(w, .{ config.width, config.height }) return false;
 
-    display := SDL_GetDisplayForWindow(w.handle);
-    center := sdl_windowpos_centered_display(display);
-    return SDL_SetWindowPosition(w.handle, center, center);
-}
+        display := SDL_GetDisplayForWindow(w.handle);
+        center := sdl_windowpos_centered_display(display);
+        return SDL_SetWindowPosition(w.handle, center, center);
+    }
 } else {
-// [W1] Web: the conversion happens (window_set_logical_size above), centering
-// does not — the canvas is positioned by CSS, which is the page author's call, not
-// the engine's. Returning the resize result keeps the contract ("true means the
-// size was applied").
-window_apply_logical_size :: (w: *Window, config: App_Config) -> bool {
-    if config.fullscreen return false;
-    return window_set_logical_size(w, .{ config.width, config.height });
-}
+    // [W1] Web: the conversion happens (window_set_logical_size above), centering
+    // does not — the canvas is positioned by CSS, which is the page author's call, not
+    // the engine's. Returning the resize result keeps the contract ("true means the
+    // size was applied").
+    window_apply_logical_size :: (w: *Window, config: App_Config) -> bool {
+        if config.fullscreen return false;
+        return window_set_logical_size(w, .{ config.width, config.height });
+    }
 }

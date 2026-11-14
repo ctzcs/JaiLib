@@ -1,5 +1,5 @@
 #scope_module
-using Basic;   // module-private
+using Basic; // module-private
 #scope_export
 
 // Port of Foster Framework/Utility/UpdateMode.cs.
@@ -18,10 +18,10 @@ Update_Modes :: enum {
 }
 
 Update_Mode :: struct {
-    Mode:               Update_Modes;
-    FixedTargetTime:    float64;   // seconds per fixed update  (C#: TimeSpan)
-    FixedMaxTime:       float64;   // max time a fixed update may take (spiral-of-death guard)
-    FixedWaitEnabled:   bool;      // main thread sleeps until the next fixed update is due
+    Mode: Update_Modes;
+    FixedTargetTime: float64; // seconds per fixed update  (C#: TimeSpan)
+    FixedMaxTime: float64; // max time a fixed update may take (spiral-of-death guard)
+    FixedWaitEnabled: bool; // main thread sleeps until the next fixed update is due
 }
 
 // C# UpdateMode.FixedStep(TimeSpan targetTimePerFrame, TimeSpan? maxTimePerFrame, bool)
@@ -30,9 +30,9 @@ update_mode_fixed_step_seconds :: (target_time_per_frame: float64, max_time_per_
     max_time := max_time_per_frame;
     if max_time <= 0.0 max_time = target_time_per_frame * 5.0;
     return .{
-        Mode             = .FIXED,
-        FixedTargetTime  = target_time_per_frame,
-        FixedMaxTime     = max_time,
+        Mode = .FIXED,
+        FixedTargetTime = target_time_per_frame,
+        FixedMaxTime = max_time,
         FixedWaitEnabled = wait_for_next_update,
     };
 }
@@ -59,9 +59,9 @@ update_mode_unlocked :: () -> Update_Mode {
 //
 
 Fixed_Step_Clock :: struct {
-    accumulator: float64;   // time fed in but not yet consumed by a fixed update
-    dropped:     float64;   // time discarded by the FixedMaxTime clamp
-    steps:       s32;       // fixed updates run so far
+    accumulator: float64; // time fed in but not yet consumed by a fixed update
+    dropped: float64; // time discarded by the FixedMaxTime clamp
+    steps: s32; // fixed updates run so far
 }
 
 fixed_step_clock_create :: () -> Fixed_Step_Clock {
@@ -74,7 +74,7 @@ fixed_step_clock_create :: () -> Fixed_Step_Clock {
 update_mode_fixed_steps :: (clock: *Fixed_Step_Clock, mode: Update_Mode, delta: float64) -> s32 {
     if mode.Mode == .UNLOCKED return 1;
     if mode.Mode != .FIXED return 0;
-    if mode.FixedTargetTime <= 0.0 return 0;   // unset mode: never divide by zero
+    if mode.FixedTargetTime <= 0.0 return 0; // unset mode: never divide by zero
 
     clock.accumulator += delta;
 
@@ -87,7 +87,7 @@ update_mode_fixed_steps :: (clock: *Fixed_Step_Clock, mode: Update_Mode, delta: 
     steps := cast(s32) floor(clock.accumulator / mode.FixedTargetTime);
     if steps < 0 steps = 0;
     clock.accumulator -= cast(float64) steps * mode.FixedTargetTime;
-    if clock.accumulator < 0.0 clock.accumulator = 0.0;   // rounding never leaves debt
+    if clock.accumulator < 0.0 clock.accumulator = 0.0; // rounding never leaves debt
     clock.steps += steps;
     return steps;
 }

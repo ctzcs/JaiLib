@@ -44,12 +44,12 @@ color_hsv_to_rgb :: (hsv: [3] float32) -> [3] float32 {
     m := hsv[2] - c;
     rgb: [3] float32;
     sector := cast(int) h;
-    if sector == 0      rgb = .[c, x, 0];
+    if sector == 0 rgb = .[c, x, 0];
     else if sector == 1 rgb = .[x, c, 0];
     else if sector == 2 rgb = .[0, c, x];
     else if sector == 3 rgb = .[0, x, c];
     else if sector == 4 rgb = .[x, 0, c];
-    else                rgb = .[c, 0, x];
+    else rgb = .[c, 0, x];
     return .[rgb[0] + m, rgb[1] + m, rgb[2] + m];
 }
 
@@ -64,9 +64,9 @@ color_rgb_to_hsv :: (rgb: [3] float32) -> [3] float32 {
     delta := hi - lo;
     h: float32 = 0;
     if delta > 0.00001 {
-        if hi == rgb[0]      h = (rgb[1] - rgb[2]) / delta;
+        if hi == rgb[0] h = (rgb[1] - rgb[2]) / delta;
         else if hi == rgb[1] h = 2 + (rgb[2] - rgb[0]) / delta;
-        else                 h = 4 + (rgb[0] - rgb[1]) / delta;
+        else h = 4 + (rgb[0] - rgb[1]) / delta;
         h /= 6;
         if h < 0 h += 1;
     }

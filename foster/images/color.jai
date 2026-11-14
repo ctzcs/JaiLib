@@ -11,11 +11,11 @@ Color :: struct {
 }
 
 Color_White :: Color.{ 255, 255, 255, 255 };
-Color_Black :: Color.{   0,   0,   0, 255 };
+Color_Black :: Color.{ 0, 0, 0, 255 };
 Color_Transparent :: Color.{ 0, 0, 0, 0 };
-Color_Red   :: Color.{ 255, 0, 0, 255 };
+Color_Red :: Color.{ 255, 0, 0, 255 };
 Color_Green :: Color.{ 0, 255, 0, 255 };
-Color_Blue  :: Color.{ 0, 0, 255, 255 };
+Color_Blue :: Color.{ 0, 0, 255, 255 };
 Color_Yellow :: Color.{ 255, 255, 0, 255 };
 Color_Cyan :: Color.{ 0, 255, 255, 255 };
 Color_Magenta :: Color.{ 255, 0, 255, 255 };
@@ -58,8 +58,8 @@ color_from_rgba :: (packed: u32) -> Color {
     return .{
         cast(u8) ((packed >> 24) & 0xFF),
         cast(u8) ((packed >> 16) & 0xFF),
-        cast(u8) ((packed >> 8)  & 0xFF),
-        cast(u8)  (packed        & 0xFF),
+        cast(u8) ((packed >> 8) & 0xFF),
+        cast(u8) (packed & 0xFF),
     };
 }
 
@@ -90,5 +90,10 @@ color_from_vector4 :: (v: Vector4) -> Color {
     };
 }
 
-operator == :: (a: Color, b: Color) -> bool { return a.r == b.r && a.g == b.g && a.b == b.b && a.a == b.a; }
-operator != :: (a: Color, b: Color) -> bool { return !(a == b); }
+operator == :: (a: Color, b: Color) -> bool {
+    return a.r == b.r && a.g == b.g && a.b == b.b && a.a == b.a;
+}
+
+operator != :: (a: Color, b: Color) -> bool {
+    return !(a == b);
+}

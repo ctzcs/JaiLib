@@ -76,8 +76,8 @@
 //@region Flow —— 检查点写法
 
 Flow :: struct {
-    step: s32;    // 已完成的检查点数
-    at: s32;      // 本次重入走到第几个检查点，由 flow_begin 重置
+    step: s32; // 已完成的检查点数
+    at: s32; // 本次重入走到第几个检查点，由 flow_begin 重置
     elapsed: float32; // 当前检查点已等待的时间
 }
 
@@ -134,7 +134,7 @@ flow_progress :: (f: *Flow, seconds: float32) -> (float32, bool) {
 
 // elapsed 由 step 过程每次进入时自行累加 dt。
 // odin 的泛型约束 `where intrinsics.type_is_enum(S)` 无法在 Jai 的泛型结构体上表达。
-Cursor :: struct ($S: Type) {
+Cursor :: struct($S: Type) {
     step: S;
     elapsed: float32; // 当前步已经过的时间
 }

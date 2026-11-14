@@ -119,13 +119,13 @@ get_triangle_closest_point :: (pos: V3, tri: [3] V3) -> (V3, Voronoi_Feature_Kin
     v02 := geom_sub(tri[2], tri[0]);
     v12 := geom_sub(tri[2], tri[1]);
     if geom_length_sq(geom_cross(v01, v02)) == 0 {
-        indices : [3][2] int = .[.[0, 1], .[0, 2], .[1, 2]];
+        indices: [3][2] int = .[.[0, 1], .[0, 2], .[1, 2]];
         best: float32;
         closest: V3;
         feature_kind: Voronoi_Feature_Kind;
         feature_index: s32;
         for edge, i: indices {
-            segment : [2] V3 = .[tri[edge[0]], tri[edge[1]]];
+            segment: [2] V3 = .[tri[edge[0]], tri[edge[1]]];
             p, u := get_line_closest_point(pos, segment);
             d := geom_length_sq(geom_sub(pos, p));
             if i == 0 || d < best {
@@ -278,7 +278,7 @@ get_oriented_box_bounds :: (pos: V3, rad: V3, rot: [3][3] float32) -> (V3, V3) {
     extent: V3;
     for 0..2 {
         c := it;
-        column : V3 = .[rot[0][c], rot[1][c], rot[2][c]];
+        column: V3 = .[rot[0][c], rot[1][c], rot[2][c]];
         extent = geom_add(extent, geom_scale(geom_abs(column), rad[c]));
     }
     return geom_sub(pos, extent), geom_add(pos, extent);

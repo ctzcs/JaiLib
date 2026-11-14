@@ -76,7 +76,11 @@ folder_enum :: (path: string, pattern: string, recursive: bool) -> ([] string, b
             slash := 0;
             found := false;
             for c, i: trimmed {
-                if c == #char "/" { slash = i; found = true; break; }
+                if c == #char "/" {
+                    slash = i;
+                    found = true;
+                    break;
+                }
             }
             if found trimmed = web_str_of(trimmed.data, cast(s32) slash);
         }
@@ -86,7 +90,10 @@ folder_enum :: (path: string, pattern: string, recursive: bool) -> ([] string, b
         // 去重：非递归时多个子文件会把同一个目录名报多次。
         duplicate := false;
         for existing: results {
-            if existing == trimmed { duplicate = true; break; }
+            if existing == trimmed {
+                duplicate = true;
+                break;
+            }
         }
         if duplicate continue;
 

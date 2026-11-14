@@ -1,5 +1,5 @@
 #scope_module
-using Basic;   // module-private
+using Basic; // module-private
 #scope_export
 
 // Port of Foster Framework/Utility/StackList.cs.
@@ -30,9 +30,9 @@ using Basic;   // module-private
 // or on the stack and pass `*Stack_List(...)` around, exactly like C# passes
 // the struct by `ref`. Nothing here allocates.
 
-Stack_List :: struct ($T: Type, $N: int = 4) {
+Stack_List :: struct($T: Type, $N: int = 4) {
     elements: [N] T;
-    count:    s32;
+    count: s32;
 }
 
 // Zero value of a $T: Jai has no `default(T)` expression, and `value: T = ---;`
@@ -52,14 +52,28 @@ stack_list_create :: ($T: Type, $N := 4) -> Stack_List($T, $N) {
     return .{ count = 0 };
 }
 
-stack_list4  :: ($T: Type) -> Stack_List($T, 4)  { return .{ count = 0 }; }
-stack_list8  :: ($T: Type) -> Stack_List($T, 8)  { return .{ count = 0 }; }
-stack_list16 :: ($T: Type) -> Stack_List($T, 16) { return .{ count = 0 }; }
-stack_list32 :: ($T: Type) -> Stack_List($T, 32) { return .{ count = 0 }; }
-stack_list64 :: ($T: Type) -> Stack_List($T, 64) { return .{ count = 0 }; }
+stack_list4 :: ($T: Type) -> Stack_List($T, 4) {
+    return .{ count = 0 };
+}
+
+stack_list8 :: ($T: Type) -> Stack_List($T, 8) {
+    return .{ count = 0 };
+}
+
+stack_list16 :: ($T: Type) -> Stack_List($T, 16) {
+    return .{ count = 0 };
+}
+
+stack_list32 :: ($T: Type) -> Stack_List($T, 32) {
+    return .{ count = 0 };
+}
+
+stack_list64 :: ($T: Type) -> Stack_List($T, 64) {
+    return .{ count = 0 };
+}
 
 stack_list_capacity :: (list: *Stack_List($T, $N)) -> s32 {
-    return N;   // C# StackListN<T>.Capacity / TypeCapacity
+    return N; // C# StackListN<T>.Capacity / TypeCapacity
 }
 
 stack_list_count :: (list: *Stack_List($T, $N)) -> s32 {
@@ -145,16 +159,16 @@ stack_list_resize :: (list: *Stack_List($T, $N), new_count: s32) {
     assert(new_count >= 0 && new_count <= N, "Exceeding Capacity of StackList");
     zero := stack_list_zero_value(T);
     if new_count < list.count {
-        for i: new_count..list.count-1 list.elements[i] = zero;
+        for i: new_count..list.count - 1 list.elements[i] = zero;
     } else {
-        for i: list.count..new_count-1 list.elements[i] = zero;
+        for i: list.count..new_count - 1 list.elements[i] = zero;
     }
     list.count = new_count;
 }
 
 stack_list_clear :: (list: *Stack_List($T, $N)) {
     zero := stack_list_zero_value(T);
-    for i: 0..list.count-1 list.elements[i] = zero;
+    for i: 0..list.count - 1 list.elements[i] = zero;
     list.count = 0;
 }
 
@@ -163,7 +177,7 @@ stack_list_clear :: (list: *Stack_List($T, $N)) {
 //
 
 stack_list_index_of :: (list: *Stack_List($T, $N), item: T) -> s32 {
-    for i: 0..list.count-1 {
+    for i: 0..list.count - 1 {
         if list.elements[i] == item return i;
     }
     return -1;
@@ -189,7 +203,7 @@ stack_list_insert :: (list: *Stack_List($T, $N), index: s32, item: T) {
 // which is harmless with a GC and a leak without one).
 stack_list_remove_at :: (list: *Stack_List($T, $N), index: s32) {
     assert(index >= 0 && index < list.count, "IndexOutOfRangeException");
-    for i: index..list.count-2 list.elements[i] = list.elements[i + 1];
+    for i: index..list.count - 2 list.elements[i] = list.elements[i + 1];
     list.count -= 1;
     list.elements[list.count] = stack_list_zero_value(T);
 }
@@ -203,5 +217,5 @@ stack_list_remove :: (list: *Stack_List($T, $N), item: T) -> bool {
 
 stack_list_copy_to :: (list: *Stack_List($T, $N), dest: [] T, dest_index: s32) {
     assert(dest_index >= 0 && dest_index + list.count <= dest.count, "Destination array was not long enough");
-    for i: 0..list.count-1 dest[dest_index + i] = list.elements[i];
+    for i: 0..list.count - 1 dest[dest_index + i] = list.elements[i];
 }

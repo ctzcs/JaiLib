@@ -31,17 +31,33 @@ gizmo_finite2 :: (v: W.Vec2) -> bool {
 }
 
 // olib 的 Vec2 `+` / `-`。
-gizmo_v2_add :: (a: W.Vec2, b: W.Vec2) -> W.Vec2 { return W.Vec2.{a.x + b.x, a.y + b.y}; }
-gizmo_v2_sub :: (a: W.Vec2, b: W.Vec2) -> W.Vec2 { return W.Vec2.{a.x - b.x, a.y - b.y}; }
+gizmo_v2_add :: (a: W.Vec2, b: W.Vec2) -> W.Vec2 {
+    return W.Vec2.{ a.x + b.x, a.y + b.y };
+}
+
+gizmo_v2_sub :: (a: W.Vec2, b: W.Vec2) -> W.Vec2 {
+    return W.Vec2.{ a.x - b.x, a.y - b.y };
+}
+
 // olib 的 Vec2 `v * s`（逐分量乘，标量在右）。
-gizmo_v2_scale :: (v: W.Vec2, s: float32) -> W.Vec2 { return W.Vec2.{v.x * s, v.y * s}; }
+gizmo_v2_scale :: (v: W.Vec2, s: float32) -> W.Vec2 {
+    return W.Vec2.{ v.x * s, v.y * s };
+}
+
 // olib 的 Vec2 `a * b`（逐分量）。
-gizmo_v2_mul :: (a: W.Vec2, b: W.Vec2) -> W.Vec2 { return W.Vec2.{a.x * b.x, a.y * b.y}; }
+gizmo_v2_mul :: (a: W.Vec2, b: W.Vec2) -> W.Vec2 {
+    return W.Vec2.{ a.x * b.x, a.y * b.y };
+}
+
 // olib 的 Vec2 `v / s`（逐分量除；不写成乘倒数，保持逐位相同的舍入）。
-gizmo_v2_div :: (v: W.Vec2, s: float32) -> W.Vec2 { return W.Vec2.{v.x / s, v.y / s}; }
+gizmo_v2_div :: (v: W.Vec2, s: float32) -> W.Vec2 {
+    return W.Vec2.{ v.x / s, v.y / s };
+}
 
 // olib transform.odin / transform2d.odin 的 dot2
-gizmo_v2_dot :: (a: W.Vec2, b: W.Vec2) -> float32 { return a.x * b.x + a.y * b.y; }
+gizmo_v2_dot :: (a: W.Vec2, b: W.Vec2) -> float32 {
+    return a.x * b.x + a.y * b.y;
+}
 
 gizmo_v2_equal :: (a: W.Vec2, b: W.Vec2) -> bool {
     return a.x == b.x && a.y == b.y;
@@ -50,19 +66,19 @@ gizmo_v2_equal :: (a: W.Vec2, b: W.Vec2) -> bool {
 // olib 的 Vec3 `+` / `-` / `* s` / `/ s`。W.v3_sub / W.v3_dot / W.v3_cross / W.v3_normalize
 // 是 kit/world 已经提供的同名算子的显式形式，这里只补缺的几个。
 gizmo_v3_add :: (a: W.Vec3, b: W.Vec3) -> W.Vec3 {
-    return W.Vec3.{a.x + b.x, a.y + b.y, a.z + b.z};
+    return W.Vec3.{ a.x + b.x, a.y + b.y, a.z + b.z };
 }
 
 gizmo_v3_scale :: (v: W.Vec3, s: float32) -> W.Vec3 {
-    return W.Vec3.{v.x * s, v.y * s, v.z * s};
+    return W.Vec3.{ v.x * s, v.y * s, v.z * s };
 }
 
 gizmo_v3_mul :: (a: W.Vec3, b: W.Vec3) -> W.Vec3 {
-    return W.Vec3.{a.x * b.x, a.y * b.y, a.z * b.z};
+    return W.Vec3.{ a.x * b.x, a.y * b.y, a.z * b.z };
 }
 
 gizmo_v3_div :: (v: W.Vec3, s: float32) -> W.Vec3 {
-    return W.Vec3.{v.x / s, v.y / s, v.z / s};
+    return W.Vec3.{ v.x / s, v.y / s, v.z / s };
 }
 
 // olib 的 `a == b`（Vec3 / Vec3 逐分量，含 NaN 语义）。
@@ -82,7 +98,7 @@ gizmo_color_equal :: (a: F.Color, b: F.Color) -> bool {
 // olib 的 `foster.Vec2{p[0], p[1]}` / `foster.Vec3{p, q, r}`：Jai 的 Vector2/Vector3 是结构体，
 // 从 [3]f32 顶点数组取值要显式搬。
 gizmo_vec3_from_array :: (p: [3] float32) -> W.Vec3 {
-    return W.Vec3.{p[0], p[1], p[2]};
+    return W.Vec3.{ p[0], p[1], p[2] };
 }
 
 gizmo_vec3_to_array :: (v: W.Vec3) -> [3] float32 {
@@ -95,55 +111,55 @@ gizmo_vec3_to_array :: (v: W.Vec3) -> [3] float32 {
 // 零值可用，无堆资源；一套状态对应一个当前操作目标。目标改变时传 input.cancel。
 Translation_Gizmo :: struct {
     dragging, captured: bool;
-    axis:                   int; // dragging 时为 0/1/2，即世界 X/Y/Z。
-    origin:                 W.Vec3;
-    plane_normal:           W.Vec3;
-    start_distance:         float32;
-    viewport:               F.Rect;
-    view_projection:        W.Matrix4;
+    axis: int; // dragging 时为 0/1/2，即世界 X/Y/Z。
+    origin: W.Vec3;
+    plane_normal: W.Vec3;
+    start_distance: float32;
+    viewport: F.Rect;
+    view_projection: W.Matrix4;
 }
 
 Translation_Input :: struct {
-    pointer:     W.Vec2; // 最终输出像素，与 viewport 在同一坐标空间。
+    pointer: W.Vec2; // 最终输出像素，与 viewport 在同一坐标空间。
     pressed, down: bool; // 调用方提供按下边沿；同一个边沿只提交一次。
     enabled, allow_start: bool; // enabled=false 终止；allow_start=false 仅禁止开始。
-    cancel:      bool; // 取消只结束交互，不自动还原已应用的变换。
+    cancel: bool; // 取消只结束交互，不自动还原已应用的变换。
 }
 
 Translation_Result :: struct {
     position, delta: W.Vec3; // delta 相对按下时原点；changed 时由调用方决定是否应用。
-    axis:            int;
+    axis: int;
     started, changed, ended, cancelled, captured: bool;
 }
 
 Translation_Geometry :: struct {
-    origin:  W.Vec2;
-    ends:    [3] W.Vec2;
+    origin: W.Vec2;
+    ends: [3] W.Vec2;
     visible: [3] bool;
 }
 
 // 文本中心位置；字号与字体由调用方选择。
 Axis_Label :: struct {
-    visible:  bool;
+    visible: bool;
     position: W.Vec2;
-    color:    F.Color;
+    color: F.Color;
 }
 
 Translation_Style :: struct {
-    length, min_length, hit_radius:                      float32;
+    length, min_length, hit_radius: float32;
     line_width, outline_width, arrow_length, arrow_half_width, center_radius, label_gap: float32;
-    colors:                                              [3] F.Color;
-    highlight, outline, center:                          F.Color;
+    colors: [3] F.Color;
+    highlight, outline, center: F.Color;
 }
 
 DEFAULT_TRANSLATION_STYLE :: Translation_Style.{
     length = 100, min_length = 18, hit_radius = 9,
     line_width = 3, outline_width = 6, arrow_length = 12, arrow_half_width = 5,
     center_radius = 4, label_gap = 8,
-    colors = .[F.Color.{255, 105, 104, 255}, F.Color.{114, 232, 146, 255}, F.Color.{108, 167, 255, 255}],
-    highlight = F.Color.{255, 180, 97, 255},
-    outline = F.Color.{13, 22, 29, 236},
-    center = F.Color.{234, 237, 227, 255},
+    colors = .[F.Color.{ 255, 105, 104, 255 }, F.Color.{ 114, 232, 146, 255 }, F.Color.{ 108, 167, 255, 255 }],
+    highlight = F.Color.{ 255, 180, 97, 255 },
+    outline = F.Color.{ 13, 22, 29, 236 },
+    center = F.Color.{ 234, 237, 227, 255 },
 };
 //@endregion
 
@@ -152,16 +168,16 @@ DEFAULT_TRANSLATION_STYLE :: Translation_Style.{
 // Camera3D 的 viewport_size 必须匹配 rect 宽高；rect 允许非零偏移。
 // 不改相机视口，不依赖场景内部渲染比例。无效尺寸、相机后方及裁剪范围外返回 false。
 project :: (camera: *W.Camera3D, point: W.Vec3, viewport: F.Rect) -> (W.Vec2, bool) {
-    if camera == null || viewport.w <= 0 || viewport.h <= 0 return W.Vec2.{0, 0}, false;
+    if camera == null || viewport.w <= 0 || viewport.h <= 0 return W.Vec2.{ 0, 0 }, false;
     if cast(float32) camera.viewport_size.x != viewport.w ||
        cast(float32) camera.viewport_size.y != viewport.h {
-        return W.Vec2.{0, 0}, false;
+        return W.Vec2.{ 0, 0 }, false;
     }
     h := W.matrix4_transform_vec4(W.camera3d_view_projection(camera),
                                  W.vec4(point.x, point.y, point.z, 1));
-    if !gizmo_finite(h[3]) || h[3] <= 0.0001 return W.Vec2.{0, 0}, false;
+    if !gizmo_finite(h[3]) || h[3] <= 0.0001 return W.Vec2.{ 0, 0 }, false;
     // olib: !(h[2] >= 0 && h[2] <= h[3]) —— 写成同义的反向判断
-    if !(h[2] >= 0 && h[2] <= h[3]) return W.Vec2.{0, 0}, false;
+    if !(h[2] >= 0 && h[2] <= h[3]) return W.Vec2.{ 0, 0 }, false;
     p := W.Vec2.{
         viewport.x + (h[0] / h[3] + 1) * 0.5 * viewport.w,
         viewport.y + (1 - h[1] / h[3]) * 0.5 * viewport.h,
@@ -227,7 +243,7 @@ translation_update :: (
     viewport: F.Rect, input: Translation_Input,
     scale: float32 = 1, style := DEFAULT_TRANSLATION_STYLE,
 ) -> Translation_Result {
-    r := Translation_Result.{position = position, axis = -1, captured = g.captured};
+    r := Translation_Result.{ position = position, axis = -1, captured = g.captured };
     if g.dragging {
         r.axis = g.axis;
         r.delta = W.v3_sub(position, g.origin);
@@ -256,7 +272,7 @@ translation_update :: (
         return r;
     }
     if !gizmo_finite(input.pointer.x) || !gizmo_finite(input.pointer.y) return r;
-    local := gizmo_v2_sub(input.pointer, W.Vec2.{viewport.x, viewport.y});
+    local := gizmo_v2_sub(input.pointer, W.Vec2.{ viewport.x, viewport.y });
     ray, ray_ok := W.camera3d_screen_point_to_ray(camera, local);
     if g.dragging {
         if ray_ok {

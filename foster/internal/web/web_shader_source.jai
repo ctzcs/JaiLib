@@ -61,8 +61,16 @@ using Basic;
 // table
 // ---------------------------------------------------------------------------
 
-Web_Shader_Variant :: enum { BATCHER; TEXTURED; MSDF; }
-Web_Shader_Stage   :: enum { VERTEX; FRAGMENT; }
+Web_Shader_Variant :: enum {
+    BATCHER;
+    TEXTURED;
+    MSDF;
+}
+
+Web_Shader_Stage :: enum {
+    VERTEX;
+    FRAGMENT;
+}
 
 // Compile-time text load, relative to THIS file (Jai: `#load` and `#filepath`
 // resolve against the file the call is written in, never the build CWD).
@@ -75,19 +83,19 @@ web_shader_text :: (relative_path: string) -> string {
 
 Web_Shader_Entry :: struct {
     variant: Web_Shader_Variant;
-    stage:   Web_Shader_Stage;
-    name:    string;   // "Batcher.vertex" — for diagnostics and log lines
-    source:  string;   // GLSL ES 3.00 text
+    stage: Web_Shader_Stage;
+    name: string; // "Batcher.vertex" — for diagnostics and log lines
+    source: string; // GLSL ES 3.00 text
 };
 
 // The six default stages. Order matches graphics/default_resource_data.jai.
 WEB_SHADERS :: Web_Shader_Entry.[
-    .{ .BATCHER,  .VERTEX,   "Batcher.vertex",    #run web_shader_text("batcher.vertex.glsl")  },
-    .{ .BATCHER,  .FRAGMENT, "Batcher.fragment",  #run web_shader_text("batcher.fragment.glsl") },
-    .{ .TEXTURED, .VERTEX,   "Textured.vertex",   #run web_shader_text("textured.vertex.glsl") },
+    .{ .BATCHER, .VERTEX, "Batcher.vertex", #run web_shader_text("batcher.vertex.glsl") },
+    .{ .BATCHER, .FRAGMENT, "Batcher.fragment", #run web_shader_text("batcher.fragment.glsl") },
+    .{ .TEXTURED, .VERTEX, "Textured.vertex", #run web_shader_text("textured.vertex.glsl") },
     .{ .TEXTURED, .FRAGMENT, "Textured.fragment", #run web_shader_text("textured.fragment.glsl") },
-    .{ .MSDF,     .VERTEX,   "Msdf.vertex",       #run web_shader_text("msdf.vertex.glsl") },
-    .{ .MSDF,     .FRAGMENT, "Msdf.fragment",     #run web_shader_text("msdf.fragment.glsl") },
+    .{ .MSDF, .VERTEX, "Msdf.vertex", #run web_shader_text("msdf.vertex.glsl") },
+    .{ .MSDF, .FRAGMENT, "Msdf.fragment", #run web_shader_text("msdf.fragment.glsl") },
 ];
 
 // The generated twins (internal/web/shaders/reference/). Not used at runtime —
@@ -95,12 +103,12 @@ WEB_SHADERS :: Web_Shader_Entry.[
 // and compare pixels, and so a future W5 shader-translation path has a worked
 // example of what the toolchain produces.
 WEB_SHADER_REFERENCE :: Web_Shader_Entry.[
-    .{ .BATCHER,  .VERTEX,   "reference/Batcher.vertex",    #run web_shader_text("reference/batcher.vertex.glsl")  },
-    .{ .BATCHER,  .FRAGMENT, "reference/Batcher.fragment",  #run web_shader_text("reference/batcher.fragment.glsl") },
-    .{ .TEXTURED, .VERTEX,   "reference/Textured.vertex",   #run web_shader_text("reference/textured.vertex.glsl") },
+    .{ .BATCHER, .VERTEX, "reference/Batcher.vertex", #run web_shader_text("reference/batcher.vertex.glsl") },
+    .{ .BATCHER, .FRAGMENT, "reference/Batcher.fragment", #run web_shader_text("reference/batcher.fragment.glsl") },
+    .{ .TEXTURED, .VERTEX, "reference/Textured.vertex", #run web_shader_text("reference/textured.vertex.glsl") },
     .{ .TEXTURED, .FRAGMENT, "reference/Textured.fragment", #run web_shader_text("reference/textured.fragment.glsl") },
-    .{ .MSDF,     .VERTEX,   "reference/Msdf.vertex",       #run web_shader_text("reference/msdf.vertex.glsl") },
-    .{ .MSDF,     .FRAGMENT, "reference/Msdf.fragment",     #run web_shader_text("reference/msdf.fragment.glsl") },
+    .{ .MSDF, .VERTEX, "reference/Msdf.vertex", #run web_shader_text("reference/msdf.vertex.glsl") },
+    .{ .MSDF, .FRAGMENT, "reference/Msdf.fragment", #run web_shader_text("reference/msdf.fragment.glsl") },
 ];
 
 // Borrowed immutable bytes (the compiler's static data). Never free these.
@@ -127,9 +135,9 @@ web_shader_reference_source :: (variant: Web_Shader_Variant, stage: Web_Shader_S
 // in web_gl.jai (which is the backend's own module and is not reachable from
 // graphics/).
 web_shader_variant_of_name :: (name: string) -> (variant: Web_Shader_Variant, found: bool) {
-    if name == "Batcher"  return .BATCHER,  true;
+    if name == "Batcher" return .BATCHER, true;
     if name == "Textured" return .TEXTURED, true;
-    if name == "Msdf"     return .MSDF,     true;
+    if name == "Msdf" return .MSDF, true;
     return .BATCHER, false;
 }
 
@@ -146,7 +154,7 @@ WEB_GLSL_VERSION_TOKEN :: "#version";
 web_shader_code_is_glsl :: (code: [] u8) -> bool {
     if code.data == null || code.count <= 0 return false;
     if code.count < WEB_GLSL_VERSION_TOKEN.count return false;
-    for i: 0..WEB_GLSL_VERSION_TOKEN.count-1 {
+    for i: 0..WEB_GLSL_VERSION_TOKEN.count - 1 {
         if code.data[i] != WEB_GLSL_VERSION_TOKEN[i] return false;
     }
     return true;
@@ -174,21 +182,21 @@ web_shader_code_is_glsl :: (code: [] u8) -> bool {
 // single premultiplied vec4 to location 0).
 
 Web_Shader_Program :: struct {
-    variant:          Web_Shader_Variant;
-    name:             string;
-    vertex_samplers:  s32;
-    vertex_uniforms:  s32;   // uniform *slots*, i.e. Shader.UniformBufferCount
+    variant: Web_Shader_Variant;
+    name: string;
+    vertex_samplers: s32;
+    vertex_uniforms: s32; // uniform *slots*, i.e. Shader.UniformBufferCount
     fragment_samplers: s32;
     fragment_uniforms: s32;
-    vertex_attributes: s32;  // highest location + 1
-    vertex_stride:     s32;  // bytes, from the vertex format
-    texture_units:     s32;  // sampler2D uniforms the GLSL declares
+    vertex_attributes: s32; // highest location + 1
+    vertex_stride: s32; // bytes, from the vertex format
+    texture_units: s32; // sampler2D uniforms the GLSL declares
 };
 
 WEB_SHADER_PROGRAMS :: Web_Shader_Program.[
-    .{ .BATCHER,  "Batcher",  0, 1, 1, 0, 4, 24, 1 },
+    .{ .BATCHER, "Batcher", 0, 1, 1, 0, 4, 24, 1 },
     .{ .TEXTURED, "Textured", 0, 1, 1, 0, 3, 20, 1 },
-    .{ .MSDF,     "Msdf",     0, 1, 1, 1, 3, 24, 1 },
+    .{ .MSDF, "Msdf", 0, 1, 1, 1, 3, 24, 1 },
 ];
 
 web_shader_program :: (variant: Web_Shader_Variant) -> Web_Shader_Program {

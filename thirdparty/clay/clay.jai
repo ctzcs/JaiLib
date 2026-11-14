@@ -29,64 +29,64 @@
 //@region 结构体构造辅助
 
 PaddingAll :: (allPadding: u16) -> Padding {
-	return .{ left = allPadding, right = allPadding, top = allPadding, bottom = allPadding };
+    return .{ left = allPadding, right = allPadding, top = allPadding, bottom = allPadding };
 }
 
 BorderOutside :: (width: u16) -> BorderWidth {
-	// olib: return {width, width, width, width, 0}
-	return .{ left = width, right = width, top = width, bottom = width, betweenChildren = 0 };
+    // olib: return {width, width, width, width, 0}
+    return .{ left = width, right = width, top = width, bottom = width, betweenChildren = 0 };
 }
 
 BorderAll :: (width: u16) -> BorderWidth {
-	// olib: return {width, width, width, width, width}
-	return .{ left = width, right = width, top = width, bottom = width, betweenChildren = width };
+    // olib: return {width, width, width, width, width}
+    return .{ left = width, right = width, top = width, bottom = width, betweenChildren = width };
 }
 
 CornerRadiusAll :: (radius: float) -> CornerRadius {
-	return .{ topLeft = radius, topRight = radius, bottomLeft = radius, bottomRight = radius };
+    return .{ topLeft = radius, topRight = radius, bottomLeft = radius, bottomRight = radius };
 }
 
 // Jai 侧给了默认值：olib 的调用点都传 `{}`，这样 0.12 风格的无参调用也能过。
 SizingFit :: (sizeMinMax := SizingConstraintsMinMax.{}) -> SizingAxis {
-	return .{ type = .FIT, constraints = .{ sizeMinMax = sizeMinMax } };
+    return .{ type = .FIT, constraints = .{ sizeMinMax = sizeMinMax } };
 }
 
 SizingGrow :: (sizeMinMax := SizingConstraintsMinMax.{}) -> SizingAxis {
-	return .{ type = .GROW, constraints = .{ sizeMinMax = sizeMinMax } };
+    return .{ type = .GROW, constraints = .{ sizeMinMax = sizeMinMax } };
 }
 
 SizingFixed :: (size: float) -> SizingAxis {
-	return .{ type = .FIXED, constraints = .{ sizeMinMax = .{ min = size, max = size } } };
+    return .{ type = .FIXED, constraints = .{ sizeMinMax = .{ min = size, max = size } } };
 }
 
 SizingPercent :: (sizePercent: float) -> SizingAxis {
-	return .{ type = .PERCENT, constraints = .{ sizePercent = sizePercent } };
+    return .{ type = .PERCENT, constraints = .{ sizePercent = sizePercent } };
 }
 //@endregion
 
 //@region 字符串与 ID
 
 MakeString :: (label: string) -> String {
-	return .{ chars = label.data, length = cast(s32) label.count };
+    return .{ chars = label.data, length = cast(s32) label.count };
 }
 
 // olib: ID :: proc(label: string, index: u32 = 0) -> ElementId
 // Jai 没有默认参数 —— 用 `.. u32` 可变参数等价替代（见文件头说明 2）。
-ID :: (label: string, index: .. u32) -> ElementId {
-	i : u32 = 0;
-	if index.count > 0 {
-		i = index[0];
-	}
-	return _HashString(MakeString(label), i, 0);
+ID :: (label: string, index: ..u32) -> ElementId {
+    i: u32 = 0;
+    if index.count > 0 {
+        i = index[0];
+    }
+    return _HashString(MakeString(label), i, 0);
 }
 
 // olib: ID_LOCAL :: proc(label: string, index: u32 = 0) -> ElementId
-ID_LOCAL :: (label: string, index: .. u32) -> ElementId {
-	i : u32 = 0;
-	if index.count > 0 {
-		i = index[0];
-	}
-	return _HashString(MakeString(label), i, _GetParentElementId());
+ID_LOCAL :: (label: string, index: ..u32) -> ElementId {
+    i: u32 = 0;
+    if index.count > 0 {
+        i = index[0];
+    }
+    return _HashString(MakeString(label), i, _GetParentElementId());
 }
 //@endregion
 
@@ -94,8 +94,8 @@ ID_LOCAL :: (label: string, index: .. u32) -> ElementId {
 
 // olib: ConfigureOpenElement
 ConfigureOpenElement :: (config: ElementDeclaration) -> bool {
-	_ConfigureOpenElement(config);
-	return true;
+    _ConfigureOpenElement(config);
+    return true;
 }
 
 // olib: UI —— `@(deferred_none = _CloseElement)` 的 Jai 等价物（#expand 宏）
@@ -116,41 +116,41 @@ ConfigureOpenElement :: (config: ElementDeclaration) -> bool {
 //   2. 必须写成 `#expand` + 显式 `{ }` 块；否则 defer 会绑到调用者作用域末尾，
 //      嵌套的 open/close 顺序就全乱了（debug 面板那种上百层嵌套会直接崩）。
 UI :: (decl: ElementDeclaration, $body := #code null) #expand {
-	{
-		_OpenElement();
-		defer _CloseElement();
-		_ConfigureOpenElement(decl);
-		#insert body;
-	}
+    {
+        _OpenElement();
+        defer _CloseElement();
+        _ConfigureOpenElement(decl);
+        #insert body;
+    }
 }
 
 // Jai 专属：不用宏、手写配对时用这两个。与 `_OpenElement` + `_ConfigureOpenElement` /
 // `_CloseElement` 一一对应，只是去掉了下划线前缀，方便 kit 层调用。
 UI_Begin :: (decl: ElementDeclaration) {
-	_OpenElement();
-	_ConfigureOpenElement(decl);
+    _OpenElement();
+    _ConfigureOpenElement(decl);
 }
 
 UI_End :: () {
-	_CloseElement();
+    _CloseElement();
 }
 
 // olib: Text
 // ⚠ olib 的 `$text: string` 是编译期常量参数；Jai 里就是普通 string 参数，
 // 行为一致（内容只在本帧内被读取）。
 Text :: (text: string, config: *TextElementConfig) {
-	wrapped := MakeString(text);
-	wrapped.isStaticallyAllocated = true;
-	_OpenTextElement(wrapped, config);
+    wrapped := MakeString(text);
+    wrapped.isStaticallyAllocated = true;
+    _OpenTextElement(wrapped, config);
 }
 
 // olib: TextDynamic
 TextDynamic :: (text: string, config: *TextElementConfig) {
-	_OpenTextElement(MakeString(text), config);
+    _OpenTextElement(MakeString(text), config);
 }
 
 // olib: TextConfig
 TextConfig :: (config: TextElementConfig) -> *TextElementConfig {
-	return _StoreTextElementConfig(config);
+    return _StoreTextElementConfig(config);
 }
 //@endregion

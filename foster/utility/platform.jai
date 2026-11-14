@@ -1,5 +1,5 @@
 #scope_module
-using Basic;   // module-private
+using Basic; // module-private
 using Math;
 #scope_export
 
@@ -12,14 +12,29 @@ using Math;
         crit: Windows.CRITICAL_SECTION;
     }
 
-    mutex_init :: (m: *Mutex)    { Windows.InitializeCriticalSection(*m.crit); }
-    mutex_destroy :: (m: *Mutex) { Windows.DeleteCriticalSection(*m.crit); }
-    mutex_lock :: (m: *Mutex)    { Windows.EnterCriticalSection(*m.crit); }
-    mutex_unlock :: (m: *Mutex)  { Windows.LeaveCriticalSection(*m.crit); }
+    mutex_init :: (m: *Mutex) {
+        Windows.InitializeCriticalSection(*m.crit);
+    }
 
-    sleep_ms :: (ms: s32) { Windows.Sleep(ms); }
+    mutex_destroy :: (m: *Mutex) {
+        Windows.DeleteCriticalSection(*m.crit);
+    }
 
-    current_thread_id :: () -> u32 { return Windows.GetCurrentThreadId(); }
+    mutex_lock :: (m: *Mutex) {
+        Windows.EnterCriticalSection(*m.crit);
+    }
+
+    mutex_unlock :: (m: *Mutex) {
+        Windows.LeaveCriticalSection(*m.crit);
+    }
+
+    sleep_ms :: (ms: s32) {
+        Windows.Sleep(ms);
+    }
+
+    current_thread_id :: () -> u32 {
+        return Windows.GetCurrentThreadId();
+    }
 } else #if OS == .WASM {
     // Web target: single-threaded, and there is no pthread to import (POSIX is
     // also unusable — its module #assert's on any non-native platform). A mutex
@@ -29,19 +44,32 @@ using Math;
         locked: bool;
     }
 
-    mutex_init :: (m: *Mutex)    { m.locked = false; }
-    mutex_destroy :: (m: *Mutex) { m.locked = false; }
-    mutex_lock :: (m: *Mutex)    { m.locked = true; }
-    mutex_unlock :: (m: *Mutex)  { m.locked = false; }
+    mutex_init :: (m: *Mutex) {
+        m.locked = false;
+    }
+
+    mutex_destroy :: (m: *Mutex) {
+        m.locked = false;
+    }
+
+    mutex_lock :: (m: *Mutex) {
+        m.locked = true;
+    }
+
+    mutex_unlock :: (m: *Mutex) {
+        m.locked = false;
+    }
 
     // Blocking inside the rAF callback would freeze the tab, so this is a
     // deliberate no-op. app_tick's fixed-step "do not run too fast" loop still
     // terminates, because platform_time_seconds() advances off the WASI clock;
     // it just spins instead of sleeping until W2 puts requestAnimationFrame /
     // Atomics.wait behind it.
-    sleep_ms :: (ms: s32) { }
+    sleep_ms :: (ms: s32) {}
 
-    current_thread_id :: () -> u32 { return 1; }
+    current_thread_id :: () -> u32 {
+        return 1;
+    }
 } else {
     POSIX :: #import "POSIX";
 
@@ -49,15 +77,26 @@ using Math;
         m: POSIX.pthread_mutex_t = POSIX.PTHREAD_MUTEX_INITIALIZER;
     }
 
-    mutex_init :: (m: *Mutex)    { POSIX.pthread_mutex_init(*m.m, null); }
-    mutex_destroy :: (m: *Mutex) { POSIX.pthread_mutex_destroy(*m.m); }
-    mutex_lock :: (m: *Mutex)    { POSIX.pthread_mutex_lock(*m.m); }
-    mutex_unlock :: (m: *Mutex)  { POSIX.pthread_mutex_unlock(*m.m); }
+    mutex_init :: (m: *Mutex) {
+        POSIX.pthread_mutex_init(*m.m, null);
+    }
+
+    mutex_destroy :: (m: *Mutex) {
+        POSIX.pthread_mutex_destroy(*m.m);
+    }
+
+    mutex_lock :: (m: *Mutex) {
+        POSIX.pthread_mutex_lock(*m.m);
+    }
+
+    mutex_unlock :: (m: *Mutex) {
+        POSIX.pthread_mutex_unlock(*m.m);
+    }
 
     sleep_ms :: (ms: s32) {
         t: POSIX.timespec;
-        t.tv_sec  = cast(time_t) (ms / 1000);
-        t.tv_nsec = cast(s64)    (ms % 1000) * 1_000_000;
+        t.tv_sec = cast(time_t) (ms / 1000);
+        t.tv_nsec = cast(s64) (ms % 1000) * 1_000_000;
         POSIX.nanosleep(*t, null);
     }
 

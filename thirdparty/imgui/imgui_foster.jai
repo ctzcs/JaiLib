@@ -19,7 +19,7 @@
 #import "Basic";
 #import "thirdparty/imgui";
 
-IMGF :: #import "foster";   // 独特别名：gfx.jai 也导出 F，非命名空间导入会冲突
+IMGF :: #import "foster"; // 独特别名：gfx.jai 也导出 F，非命名空间导入会冲突
 
 imgui_dll :: #library "imgui";
 
@@ -46,21 +46,21 @@ DrawList_AddText :: (this: *ImDrawList, pos: *ImVec2, col: u32, text_begin: *u8,
 // ---- import library is already linked by the jfoster module).
 
 // 光标 API：文件相对路径直指 jfoster 自带的 SDL3 导入库（同一 DLL）。
-IMGUI_SDL3 :: #library "../../foster/internal/native/windows/SDL3";   // 从 thirdparty/imgui/ 上溯两级
+IMGUI_SDL3 :: #library "../../foster/internal/native/windows/SDL3"; // 从 thirdparty/imgui/ 上溯两级
 
 SDL_SystemCursor :: enum u32 {
-    DEFAULT;           // 0
-    TEXT;              // 1
-    WAIT;              // 2
-    CROSSHAIR;         // 3
-    PROGRESS;          // 4
-    NWSE_RESIZE;       // 5
-    NESW_RESIZE;       // 6
-    EW_RESIZE;         // 7
-    NS_RESIZE;         // 8
-    MOVE;              // 9
-    NOT_ALLOWED;       // 10
-    POINTER;           // 11 (SDL_SYSTEM_CURSOR_POINTER)
+    DEFAULT; // 0
+    TEXT; // 1
+    WAIT; // 2
+    CROSSHAIR; // 3
+    PROGRESS; // 4
+    NWSE_RESIZE; // 5
+    NESW_RESIZE; // 6
+    EW_RESIZE; // 7
+    NS_RESIZE; // 8
+    MOVE; // 9
+    NOT_ALLOWED; // 10
+    POINTER; // 11 (SDL_SYSTEM_CURSOR_POINTER)
 }
 
 SDL_CreateSystemCursor :: (id: SDL_SystemCursor) -> *void #foreign IMGUI_SDL3;
@@ -118,7 +118,7 @@ imgui_foster_shutdown :: () {
         IMGF.texture_dispose(font_texture);
         font_texture = null;
     }
-    for * sdl_cursors {
+    for *sdl_cursors {
         if <<it != null SDL_DestroyCursor(<<it);
         <<it = null;
     }
@@ -159,7 +159,7 @@ imgui_foster_process_input :: () {
     // 同一 step 内按下又松开（帧卡顿/快速点按）时 pressed 和 released 同时为
     // 真：必须先发 down 再发 up——用 else if 会吞掉 up，ImGui 认为键卡死
     //（Backspace 连删就是这个症状）。
-    for sc: 0..KEY_MAP_SIZE-1 {
+    for sc: 0..KEY_MAP_SIZE - 1 {
         imgui_key := key_map[sc];
         if imgui_key == .None continue;
         sdl_key := cast(IMGF.Keys) sc;
@@ -195,11 +195,11 @@ imgui_foster_process_input :: () {
         IO_AddMousePosEvent(io, pos.x, pos.y);
     }
 
-    set_mouse_event(io, .LEFT,   0);
-    set_mouse_event(io, .RIGHT,  1);
+    set_mouse_event(io, .LEFT, 0);
+    set_mouse_event(io, .RIGHT, 1);
     set_mouse_event(io, .MIDDLE, 2);
-    set_mouse_event(io, .X1,     3);
-    set_mouse_event(io, .X2,     4);
+    set_mouse_event(io, .X1, 3);
+    set_mouse_event(io, .X2, 4);
 
     wheel := IMGF.mouse_wheel(mouse);
     if wheel.x != 0 || wheel.y != 0 {
@@ -238,11 +238,11 @@ imgui_foster_render :: (b: *IMGF.Batcher) {
     // ImGui colors are straight alpha (raylib-era behavior we keep).
     IMGF.batcher_push_blend(b, IMGF.Blend_Mode_NonPremultiplied);
 
-    for list_i: 0..draw_data.CmdListsCount-1 {
+    for list_i: 0..draw_data.CmdListsCount - 1 {
         draw_list := (draw_data.CmdLists)[list_i];
         if draw_list.CmdBuffer.Size <= 0 continue;
 
-        for cmd_i: 0..draw_list.CmdBuffer.Size-1 {
+        for cmd_i: 0..draw_list.CmdBuffer.Size - 1 {
             cmd := draw_list.CmdBuffer.Data[cmd_i];
 
             clip := IMGF.Rect_Int.{
@@ -290,16 +290,16 @@ render_triangles :: (b: *IMGF.Batcher, count: u32, index_start: u32, index_buffe
     vertices, indices, offset := IMGF.batcher_request(b, n, n);
 
     matrix := b.Matrix; // imgui geometry is submitted in screen space, but
-                         // honor an outer transform for parity with the batcher.
-    for i: 0..n-1 {
+    // honor an outer transform for parity with the batcher.
+    for i: 0..n - 1 {
         index := index_buffer.Data[cast(s64) (index_start + cast(u32) i)];
         src := vert_buffer.Data[cast(s64) index];
         dst := *vertices[i];
         dst.pos = IMGF.vector2_transform(.{ x = src.pos.x, y = src.pos.y }, matrix);
         dst.tex = .{ x = src.uv.x, y = src.uv.y };
         dst.col = .{
-            r = cast(u8) ((src.col >> 0)  & 0xFF),
-            g = cast(u8) ((src.col >> 8)  & 0xFF),
+            r = cast(u8) ((src.col >> 0) & 0xFF),
+            g = cast(u8) ((src.col >> 8) & 0xFF),
             b = cast(u8) ((src.col >> 16) & 0xFF),
             a = cast(u8) ((src.col >> 24) & 0xFF),
         };
@@ -342,17 +342,17 @@ setup_cursors :: () {
     // ImGui MouseCursor 顺序：Arrow, TextInput, ResizeAll, ResizeNS,
     // ResizeEW, ResizeNESW, ResizeNWSE, Hand, NotAllowed。
     map: [MouseCursor.COUNT] SDL_SystemCursor = .[
-        .DEFAULT,     // Arrow
-        .TEXT,        // TextInput
-        .MOVE,        // ResizeAll
-        .NS_RESIZE,   // ResizeNS
-        .EW_RESIZE,   // ResizeEW
+        .DEFAULT, // Arrow
+        .TEXT, // TextInput
+        .MOVE, // ResizeAll
+        .NS_RESIZE, // ResizeNS
+        .EW_RESIZE, // ResizeEW
         .NESW_RESIZE, // ResizeNESW
         .NWSE_RESIZE, // ResizeNWSE
-        .POINTER,     // Hand
+        .POINTER, // Hand
         .NOT_ALLOWED, // NotAllowed
     ];
-    for i: 0..cast(s32) MouseCursor.COUNT-1 {
+    for i: 0..cast(s32) MouseCursor.COUNT - 1 {
         sdl_cursors[i] = SDL_CreateSystemCursor(map[i]);
     }
 }
@@ -393,7 +393,7 @@ setup_font_texture :: () {
     FontAtlas_GetTexDataAsRGBA32(io.Fonts, *pixels, *w, *h);
 
     bytes: [] u8;
-    bytes.data  = pixels;
+    bytes.data = pixels;
     bytes.count = cast(s64) w * h * 4;
     font_texture = IMGF.texture_create_from_pixels(IMGF.App.device, w, h, bytes);
     io.Fonts.TexID = cast(*void) font_texture;
@@ -451,109 +451,109 @@ utf8_decode :: (text: string, i: int) -> (u32, int) {
 setup_keymap :: () {
     // 直接写 key_map 本体（固定数组是值语义，k := key_map 只会改到副本）
 
-    key_map[cast(s64) IMGF.Keys.APOSTROPHE]     = .Apostrophe;
-    key_map[cast(s64) IMGF.Keys.COMMA]          = .Comma;
-    key_map[cast(s64) IMGF.Keys.MINUS]          = .Minus;
-    key_map[cast(s64) IMGF.Keys.PERIOD]         = .Period;
-    key_map[cast(s64) IMGF.Keys.SLASH]          = .Slash;
-    key_map[cast(s64) IMGF.Keys.NUM_0]          = ._0;
-    key_map[cast(s64) IMGF.Keys.NUM_1]          = ._1;
-    key_map[cast(s64) IMGF.Keys.NUM_2]          = ._2;
-    key_map[cast(s64) IMGF.Keys.NUM_3]          = ._3;
-    key_map[cast(s64) IMGF.Keys.NUM_4]          = ._4;
-    key_map[cast(s64) IMGF.Keys.NUM_5]          = ._5;
-    key_map[cast(s64) IMGF.Keys.NUM_6]          = ._6;
-    key_map[cast(s64) IMGF.Keys.NUM_7]          = ._7;
-    key_map[cast(s64) IMGF.Keys.NUM_8]          = ._8;
-    key_map[cast(s64) IMGF.Keys.NUM_9]          = ._9;
-    key_map[cast(s64) IMGF.Keys.SEMICOLON]      = .Semicolon;
-    key_map[cast(s64) IMGF.Keys.EQUALS]         = .Equal;
-    key_map[cast(s64) IMGF.Keys.A]              = .A;
-    key_map[cast(s64) IMGF.Keys.B]              = .B;
-    key_map[cast(s64) IMGF.Keys.C]              = .C;
-    key_map[cast(s64) IMGF.Keys.D]              = .D;
-    key_map[cast(s64) IMGF.Keys.E]              = .E;
-    key_map[cast(s64) IMGF.Keys.F]              = .F;
-    key_map[cast(s64) IMGF.Keys.G]              = .G;
-    key_map[cast(s64) IMGF.Keys.H]              = .H;
-    key_map[cast(s64) IMGF.Keys.I]              = .I;
-    key_map[cast(s64) IMGF.Keys.J]              = .J;
-    key_map[cast(s64) IMGF.Keys.K]              = .K;
-    key_map[cast(s64) IMGF.Keys.L]              = .L;
-    key_map[cast(s64) IMGF.Keys.M]              = .M;
-    key_map[cast(s64) IMGF.Keys.N]              = .N;
-    key_map[cast(s64) IMGF.Keys.O]              = .O;
-    key_map[cast(s64) IMGF.Keys.P]              = .P;
-    key_map[cast(s64) IMGF.Keys.Q]              = .Q;
-    key_map[cast(s64) IMGF.Keys.R]              = .R;
-    key_map[cast(s64) IMGF.Keys.S]              = .S;
-    key_map[cast(s64) IMGF.Keys.T]              = .T;
-    key_map[cast(s64) IMGF.Keys.U]              = .U;
-    key_map[cast(s64) IMGF.Keys.V]              = .V;
-    key_map[cast(s64) IMGF.Keys.W]              = .W;
-    key_map[cast(s64) IMGF.Keys.X]              = .X;
-    key_map[cast(s64) IMGF.Keys.Y]              = .Y;
-    key_map[cast(s64) IMGF.Keys.Z]              = .Z;
-    key_map[cast(s64) IMGF.Keys.SPACE]          = .Space;
-    key_map[cast(s64) IMGF.Keys.ESCAPE]         = .Escape;
-    key_map[cast(s64) IMGF.Keys.RETURN]         = .Enter;
-    key_map[cast(s64) IMGF.Keys.TAB]            = .Tab;
-    key_map[cast(s64) IMGF.Keys.BACKSPACE]      = .Backspace;
-    key_map[cast(s64) IMGF.Keys.INSERT]         = .Insert;
-    key_map[cast(s64) IMGF.Keys.DELETE]         = .Delete;
-    key_map[cast(s64) IMGF.Keys.RIGHT]          = .RightArrow;
-    key_map[cast(s64) IMGF.Keys.LEFT]           = .LeftArrow;
-    key_map[cast(s64) IMGF.Keys.DOWN]           = .DownArrow;
-    key_map[cast(s64) IMGF.Keys.UP]             = .UpArrow;
-    key_map[cast(s64) IMGF.Keys.PAGE_UP]        = .PageUp;
-    key_map[cast(s64) IMGF.Keys.PAGE_DOWN]      = .PageDown;
-    key_map[cast(s64) IMGF.Keys.HOME]           = .Home;
-    key_map[cast(s64) IMGF.Keys.END]            = .End;
-    key_map[cast(s64) IMGF.Keys.CAPS_LOCK]      = .CapsLock;
-    key_map[cast(s64) IMGF.Keys.SCROLL_LOCK]    = .ScrollLock;
-    key_map[cast(s64) IMGF.Keys.NUM_LOCK]       = .NumLock;
-    key_map[cast(s64) IMGF.Keys.PRINT_SCREEN]   = .PrintScreen;
-    key_map[cast(s64) IMGF.Keys.PAUSE]          = .Pause;
-    key_map[cast(s64) IMGF.Keys.F1]             = .F1;
-    key_map[cast(s64) IMGF.Keys.F2]             = .F2;
-    key_map[cast(s64) IMGF.Keys.F3]             = .F3;
-    key_map[cast(s64) IMGF.Keys.F4]             = .F4;
-    key_map[cast(s64) IMGF.Keys.F5]             = .F5;
-    key_map[cast(s64) IMGF.Keys.F6]             = .F6;
-    key_map[cast(s64) IMGF.Keys.F7]             = .F7;
-    key_map[cast(s64) IMGF.Keys.F8]             = .F8;
-    key_map[cast(s64) IMGF.Keys.F9]             = .F9;
-    key_map[cast(s64) IMGF.Keys.F10]            = .F10;
-    key_map[cast(s64) IMGF.Keys.F11]            = .F11;
-    key_map[cast(s64) IMGF.Keys.F12]            = .F12;
-    key_map[cast(s64) IMGF.Keys.LEFT_SHIFT]     = .LeftShift;
-    key_map[cast(s64) IMGF.Keys.LEFT_CONTROL]   = .LeftCtrl;
-    key_map[cast(s64) IMGF.Keys.LEFT_ALT]       = .LeftAlt;
-    key_map[cast(s64) IMGF.Keys.LEFT_OS]        = .LeftSuper;
-    key_map[cast(s64) IMGF.Keys.RIGHT_SHIFT]    = .RightShift;
-    key_map[cast(s64) IMGF.Keys.RIGHT_CONTROL]  = .RightCtrl;
-    key_map[cast(s64) IMGF.Keys.RIGHT_ALT]      = .RightAlt;
-    key_map[cast(s64) IMGF.Keys.RIGHT_OS]       = .RightSuper;
-    key_map[cast(s64) IMGF.Keys.LEFT_BRACKET]   = .LeftBracket;
-    key_map[cast(s64) IMGF.Keys.BACKSLASH]      = .Backslash;
-    key_map[cast(s64) IMGF.Keys.RIGHT_BRACKET]  = .RightBracket;
-    key_map[cast(s64) IMGF.Keys.GRAVE]          = .GraveAccent;
-    key_map[cast(s64) IMGF.Keys.KP_0]           = .Keypad0;
-    key_map[cast(s64) IMGF.Keys.KP_1]           = .Keypad1;
-    key_map[cast(s64) IMGF.Keys.KP_2]           = .Keypad2;
-    key_map[cast(s64) IMGF.Keys.KP_3]           = .Keypad3;
-    key_map[cast(s64) IMGF.Keys.KP_4]           = .Keypad4;
-    key_map[cast(s64) IMGF.Keys.KP_5]           = .Keypad5;
-    key_map[cast(s64) IMGF.Keys.KP_6]           = .Keypad6;
-    key_map[cast(s64) IMGF.Keys.KP_7]           = .Keypad7;
-    key_map[cast(s64) IMGF.Keys.KP_8]           = .Keypad8;
-    key_map[cast(s64) IMGF.Keys.KP_9]           = .Keypad9;
-    key_map[cast(s64) IMGF.Keys.KP_PERIOD]      = .KeypadDecimal;
-    key_map[cast(s64) IMGF.Keys.KP_DIVIDE]      = .KeypadDivide;
-    key_map[cast(s64) IMGF.Keys.KP_MULTIPLY]    = .KeypadMultiply;
-    key_map[cast(s64) IMGF.Keys.KP_MINUS]       = .KeypadSubtract;
-    key_map[cast(s64) IMGF.Keys.KP_PLUS]        = .KeypadAdd;
-    key_map[cast(s64) IMGF.Keys.KP_ENTER]       = .KeypadEnter;
+    key_map[cast(s64) IMGF.Keys.APOSTROPHE] = .Apostrophe;
+    key_map[cast(s64) IMGF.Keys.COMMA] = .Comma;
+    key_map[cast(s64) IMGF.Keys.MINUS] = .Minus;
+    key_map[cast(s64) IMGF.Keys.PERIOD] = .Period;
+    key_map[cast(s64) IMGF.Keys.SLASH] = .Slash;
+    key_map[cast(s64) IMGF.Keys.NUM_0] = ._0;
+    key_map[cast(s64) IMGF.Keys.NUM_1] = ._1;
+    key_map[cast(s64) IMGF.Keys.NUM_2] = ._2;
+    key_map[cast(s64) IMGF.Keys.NUM_3] = ._3;
+    key_map[cast(s64) IMGF.Keys.NUM_4] = ._4;
+    key_map[cast(s64) IMGF.Keys.NUM_5] = ._5;
+    key_map[cast(s64) IMGF.Keys.NUM_6] = ._6;
+    key_map[cast(s64) IMGF.Keys.NUM_7] = ._7;
+    key_map[cast(s64) IMGF.Keys.NUM_8] = ._8;
+    key_map[cast(s64) IMGF.Keys.NUM_9] = ._9;
+    key_map[cast(s64) IMGF.Keys.SEMICOLON] = .Semicolon;
+    key_map[cast(s64) IMGF.Keys.EQUALS] = .Equal;
+    key_map[cast(s64) IMGF.Keys.A] = .A;
+    key_map[cast(s64) IMGF.Keys.B] = .B;
+    key_map[cast(s64) IMGF.Keys.C] = .C;
+    key_map[cast(s64) IMGF.Keys.D] = .D;
+    key_map[cast(s64) IMGF.Keys.E] = .E;
+    key_map[cast(s64) IMGF.Keys.F] = .F;
+    key_map[cast(s64) IMGF.Keys.G] = .G;
+    key_map[cast(s64) IMGF.Keys.H] = .H;
+    key_map[cast(s64) IMGF.Keys.I] = .I;
+    key_map[cast(s64) IMGF.Keys.J] = .J;
+    key_map[cast(s64) IMGF.Keys.K] = .K;
+    key_map[cast(s64) IMGF.Keys.L] = .L;
+    key_map[cast(s64) IMGF.Keys.M] = .M;
+    key_map[cast(s64) IMGF.Keys.N] = .N;
+    key_map[cast(s64) IMGF.Keys.O] = .O;
+    key_map[cast(s64) IMGF.Keys.P] = .P;
+    key_map[cast(s64) IMGF.Keys.Q] = .Q;
+    key_map[cast(s64) IMGF.Keys.R] = .R;
+    key_map[cast(s64) IMGF.Keys.S] = .S;
+    key_map[cast(s64) IMGF.Keys.T] = .T;
+    key_map[cast(s64) IMGF.Keys.U] = .U;
+    key_map[cast(s64) IMGF.Keys.V] = .V;
+    key_map[cast(s64) IMGF.Keys.W] = .W;
+    key_map[cast(s64) IMGF.Keys.X] = .X;
+    key_map[cast(s64) IMGF.Keys.Y] = .Y;
+    key_map[cast(s64) IMGF.Keys.Z] = .Z;
+    key_map[cast(s64) IMGF.Keys.SPACE] = .Space;
+    key_map[cast(s64) IMGF.Keys.ESCAPE] = .Escape;
+    key_map[cast(s64) IMGF.Keys.RETURN] = .Enter;
+    key_map[cast(s64) IMGF.Keys.TAB] = .Tab;
+    key_map[cast(s64) IMGF.Keys.BACKSPACE] = .Backspace;
+    key_map[cast(s64) IMGF.Keys.INSERT] = .Insert;
+    key_map[cast(s64) IMGF.Keys.DELETE] = .Delete;
+    key_map[cast(s64) IMGF.Keys.RIGHT] = .RightArrow;
+    key_map[cast(s64) IMGF.Keys.LEFT] = .LeftArrow;
+    key_map[cast(s64) IMGF.Keys.DOWN] = .DownArrow;
+    key_map[cast(s64) IMGF.Keys.UP] = .UpArrow;
+    key_map[cast(s64) IMGF.Keys.PAGE_UP] = .PageUp;
+    key_map[cast(s64) IMGF.Keys.PAGE_DOWN] = .PageDown;
+    key_map[cast(s64) IMGF.Keys.HOME] = .Home;
+    key_map[cast(s64) IMGF.Keys.END] = .End;
+    key_map[cast(s64) IMGF.Keys.CAPS_LOCK] = .CapsLock;
+    key_map[cast(s64) IMGF.Keys.SCROLL_LOCK] = .ScrollLock;
+    key_map[cast(s64) IMGF.Keys.NUM_LOCK] = .NumLock;
+    key_map[cast(s64) IMGF.Keys.PRINT_SCREEN] = .PrintScreen;
+    key_map[cast(s64) IMGF.Keys.PAUSE] = .Pause;
+    key_map[cast(s64) IMGF.Keys.F1] = .F1;
+    key_map[cast(s64) IMGF.Keys.F2] = .F2;
+    key_map[cast(s64) IMGF.Keys.F3] = .F3;
+    key_map[cast(s64) IMGF.Keys.F4] = .F4;
+    key_map[cast(s64) IMGF.Keys.F5] = .F5;
+    key_map[cast(s64) IMGF.Keys.F6] = .F6;
+    key_map[cast(s64) IMGF.Keys.F7] = .F7;
+    key_map[cast(s64) IMGF.Keys.F8] = .F8;
+    key_map[cast(s64) IMGF.Keys.F9] = .F9;
+    key_map[cast(s64) IMGF.Keys.F10] = .F10;
+    key_map[cast(s64) IMGF.Keys.F11] = .F11;
+    key_map[cast(s64) IMGF.Keys.F12] = .F12;
+    key_map[cast(s64) IMGF.Keys.LEFT_SHIFT] = .LeftShift;
+    key_map[cast(s64) IMGF.Keys.LEFT_CONTROL] = .LeftCtrl;
+    key_map[cast(s64) IMGF.Keys.LEFT_ALT] = .LeftAlt;
+    key_map[cast(s64) IMGF.Keys.LEFT_OS] = .LeftSuper;
+    key_map[cast(s64) IMGF.Keys.RIGHT_SHIFT] = .RightShift;
+    key_map[cast(s64) IMGF.Keys.RIGHT_CONTROL] = .RightCtrl;
+    key_map[cast(s64) IMGF.Keys.RIGHT_ALT] = .RightAlt;
+    key_map[cast(s64) IMGF.Keys.RIGHT_OS] = .RightSuper;
+    key_map[cast(s64) IMGF.Keys.LEFT_BRACKET] = .LeftBracket;
+    key_map[cast(s64) IMGF.Keys.BACKSLASH] = .Backslash;
+    key_map[cast(s64) IMGF.Keys.RIGHT_BRACKET] = .RightBracket;
+    key_map[cast(s64) IMGF.Keys.GRAVE] = .GraveAccent;
+    key_map[cast(s64) IMGF.Keys.KP_0] = .Keypad0;
+    key_map[cast(s64) IMGF.Keys.KP_1] = .Keypad1;
+    key_map[cast(s64) IMGF.Keys.KP_2] = .Keypad2;
+    key_map[cast(s64) IMGF.Keys.KP_3] = .Keypad3;
+    key_map[cast(s64) IMGF.Keys.KP_4] = .Keypad4;
+    key_map[cast(s64) IMGF.Keys.KP_5] = .Keypad5;
+    key_map[cast(s64) IMGF.Keys.KP_6] = .Keypad6;
+    key_map[cast(s64) IMGF.Keys.KP_7] = .Keypad7;
+    key_map[cast(s64) IMGF.Keys.KP_8] = .Keypad8;
+    key_map[cast(s64) IMGF.Keys.KP_9] = .Keypad9;
+    key_map[cast(s64) IMGF.Keys.KP_PERIOD] = .KeypadDecimal;
+    key_map[cast(s64) IMGF.Keys.KP_DIVIDE] = .KeypadDivide;
+    key_map[cast(s64) IMGF.Keys.KP_MULTIPLY] = .KeypadMultiply;
+    key_map[cast(s64) IMGF.Keys.KP_MINUS] = .KeypadSubtract;
+    key_map[cast(s64) IMGF.Keys.KP_PLUS] = .KeypadAdd;
+    key_map[cast(s64) IMGF.Keys.KP_ENTER] = .KeypadEnter;
 }
 
 #load "imgui_foster_theme.jai";

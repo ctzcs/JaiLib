@@ -137,14 +137,14 @@ using SDL_EventType :: enum u32 {
     SDL_EVENT_PRIVATE3;
 
     SDL_EVENT_POLL_SENTINEL :: 0x7F00;
-    SDL_EVENT_USER    :: 0x8000;
-    SDL_EVENT_LAST    :: 0xFFFF;
+    SDL_EVENT_USER :: 0x8000;
+    SDL_EVENT_LAST :: 0xFFFF;
 }
 
 SDL_CommonEvent :: struct {
     type: SDL_EventType;
     reserved: u32;
-    timestamp: u64;    // nanoseconds
+    timestamp: u64; // nanoseconds
 }
 
 SDL_WindowEvent :: struct {
@@ -192,7 +192,7 @@ SDL_TextInputEvent :: struct {
     reserved: u32;
     timestamp: u64;
     windowID: SDL_WindowID;
-    text: *u8;         // UTF-8
+    text: *u8; // UTF-8
 }
 
 SDL_MouseDeviceEvent :: struct {
@@ -323,32 +323,32 @@ SDL_UserEvent :: struct {
 // outside the enum still round-trip since the backing type is u32.
 SDL_Event :: union {
     type: SDL_EventType;
-    common:  SDL_CommonEvent;
-    window:  SDL_WindowEvent;
+    common: SDL_CommonEvent;
+    window: SDL_WindowEvent;
     kdevice: SDL_KeyboardDeviceEvent;
-    key:     SDL_KeyboardEvent;
-    edit:    SDL_TextEditingEvent;
-    text:    SDL_TextInputEvent;
+    key: SDL_KeyboardEvent;
+    edit: SDL_TextEditingEvent;
+    text: SDL_TextInputEvent;
     mdevice: SDL_MouseDeviceEvent;
-    motion:  SDL_MouseMotionEvent;
-    button:  SDL_MouseButtonEvent;
-    wheel:   SDL_MouseWheelEvent;
+    motion: SDL_MouseMotionEvent;
+    button: SDL_MouseButtonEvent;
+    wheel: SDL_MouseWheelEvent;
     jdevice: SDL_JoyDeviceEvent;
-    jaxis:   SDL_JoyAxisEvent;
+    jaxis: SDL_JoyAxisEvent;
     jbutton: SDL_JoyButtonEvent;
     gdevice: SDL_GamepadDeviceEvent;
-    gaxis:   SDL_GamepadAxisEvent;
+    gaxis: SDL_GamepadAxisEvent;
     gbutton: SDL_GamepadButtonEvent;
-    user:    SDL_UserEvent;
+    user: SDL_UserEvent;
     padding: [128] u8;
 }
 
 SDL_EventFilter :: #type (userdata: *void, event: *SDL_Event) -> bool #c_call;
 
 #if OS != .WASM {
-SDL_PumpEvents      :: () #foreign SDL3;
-SDL_PollEvent       :: (event: *SDL_Event) -> bool #foreign SDL3;
-SDL_PushEvent       :: (event: *SDL_Event) -> bool #foreign SDL3;
-SDL_AddEventWatch   :: (filter: SDL_EventFilter, userdata: *void) -> bool #foreign SDL3;
-SDL_RemoveEventWatch :: (filter: SDL_EventFilter, userdata: *void) #foreign SDL3;
+    SDL_PumpEvents :: () #foreign SDL3;
+    SDL_PollEvent :: (event: *SDL_Event) -> bool #foreign SDL3;
+    SDL_PushEvent :: (event: *SDL_Event) -> bool #foreign SDL3;
+    SDL_AddEventWatch :: (filter: SDL_EventFilter, userdata: *void) -> bool #foreign SDL3;
+    SDL_RemoveEventWatch :: (filter: SDL_EventFilter, userdata: *void) #foreign SDL3;
 }

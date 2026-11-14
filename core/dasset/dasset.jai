@@ -27,11 +27,11 @@ MATH :: #import "Math";
 //@region 格式常量
 
 // 文件头魔数，little-endian 写出即 ASCII "DAST"。
-DASSET_MAGIC : u32 : 0x54534144;
+DASSET_MAGIC: u32 : 0x54534144;
 
 // 当前格式版本（v3:PBR 材质；v4:channel 插值与 cubic 切线）。
 // Reader 兼容 1..4；布局变更时 bump 并同步读写两端。
-DASSET_VERSION : s32 : 4;
+DASSET_VERSION: s32 : 4;
 
 DASSET_VERTEX_STRIDE_STATIC :: 48; // PositionNormalUv：pos3+normal3+uv2+tangent4
 DASSET_VERTEX_STRIDE_SKIN :: 68; // 上者 + joints(u32) + weights4

@@ -18,16 +18,16 @@ UI_Op :: struct {
     kind: UI_Op_Kind;
     // 已合成的逻辑坐标变换；零值 op 保持旧版轴对齐行为。
     transformed: bool;
-    transform:   F.Matrix3x2;
+    transform: F.Matrix3x2;
 
     // Quad 有效字段
     x0, y0, x1, y1: float32; // 逻辑像素（左上/右下）
     u0, v0, u1, v1: float32; // UV（纯色时 0..1）
-    color:          F.Color;
-    texture:        *F.Texture; // null = 纯色
-    msdf:           bool;
-    font_id:        int;
-    radius:         float32;    // 圆角半径（<1 走直角路径）
+    color: F.Color;
+    texture: *F.Texture; // null = 纯色
+    msdf: bool;
+    font_id: int;
+    radius: float32; // 圆角半径（<1 走直角路径）
 
     // Scissor 有效字段
     clip_x, clip_y, clip_w, clip_h: float32;
@@ -53,7 +53,7 @@ ui_translate_into :: (ctx: *UI_Context, commands: clay.ClayArray(clay.RenderComm
     ring_at := -1;
     ring_bb: clay.BoundingBox;
     cmds := commands; // 取址需要局部变量
-    for i: 0 .. cmds.length - 1 {
+    for i: 0..cmds.length - 1 {
         cmd := clay.RenderCommandArray_Get(*cmds, i);
         if cmd == null continue;
         bb := cmd.boundingBox;
@@ -265,14 +265,14 @@ ui_translate_nine_slice :: (ops: *[..] UI_Op, bb: clay.BoundingBox, data: UI_Ima
     if bb.width <= 0 || bb.height <= 0 return;
     if data.sub.Tex == null return;
     b := min(data.border, min(bb.width, bb.height) * 0.5);
-    x: [4] float32 = .[ bb.x, bb.x + b, bb.x + bb.width - b, bb.x + bb.width ];
-    y: [4] float32 = .[ bb.y, bb.y + b, bb.y + bb.height - b, bb.y + bb.height ];
-    u: [4] float32 = .[ 0, data.source_border / data.sub.Frame.w,
-                         1 - data.source_border / data.sub.Frame.w, 1 ];
-    v: [4] float32 = .[ 0, data.source_border / data.sub.Frame.h,
-                         1 - data.source_border / data.sub.Frame.h, 1 ];
-    for row: 0 .. 2 {
-        for col: 0 .. 2 {
+    x: [4] float32 = .[bb.x, bb.x + b, bb.x + bb.width - b, bb.x + bb.width];
+    y: [4] float32 = .[bb.y, bb.y + b, bb.y + bb.height - b, bb.y + bb.height];
+    u: [4] float32 = .[0, data.source_border / data.sub.Frame.w,
+                         1 - data.source_border / data.sub.Frame.w, 1];
+    v: [4] float32 = .[0, data.source_border / data.sub.Frame.h,
+                         1 - data.source_border / data.sub.Frame.h, 1];
+    for row: 0..2 {
+        for col: 0..2 {
             if x[col + 1] <= x[col] || y[row + 1] <= y[row] continue;
             array_add(ops, UI_Op.{
                 x0 = x[col], y0 = y[row], x1 = x[col + 1], y1 = y[row + 1],
@@ -377,7 +377,7 @@ UI_Font_Kind :: enum {
 }
 
 UI_Font_Renderer :: struct {
-    kind:     UI_Font_Kind;
+    kind: UI_Font_Kind;
     material: *mat.Material; // MSDF 字体：内置 Text_Msdf 材质实例，归材质库所有
 }
 
@@ -392,7 +392,7 @@ ui_msdf_material :: (ctx: *UI_Context, id: int, library: *mat.Material_Library) 
         if id < ctx.fonts.count && ctx.fonts[id] != null && ctx.fonts[id].DistanceRange > 0 {
             distance = ctx.fonts[id].DistanceRange;
         }
-        _ = mat.material_set_number(material, mat.BUILTIN_TEXT, "distance_range", .[ distance, 0, 0, 0 ]);
+        _ = mat.material_set_number(material, mat.BUILTIN_TEXT, "distance_range", .[distance, 0, 0, 0]);
         renderer.material = material;
     }
     return renderer.material;
@@ -414,8 +414,8 @@ ui_ensure_corner_texture :: (ctx: *UI_Context, device: *F.Graphics_Device) -> bo
     defer free(pixels.data);
     c := cast(float32) (N - 1) * 0.5;
     r := cast(float32) N * 0.5;
-    for y: 0 .. N - 1 {
-        for x: 0 .. N - 1 {
+    for y: 0..N - 1 {
+        for x: 0..N - 1 {
             dx := cast(float32) x + 0.5 - c;
             dy := cast(float32) y + 0.5 - c;
             d := JM.sqrt(dx * dx + dy * dy);
@@ -444,16 +444,16 @@ ui_emit_rounded :: (r: *r2d.Render2D, disc: *F.Texture, op: UI_Op) {
     }
 
     // 4 角（象限 UV：TL(0,0)-(0.5,0.5) TR/BR/BL 顺时针）
-    ui_emit_corner(r, disc, op.x0, op.y0, 0, 0, radius, op.color);                         // TL
-    ui_emit_corner(r, disc, op.x1 - radius, op.y0, 0.5, 0, radius, op.color);              // TR
-    ui_emit_corner(r, disc, op.x1 - radius, op.y1 - radius, 0.5, 0.5, radius, op.color);   // BR
-    ui_emit_corner(r, disc, op.x0, op.y1 - radius, 0, 0.5, radius, op.color);              // BL
+    ui_emit_corner(r, disc, op.x0, op.y0, 0, 0, radius, op.color); // TL
+    ui_emit_corner(r, disc, op.x1 - radius, op.y0, 0.5, 0, radius, op.color); // TR
+    ui_emit_corner(r, disc, op.x1 - radius, op.y1 - radius, 0.5, 0.5, radius, op.color); // BR
+    ui_emit_corner(r, disc, op.x0, op.y1 - radius, 0, 0.5, radius, op.color); // BL
 
     // 5 个填充条（零尺寸自动跳过）
-    ui_emit_bar(r, op.x0 + radius, op.y0, w - 2 * radius, radius, op.color);               // 上条
-    ui_emit_bar(r, op.x0 + radius, op.y1 - radius, w - 2 * radius, radius, op.color);      // 下条
-    ui_emit_bar(r, op.x0, op.y0 + radius, radius, h - 2 * radius, op.color);               // 左条
-    ui_emit_bar(r, op.x1 - radius, op.y0 + radius, radius, h - 2 * radius, op.color);      // 右条
+    ui_emit_bar(r, op.x0 + radius, op.y0, w - 2 * radius, radius, op.color); // 上条
+    ui_emit_bar(r, op.x0 + radius, op.y1 - radius, w - 2 * radius, radius, op.color); // 下条
+    ui_emit_bar(r, op.x0, op.y0 + radius, radius, h - 2 * radius, op.color); // 左条
+    ui_emit_bar(r, op.x1 - radius, op.y0 + radius, radius, h - 2 * radius, op.color); // 右条
     ui_emit_bar(r, op.x0 + radius, op.y0 + radius, w - 2 * radius, h - 2 * radius, op.color); // 中心
 }
 

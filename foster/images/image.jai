@@ -8,9 +8,9 @@ using Math;
 // QOI is a direct port of the reference codec.
 
 Image :: struct {
-    Width:  s32;
+    Width: s32;
     Height: s32;
-    Data:   [] Color;    // Width * Height RGBA
+    Data: [] Color; // Width * Height RGBA
 }
 
 image_create :: (width: s32, height: s32, color := Color_Transparent) -> Image {
@@ -34,7 +34,9 @@ image_destroy :: (img: *Image) {
     img.Height = 0;
 }
 
-image_is_empty :: (img: Image) -> bool { return img.Width <= 0 || img.Height <= 0; }
+image_is_empty :: (img: Image) -> bool {
+    return img.Width <= 0 || img.Height <= 0;
+}
 
 image_pixel :: (img: *Image, x: s32, y: s32) -> Color {
     return img.Data[y * img.Width + x];
@@ -75,13 +77,21 @@ image_copy_pixels :: (dest: *Image, source_px: [] Color, src_w: s32, src_h: s32,
                       src_x: s32, src_y: s32, src_rect_w: s32, src_rect_h: s32,
                       dest_x: s32, dest_y: s32) {
     // clip
-    if dest_x < 0 { src_rect_w += dest_x; src_x -= dest_x; dest_x = 0; }
-    if dest_y < 0 { src_rect_h += dest_y; src_y -= dest_y; dest_y = 0; }
-    if dest_x + src_rect_w > dest.Width  src_rect_w = dest.Width  - dest_x;
+    if dest_x < 0 {
+        src_rect_w += dest_x;
+        src_x -= dest_x;
+        dest_x = 0;
+    }
+    if dest_y < 0 {
+        src_rect_h += dest_y;
+        src_y -= dest_y;
+        dest_y = 0;
+    }
+    if dest_x + src_rect_w > dest.Width src_rect_w = dest.Width - dest_x;
     if dest_y + src_rect_h > dest.Height src_rect_h = dest.Height - dest_y;
     if src_rect_w <= 0 || src_rect_h <= 0 return;
 
-    for y: 0..src_rect_h-1 {
+    for y: 0..src_rect_h - 1 {
         src_row := (src_y + y) * src_w + src_x;
         dst_row := (dest_y + y) * dest.Width + dest_x;
         memcpy(dest.Data.data + dst_row, source_px.data + src_row, src_rect_w * size_of(Color));
@@ -92,7 +102,6 @@ image_copy_pixels :: (dest: *Image, source_px: [] Color, src_w: s32, src_h: s32,
 // QOI codec (port of https://github.com/phoboslab/qoi, zlib license)
 //
 
-
 qoi_is_format :: (bytes: [] u8) -> bool {
     return bytes.count >= 4 && bytes[0] == #char "q" && bytes[1] == #char "o" && bytes[2] == #char "i" && bytes[3] == #char "f";
 }
@@ -102,12 +111,12 @@ qoi_hash :: (c: Color) -> u32 {
 }
 
 QOI_OP_INDEX :: 0x00;
-QOI_OP_DIFF  :: 0x40;
-QOI_OP_LUMA  :: 0x80;
-QOI_OP_RUN   :: 0xc0;
-QOI_OP_RGB   :: 0xfe;
-QOI_OP_RGBA  :: 0xff;
-QOI_MASK_2   :: 0xc0;
+QOI_OP_DIFF :: 0x40;
+QOI_OP_LUMA :: 0x80;
+QOI_OP_RUN :: 0xc0;
+QOI_OP_RGB :: 0xfe;
+QOI_OP_RGBA :: 0xff;
+QOI_MASK_2 :: 0xc0;
 
 qoi_decode :: (bytes: [] u8) -> Image {
     if bytes.count < 14 + 8 return .{};
@@ -124,28 +133,37 @@ qoi_decode :: (bytes: [] u8) -> Image {
     chunks_len := bytes.count - 8;
 
     px_len := w * h;
-    for i: 0..px_len-1 {
+    for i: 0..px_len - 1 {
         if run > 0 {
             run -= 1;
         } else if p < chunks_len {
-            b1 := bytes[p]; p += 1;
+            b1 := bytes[p];
+            p += 1;
 
             if b1 == QOI_OP_RGB {
-                px.r = bytes[p]; px.g = bytes[p + 1]; px.b = bytes[p + 2]; p += 3;
+                px.r = bytes[p];
+                px.g = bytes[p + 1];
+                px.b = bytes[p + 2];
+                p += 3;
             } else if b1 == QOI_OP_RGBA {
-                px.r = bytes[p]; px.g = bytes[p + 1]; px.b = bytes[p + 2]; px.a = bytes[p + 3]; p += 4;
+                px.r = bytes[p];
+                px.g = bytes[p + 1];
+                px.b = bytes[p + 2];
+                px.a = bytes[p + 3];
+                p += 4;
             } else if (b1 & QOI_MASK_2) == QOI_OP_INDEX {
                 px = index[b1];
             } else if (b1 & QOI_MASK_2) == QOI_OP_DIFF {
                 px.r = cast(u8) (((cast(s32) px.r) + (cast(s32) ((b1 >> 4) & 0x03)) - 2) & 255);
                 px.g = cast(u8) (((cast(s32) px.g) + (cast(s32) ((b1 >> 2) & 0x03)) - 2) & 255);
-                px.b = cast(u8) (((cast(s32) px.b) + (cast(s32) ( b1       & 0x03)) - 2) & 255);
+                px.b = cast(u8) (((cast(s32) px.b) + (cast(s32) (b1 & 0x03)) - 2) & 255);
             } else if (b1 & QOI_MASK_2) == QOI_OP_LUMA {
-                b2 := cast(s32) bytes[p]; p += 1;
+                b2 := cast(s32) bytes[p];
+                p += 1;
                 vg := (cast(s32) (b1 & 0x3f)) - 32;
                 px.r = cast(u8) (((cast(s32) px.r) + vg - 8 + ((b2 >> 4) & 0x0f)) & 255);
                 px.g = cast(u8) (((cast(s32) px.g) + vg) & 255);
-                px.b = cast(u8) (((cast(s32) px.b) + vg - 8 + ( b2       & 0x0f)) & 255);
+                px.b = cast(u8) (((cast(s32) px.b) + vg - 8 + (b2 & 0x0f)) & 255);
             } else if (b1 & QOI_MASK_2) == QOI_OP_RUN {
                 run = cast(s32) (b1 & 0x3f);
             }
@@ -173,15 +191,15 @@ qoi_encode :: (pixels: [] Color, w: s32, h: s32) -> [] u8 {
     append(*buf, "qoif");
     write32(*buf, cast(u32) w);
     write32(*buf, cast(u32) h);
-    append(*buf, 4);   // channels
-    append(*buf, 0);   // srgb
+    append(*buf, 4); // channels
+    append(*buf, 0); // srgb
 
     index: [64] Color;
     prev := Color.{ 0, 0, 0, 255 };
     run := 0;
 
     total := w * h;
-    for i: 0..total-1 {
+    for i: 0..total - 1 {
         px := pixels[i];
 
         if px == prev {
@@ -251,81 +269,84 @@ qoi_encode :: (pixels: [] Color, w: s32, h: s32) -> [] u8 {
 //
 #if OS != .WASM {
 
-image_decode_png :: (bytes: [] u8) -> Image {
-    io := SDL_IOFromConstMem(bytes.data, cast(u64) bytes.count);
-    if io == null return .{};
-    surface := SDL_LoadPNG_IO(io);
-    SDL_CloseIO(io);
-    if surface == null return .{};
-
-    // convert to RGBA32 if needed
-    converted: *SDL_Surface;
-    if surface.format != .RGBA32 {
-        converted = SDL_ConvertSurface(surface, .RGBA32);
-        SDL_DestroySurface(surface);
-        surface = converted;
+    image_decode_png :: (bytes: [] u8) -> Image {
+        io := SDL_IOFromConstMem(bytes.data, cast(u64) bytes.count);
+        if io == null return .{};
+        surface := SDL_LoadPNG_IO(io);
+        SDL_CloseIO(io);
         if surface == null return .{};
-    }
 
-    img := image_create(surface.w, surface.h);
-    if surface.pitch == surface.w * 4 {
-        memcpy(img.Data.data, surface.pixels, cast(s64) surface.w * surface.h * 4);
-    } else {
-        // copy row by row
-        src := cast(*u8) surface.pixels;
-        for y: 0..surface.h-1 {
-            memcpy(img.Data.data + y * surface.w, src + y * surface.pitch, surface.w * 4);
+        // convert to RGBA32 if needed
+        converted: *SDL_Surface;
+        if surface.format != .RGBA32 {
+            converted = SDL_ConvertSurface(surface, .RGBA32);
+            SDL_DestroySurface(surface);
+            surface = converted;
+            if surface == null return .{};
         }
-    }
 
-    SDL_DestroySurface(surface);
-    return img;
-}
-
-image_encode_png_impl :: (img: Image) -> [] u8 {
-    surface := SDL_CreateSurfaceFrom(img.Width, img.Height, .RGBA32, img.Data.data, img.Width * 4);
-    if surface == null return .[];
-
-    io := SDL_IOFromDynamicMem();
-    if io == null { SDL_DestroySurface(surface); return .[]; }
-
-    result: [] u8 = .[];
-    if SDL_SavePNG_IO(surface, io) {
-        size := SDL_GetIOSize(io);
-        if size > 0 {
-            props := SDL_GetIOProperties(io);
-            mem := cast(*u8) SDL_GetPointerProperty(props, to_cstr(SDL_PROP_IOSTREAM_DYNAMIC_MEMORY_POINTER), null);
-            if mem != null {
-                // The stream owns mem and releases it in SDL_CloseIO.
-                // Return a separate Jai allocation owned by the caller.
-                result = .{ data = cast(*u8) alloc(cast(s64) size), count = cast(s64) size };
-                memcpy(result.data, mem, cast(s64) size);
+        img := image_create(surface.w, surface.h);
+        if surface.pitch == surface.w * 4 {
+            memcpy(img.Data.data, surface.pixels, cast(s64) surface.w * surface.h * 4);
+        } else {
+            // copy row by row
+            src := cast(*u8) surface.pixels;
+            for y: 0..surface.h - 1 {
+                memcpy(img.Data.data + y * surface.w, src + y * surface.pitch, surface.w * 4);
             }
         }
+
+        SDL_DestroySurface(surface);
+        return img;
     }
 
-    SDL_CloseIO(io);
-    SDL_DestroySurface(surface);
-    return result;
-}
+    image_encode_png_impl :: (img: Image) -> [] u8 {
+        surface := SDL_CreateSurfaceFrom(img.Width, img.Height, .RGBA32, img.Data.data, img.Width * 4);
+        if surface == null return .[];
+
+        io := SDL_IOFromDynamicMem();
+        if io == null {
+            SDL_DestroySurface(surface);
+            return .[];
+        }
+
+        result: [] u8 = .[];
+        if SDL_SavePNG_IO(surface, io) {
+            size := SDL_GetIOSize(io);
+            if size > 0 {
+                props := SDL_GetIOProperties(io);
+                mem := cast(*u8) SDL_GetPointerProperty(props, to_cstr(SDL_PROP_IOSTREAM_DYNAMIC_MEMORY_POINTER), null);
+                if mem != null {
+                    // The stream owns mem and releases it in SDL_CloseIO.
+                    // Return a separate Jai allocation owned by the caller.
+                    result = .{ data = cast(*u8) alloc(cast(s64) size), count = cast(s64) size };
+                    memcpy(result.data, mem, cast(s64) size);
+                }
+            }
+        }
+
+        SDL_CloseIO(io);
+        SDL_DestroySurface(surface);
+        return result;
+    }
 
 } else {
 
-// [W1] Web: no SDL surface/IOStream layer, so PNG is not available yet. Both
-// halves report failure the same way the desktop versions do when SDL rejects the
-// input (empty Image / empty byte slice), which means the callers' existing
-// "failed to load" paths run instead of a bogus success.
-image_decode_png :: (bytes: [] u8) -> Image {
-    if bytes.data == null || bytes.count <= 0 return .{};
-    // Jai 不做相邻字符串字面量拼接，写成一个字符串。
-    log_warning("image_decode_png: web 目标下没有 PNG 解码器（SDL_Surface 是 native 链路）；需要 ImageDecoder 桥或纯 Jai inflate —— W2/W3 接上");
-    return .{};
-}
+    // [W1] Web: no SDL surface/IOStream layer, so PNG is not available yet. Both
+    // halves report failure the same way the desktop versions do when SDL rejects the
+    // input (empty Image / empty byte slice), which means the callers' existing
+    // "failed to load" paths run instead of a bogus success.
+    image_decode_png :: (bytes: [] u8) -> Image {
+        if bytes.data == null || bytes.count <= 0 return .{};
+        // Jai 不做相邻字符串字面量拼接，写成一个字符串。
+        log_warning("image_decode_png: web 目标下没有 PNG 解码器（SDL_Surface 是 native 链路）；需要 ImageDecoder 桥或纯 Jai inflate —— W2/W3 接上");
+        return .{};
+    }
 
-image_encode_png_impl :: (img: Image) -> [] u8 {
-    if image_is_empty(img) return .[];
-    log_warning("image_encode_png_impl: web 目标下没有 PNG 编码器，W3 接上");
-    return .[];
-}
+    image_encode_png_impl :: (img: Image) -> [] u8 {
+        if image_is_empty(img) return .[];
+        log_warning("image_encode_png_impl: web 目标下没有 PNG 编码器，W3 接上");
+        return .[];
+    }
 
 }

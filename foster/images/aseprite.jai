@@ -5,9 +5,11 @@ using Hash_Table;
 // wasm 目标下没有 miniz 原生库：走 internal/web 的空实现（解压恒失败，调用方已有的
 // 「cel 解压失败」路径会跑，不会崩）。
 #if OS != .WASM {
-jf_mz_uncompress :: (pDest: *u8, pDest_len: *s64, pSource: *u8, source_len: s64) -> s32 #foreign miniz_impl;
+    jf_mz_uncompress :: (pDest: *u8, pDest_len: *s64, pSource: *u8, source_len: s64) -> s32 #foreign miniz_impl;
 } else {
-jf_mz_uncompress :: (pDest: *u8, pDest_len: *s64, pSource: *u8, source_len: s64) -> s32 { return -1; }
+    jf_mz_uncompress :: (pDest: *u8, pDest_len: *s64, pSource: *u8, source_len: s64) -> s32 {
+        return -1;
+    }
 }
 
 #scope_export
@@ -16,37 +18,55 @@ jf_mz_uncompress :: (pDest: *u8, pDest_len: *s64, pSource: *u8, source_len: s64)
 // parser (header magic 0xA5E0, frame magic 0xF1FA). Cel decompression uses
 // zlib via the vendored miniz.
 
-ASEPRITE_OLD_PALETTE_CHUNK     :: 0x0004;
-ASEPRITE_OLD_PALETTE2_CHUNK    :: 0x0011;
-ASEPRITE_LAYER_CHUNK           :: 0x2004;
-ASEPRITE_CEL_CHUNK             :: 0x2005;
-ASEPRITE_CEL_EXTRA_CHUNK       :: 0x2006;
-ASEPRITE_COLOR_PROFILE_CHUNK   :: 0x2007;
-ASEPRITE_EXTERNAL_FILES_CHUNK  :: 0x2008;
-ASEPRITE_MASK_CHUNK            :: 0x2016;
-ASEPRITE_TAGS_CHUNK            :: 0x2018;
-ASEPRITE_PALETTE_CHUNK         :: 0x2019;
-ASEPRITE_USER_DATA_CHUNK       :: 0x2020;
-ASEPRITE_SLICE_CHUNK           :: 0x2022;
-ASEPRITE_TILESET_CHUNK         :: 0x2023;
+ASEPRITE_OLD_PALETTE_CHUNK :: 0x0004;
+ASEPRITE_OLD_PALETTE2_CHUNK :: 0x0011;
+ASEPRITE_LAYER_CHUNK :: 0x2004;
+ASEPRITE_CEL_CHUNK :: 0x2005;
+ASEPRITE_CEL_EXTRA_CHUNK :: 0x2006;
+ASEPRITE_COLOR_PROFILE_CHUNK :: 0x2007;
+ASEPRITE_EXTERNAL_FILES_CHUNK :: 0x2008;
+ASEPRITE_MASK_CHUNK :: 0x2016;
+ASEPRITE_TAGS_CHUNK :: 0x2018;
+ASEPRITE_PALETTE_CHUNK :: 0x2019;
+ASEPRITE_USER_DATA_CHUNK :: 0x2020;
+ASEPRITE_SLICE_CHUNK :: 0x2022;
+ASEPRITE_TILESET_CHUNK :: 0x2023;
 
-ASEPRITE_FORMAT_RGBA     :: 32;
-ASEPRITE_FORMAT_GRAY     :: 16;
-ASEPRITE_FORMAT_INDEXED  :: 8;
+ASEPRITE_FORMAT_RGBA :: 32;
+ASEPRITE_FORMAT_GRAY :: 16;
+ASEPRITE_FORMAT_INDEXED :: 8;
 
 Aseprite_Blend_Mode :: enum u16 {
-    NORMAL; SRC; MULTIPLY; SCREEN; OVERLAY; DARKEN; LIGHTEN; COLOR_DODGE; COLOR_BURN; HARD_LIGHT;
-    SOFT_LIGHT; DIFFERENCE; EXCLUSION; HUE; SATURATION; COLOR; LUMINOSITY; ADDITION; SUBTRACT; DIVIDE;
+    NORMAL;
+    SRC;
+    MULTIPLY;
+    SCREEN;
+    OVERLAY;
+    DARKEN;
+    LIGHTEN;
+    COLOR_DODGE;
+    COLOR_BURN;
+    HARD_LIGHT;
+    SOFT_LIGHT;
+    DIFFERENCE;
+    EXCLUSION;
+    HUE;
+    SATURATION;
+    COLOR;
+    LUMINOSITY;
+    ADDITION;
+    SUBTRACT;
+    DIVIDE;
 }
 
 Aseprite_Layer_Flags :: enum_flags u16 {
-    VISIBLE       :: 1 << 0;
-    EDITABLE      :: 1 << 1;
+    VISIBLE :: 1 << 0;
+    EDITABLE :: 1 << 1;
     LOCK_MOVEMENT :: 1 << 2;
-    BACKGROUND    :: 1 << 3;
+    BACKGROUND :: 1 << 3;
     PREFER_LINKED_CELS :: 1 << 4;
     DISPLAY_COLLAPSED :: 1 << 5;
-    REFERENCE     :: 1 << 6;
+    REFERENCE :: 1 << 6;
 }
 
 Aseprite_Layer_Type :: enum u16 {
@@ -57,7 +77,7 @@ Aseprite_Layer_Type :: enum u16 {
 
 Aseprite_Layer :: struct {
     Flags: Aseprite_Layer_Flags;
-    Type:  Aseprite_Layer_Type;
+    Type: Aseprite_Layer_Type;
     ChildLevel: s32;
     DefaultWidth: u16;
     DefaultHeight: u16;
@@ -69,13 +89,13 @@ Aseprite_Layer :: struct {
 }
 
 Aseprite_User_Data :: struct {
-    Text:  string;
-    Col: Color;   // renamed from Color (shadows type)
+    Text: string;
+    Col: Color; // renamed from Color (shadows type)
 }
 
 Aseprite_Cel_Type :: enum u16 {
     RAW_IMAGE_DATA :: 0;
-    LINKED_CEL     :: 1;
+    LINKED_CEL :: 1;
     COMPRESSED_IMAGE :: 2;
     COMPRESSED_TILEMAP :: 3;
 }
@@ -85,7 +105,7 @@ Aseprite_Cel :: struct {
     Position: Point2;
     Opacity: u8;
     ZIndex: s16;
-    Img: Image;   // renamed from Image (field shadows type)
+    Img: Image; // renamed from Image (field shadows type)
     UserData: Aseprite_User_Data;
 }
 
@@ -101,7 +121,7 @@ Aseprite_Tag :: struct {
     To: u16;
     LoopDirection: Aseprite_Loop_Direction;
     Repeat: u16;
-    Col: Color;   // renamed from Color (shadows type)
+    Col: Color; // renamed from Color (shadows type)
     Name: string;
     UserData: Aseprite_User_Data;
 }
@@ -166,7 +186,7 @@ aseprite_destroy :: (a: *Aseprite) {
 
 As_Reader :: struct {
     data: [] u8;
-    pos:  s32 = 0;
+    pos: s32 = 0;
 }
 
 as_ok :: (r: *As_Reader, count: s32) -> bool {
@@ -187,7 +207,9 @@ as_u16 :: (r: *As_Reader) -> u16 {
     return v;
 }
 
-as_s16 :: (r: *As_Reader) -> s16 { return cast(s16) as_u16(r); }
+as_s16 :: (r: *As_Reader) -> s16 {
+    return cast(s16) as_u16(r);
+}
 
 as_u32 :: (r: *As_Reader) -> u32 {
     b0: u32 = r.data[r.pos];
@@ -199,7 +221,9 @@ as_u32 :: (r: *As_Reader) -> u32 {
     return v;
 }
 
-as_s32 :: (r: *As_Reader) -> s32 { return cast(s32) as_u32(r); }
+as_s32 :: (r: *As_Reader) -> s32 {
+    return cast(s32) as_u32(r);
+}
 
 as_string :: (r: *As_Reader) -> string {
     // Aseprite strings are length-prefixed and NOT NUL-terminated — copy
@@ -211,7 +235,9 @@ as_string :: (r: *As_Reader) -> string {
     return .{ data = out, count = cast(s64) len };
 }
 
-as_skip :: (r: *As_Reader, count: s32) { r.pos += count; }
+as_skip :: (r: *As_Reader, count: s32) {
+    r.pos += count;
+}
 
 //
 // parsing
@@ -234,16 +260,16 @@ aseprite_parse :: (data: [] u8) -> *Aseprite {
     if magic != 0xA5E0 return null;
 
     frame_count := as_u16(reader);
-    width  := as_u16(reader);
+    width := as_u16(reader);
     height := as_u16(reader);
     format := as_u16(reader);
-    as_skip(reader, 2);   // flags
-    as_skip(reader, 2);   // speed (deprecated)
+    as_skip(reader, 2); // flags
+    as_skip(reader, 2); // speed (deprecated)
     transparent_index := as_u32(reader);
-    as_skip(reader, 4);   // color count
-    as_skip(reader, 2);   // pixel ratio (byte x2)
-    as_skip(reader, 4);   // grid (byte x4)
-    as_skip(reader, 84);  // reserved
+    as_skip(reader, 4); // color count
+    as_skip(reader, 2); // pixel ratio (byte x2)
+    as_skip(reader, 4); // grid (byte x4)
+    as_skip(reader, 84); // reserved
 
     a := New(Aseprite);
     a.Format = format;
@@ -264,7 +290,7 @@ aseprite_parse :: (data: [] u8) -> *Aseprite {
         if frame_magic != 0xF1FA return null;
         old_chunks := as_u16(reader);
         frame_duration := as_u16(reader);
-        as_skip(reader, 2 + 4);   // unused, new-chunks-32bit
+        as_skip(reader, 2 + 4); // unused, new-chunks-32bit
 
         chunk_count := cast(s32) old_chunks;
         if old_chunks == 0xFFFF chunk_count = cast(s32) as_u32(reader);
@@ -278,7 +304,7 @@ aseprite_parse :: (data: [] u8) -> *Aseprite {
             frame = *a.Frames[current_frame];
         }
 
-        for c: 0..(chunk_count-1) {
+        for c: 0..(chunk_count - 1) {
             chunk_size := as_u32(reader);
             chunk_type := as_u16(reader);
             chunk_end := r.pos + cast(s32) chunk_size - 6;
@@ -312,7 +338,7 @@ aseprite_parse :: (data: [] u8) -> *Aseprite {
                 case ASEPRITE_SLICE_CHUNK;
                     aseprite_parse_slice_chunk(reader, a);
 
-                case;   // old palette / others: skipped below
+                case; // old palette / others: skipped below
             }
 
             // skip to the end of the chunk
@@ -332,7 +358,7 @@ aseprite_parse_layer_chunk :: (r: *As_Reader) -> Aseprite_Layer {
     l.DefaultHeight = as_u16(r);
     l.BlendMode = cast(Aseprite_Blend_Mode) as_u16(r);
     l.Opacity = as_u8(r);
-    as_skip(r, 3);   // reserved
+    as_skip(r, 3); // reserved
     l.Name = as_string(r);
 
     // tileset index follows for tilemap layers
@@ -350,7 +376,7 @@ aseprite_parse_cel_chunk :: (r: *As_Reader, a: *Aseprite) -> Aseprite_Cel {
     cel.Position = .{ pos_x, pos_y };
     cel.Opacity = as_u8(r);
     cel.ZIndex = as_s16(r);
-    as_skip(r, 5);   // reserved
+    as_skip(r, 5); // reserved
     cel_type := cast(Aseprite_Cel_Type) as_u16(r);
 
     if cel_type == .LINKED_CEL {
@@ -375,7 +401,7 @@ aseprite_parse_cel_chunk :: (r: *As_Reader, a: *Aseprite) -> Aseprite_Cel {
         if cel_type == .RAW_IMAGE_DATA {
             aseprite_read_pixels(r, cel.Img, a);
         } else {
-            as_skip(r, 2);   // zlib placeholder
+            as_skip(r, 2); // zlib placeholder
             compressed: [] u8 = .{ data = r.data.data + r.pos, count = r.data.count - r.pos };
             aseprite_inflate_pixels(compressed, *cel.Img, a);
         }
@@ -390,7 +416,7 @@ aseprite_parse_cel_chunk :: (r: *As_Reader, a: *Aseprite) -> Aseprite_Cel {
 aseprite_read_pixels :: (r: *As_Reader, img: Image, a: *Aseprite) {
     count := img.Width * img.Height;
     if !as_ok(r, cast(s32) count * (cast(s32) a.Format / 8)) return;
-    for i: 0..count-1 {
+    for i: 0..count - 1 {
         img.Data[i] = aseprite_read_pixel(r, a);
     }
 }
@@ -398,10 +424,17 @@ aseprite_read_pixels :: (r: *As_Reader, img: Image, a: *Aseprite) {
 aseprite_read_pixel :: (r: *As_Reader, a: *Aseprite) -> Color {
     px: Color;
     if a.Format == ASEPRITE_FORMAT_RGBA {
-        px.r = as_u8(r); px.g = as_u8(r); px.b = as_u8(r); px.a = as_u8(r);
+        px.r = as_u8(r);
+        px.g = as_u8(r);
+        px.b = as_u8(r);
+        px.a = as_u8(r);
     } else if a.Format == ASEPRITE_FORMAT_GRAY {
-        v := as_u8(r); alpha := as_u8(r);
-        px.r = v; px.g = v; px.b = v; px.a = alpha;
+        v := as_u8(r);
+        alpha := as_u8(r);
+        px.r = v;
+        px.g = v;
+        px.b = v;
+        px.a = alpha;
     } else if a.Format == ASEPRITE_FORMAT_INDEXED {
         index := as_u8(r);
         if cast(u32) index < a.Palette.count px = a.Palette[index];
@@ -418,7 +451,7 @@ aseprite_inflate_pixels :: (compressed: [] u8, img: *Image, a: *Aseprite) {
     buffer := cast(*u8) alloc(needed);
     dest_len: s64 = needed;
     ok := jf_mz_uncompress(buffer, *dest_len, compressed.data, compressed.count);
-    if ok != 0 {   // MZ_OK == 0 in miniz
+    if ok != 0 { // MZ_OK == 0 in miniz
         log_warning("aseprite: cel zlib inflate failed");
         free(buffer);
         return;
@@ -429,7 +462,7 @@ aseprite_inflate_pixels :: (compressed: [] u8, img: *Image, a: *Aseprite) {
 
     sub: As_Reader;
     sub.data = .{ data = buffer, count = needed };
-    for i: 0..(count-1) {
+    for i: 0..(count - 1) {
         img.Data[i] = aseprite_read_pixel(*sub, a);
     }
     free(buffer);
@@ -437,14 +470,14 @@ aseprite_inflate_pixels :: (compressed: [] u8, img: *Image, a: *Aseprite) {
 
 aseprite_parse_tags_chunk :: (r: *As_Reader, a: *Aseprite) {
     count := as_u16(r);
-    as_skip(r, 8);   // reserved
-    for i: 0..(cast(s32) count)-1 {
+    as_skip(r, 8); // reserved
+    for i: 0..(cast(s32) count) - 1 {
         tag: Aseprite_Tag;
         tag.From = as_u16(r);
         tag.To = as_u16(r);
         tag.LoopDirection = cast(Aseprite_Loop_Direction) as_u8(r);
         tag.Repeat = as_u16(r);
-        as_skip(r, 6 + 4);   // future + reserved
+        as_skip(r, 6 + 4); // future + reserved
         tag.Col = Color.{ as_u8(r), as_u8(r), as_u8(r), as_u8(r) };
         tag.Name = as_string(r);
         array_add(*a.Tags, tag);
@@ -454,13 +487,15 @@ aseprite_parse_tags_chunk :: (r: *As_Reader, a: *Aseprite) {
 aseprite_parse_palette_chunk :: (r: *As_Reader, a: *Aseprite) {
     new_size := as_u32(r);
     from := as_u32(r);
-    as_skip(r, 8 + 4);   // to, future
+    as_skip(r, 8 + 4); // to, future
     count := as_u32(r);
-    for i: 0..(cast(s64) count)-1 {
+    for i: 0..(cast(s64) count) - 1 {
         flags := as_u16(r);
         c := Color.{ as_u8(r), as_u8(r), as_u8(r), as_u8(r) };
-        if (flags & 1) != 0 { as_string(r); }      // name
-        as_skip(r, 8);                              // future
+        if (flags & 1) != 0 {
+            as_string(r);
+        } // name
+        as_skip(r, 8); // future
         index := cast(s64) from + i;
         if index >= a.Palette.count {
             while a.Palette.count <= index array_add(*a.Palette, Color_Transparent);
@@ -493,13 +528,13 @@ aseprite_read_user_data :: (r: *As_Reader) -> Aseprite_User_Data {
 aseprite_parse_slice_chunk :: (r: *As_Reader, a: *Aseprite) {
     count := as_u32(r);
     flags := as_u32(r);
-    as_skip(r, 4);   // reserved
+    as_skip(r, 4); // reserved
     name := as_string(r);
 
     slice: Aseprite_Slice;
     slice.Name = name;
 
-    for i: 0..(cast(s32) count)-1 {
+    for i: 0..(cast(s32) count) - 1 {
         key: Aseprite_Slice_Key;
         key.FrameStart = as_u32(r);
         x := as_s32(r);
@@ -565,8 +600,8 @@ aseprite_composite_cel :: (img: *Image, cel: Aseprite_Cel, layer: Aseprite_Layer
     alpha := cast(float) (cast(u32) cel.Opacity * cast(u32) layer.Opacity) / (255.0 * 255.0);
     if alpha <= 0 return;
 
-    for y: 0..cel.Img.Height-1 {
-        for x: 0..cel.Img.Width-1 {
+    for y: 0..cel.Img.Height - 1 {
+        for x: 0..cel.Img.Width - 1 {
             dx := cel.Position.x + x;
             dy := cel.Position.y + y;
             if dx < 0 || dy < 0 || dx >= img.Width || dy >= img.Height continue;

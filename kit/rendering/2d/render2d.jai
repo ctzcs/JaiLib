@@ -76,7 +76,7 @@ Render2D :: struct {
     mode_color: F.Color;
     scissor: F.Rect_Int;
     has_scissor: bool;
-    transform_stack: [..] [16] float32;
+    transform_stack: [..][16] float32;
     sampler_stack: [..] F.Texture_Sampler;
     blend_stack: [..] F.Blend_Mode;
     mode_stack: [..] Render2D_Mode_State;
@@ -89,7 +89,7 @@ Render2D :: struct {
     mesh: *F.Mesh;
     index_quads: int; // 索引缓冲已覆盖的四边形数（索引是固定的四边形图案，只在增长时重建）
     // 带 [Instance] 字段的 Shader：每个精灵一组 float4，顶点 mode 字节存它的起始偏移；[0] 保留不用。submit 时上传一次。
-    instance_values: [..] [4] float32;
+    instance_values: [..][4] float32;
     // 每个 run 的各所选 Pass 一张实例值表，开段时按材质建一次，逐精灵按表写值。
     instance_tables: [..] mat.Instance_Table;
     instance_buffer: *F.Graphics_Buffer;
@@ -101,7 +101,7 @@ Render2D :: struct {
 
 // olib: foster.BatcherModeState —— jfoster 把 mode 直接存成顶点色，没有这个结构，这里按同名同字段补上。
 Render2D_Mode_State :: struct {
-    Mode:  F.Batcher_Modes;
+    Mode: F.Batcher_Modes;
     Color: F.Color;
 }
 
@@ -161,9 +161,15 @@ dispose :: (r: *Render2D) {
     if r.scissor_stack.data != null array_free(r.scissor_stack);
     if r.instance_values.data != null array_free(r.instance_values);
     if r.instance_tables.data != null array_free(r.instance_tables);
-    if r.instance_ready { render2d_buffer_release(r.instance_buffer); }
-    if r.corner_ready { render2d_mesh_release(r.corner_mesh); }
-    if r.library != null { render2d_mesh_release(r.mesh); }
+    if r.instance_ready {
+        render2d_buffer_release(r.instance_buffer);
+    }
+    if r.corner_ready {
+        render2d_mesh_release(r.corner_mesh);
+    }
+    if r.library != null {
+        render2d_mesh_release(r.mesh);
+    }
     r.* = Render2D.{};
 }
 
@@ -211,7 +217,9 @@ render2d_bytes :: ($T: Type, value: *T) -> [] u8 {
     return .{ data = cast(*u8) value, count = size_of(T) };
 }
 
-relative_keep :: (value: bool) -> bool { return value; }
+relative_keep :: (value: bool) -> bool {
+    return value;
+}
 
 push_matrix :: (r: *Render2D, m: F.Matrix3x2, relative := true) {
     identity_projection: [16] float32 = .[m.m11, m.m12, 0, 0, m.m21, m.m22, 0, 0, 0, 0, 1, 0, m.m31, m.m32, 0, 1];
@@ -219,7 +227,7 @@ push_matrix :: (r: *Render2D, m: F.Matrix3x2, relative := true) {
 }
 
 push_matrix_trs :: (r: *Render2D, position: F.Vector2, scale: F.Vector2, rotation: float32, relative := true) {
-    push_matrix(r, F.matrix3x2_create_transform(position, F.Vector2.{0, 0}, scale, rotation), relative);
+    push_matrix(r, F.matrix3x2_create_transform(position, F.Vector2.{ 0, 0 }, scale, rotation), relative);
 }
 
 push_matrix_raw :: (r: *Render2D, m: [16] float32, relative := true) {
@@ -233,15 +241,17 @@ push_matrix_raw :: (r: *Render2D, m: [16] float32, relative := true) {
     out: [16] float32;
     for row: 0..3 {
         for col: 0..3 {
-            out[row*4 + col] = m[row*4] * a[col] + m[row*4 + 1] * a[4 + col] +
-                               m[row*4 + 2] * a[8 + col] + m[row*4 + 3] * a[12 + col];
+            out[row * 4 + col] = m[row * 4] * a[col] + m[row * 4 + 1] * a[4 + col] +
+                               m[row * 4 + 2] * a[8 + col] + m[row * 4 + 3] * a[12 + col];
         }
     }
     r.transform = out;
 }
 
 pop_matrix :: (r: *Render2D) {
-    if r.transform_stack.count > 0 { r.transform = render2d_pop([16] float32, *r.transform_stack); }
+    if r.transform_stack.count > 0 {
+        r.transform = render2d_pop([16] float32, *r.transform_stack);
+    }
 }
 
 // 只影响默认材质：Normal 为贴图 × 颜色，Wash 只取贴图 alpha，Fill 只用颜色。
@@ -264,7 +274,9 @@ push_sampler :: (r: *Render2D, sampler: F.Texture_Sampler) {
 }
 
 pop_sampler :: (r: *Render2D) {
-    if r.sampler_stack.count > 0 { r.sampler = render2d_pop(F.Texture_Sampler, *r.sampler_stack); }
+    if r.sampler_stack.count > 0 {
+        r.sampler = render2d_pop(F.Texture_Sampler, *r.sampler_stack);
+    }
 }
 
 // 未声明混合方式的 Pass 使用它；Pass 显式声明的 blend 优先。
@@ -274,7 +286,9 @@ push_blend :: (r: *Render2D, blend: F.Blend_Mode) {
 }
 
 pop_blend :: (r: *Render2D) {
-    if r.blend_stack.count > 0 { r.blend = render2d_pop(F.Blend_Mode, *r.blend_stack); }
+    if r.blend_stack.count > 0 {
+        r.blend = render2d_pop(F.Blend_Mode, *r.blend_stack);
+    }
 }
 
 // 目标像素坐标的裁剪矩形。
@@ -296,7 +310,7 @@ pop_scissor :: (r: *Render2D) {
 // 画图集子图：保留裁剪后的 DrawCoords / TexCoords，origin 是相对未裁剪原图的锚点像素。
 // values 只设置这一次绘制的 [Instance] 字段，不修改共享材质。
 image :: (r: *Render2D, frame: F.Subtexture, transform: F.Matrix3x2, color := F.Color_White,
-          origin := F.Vector2.{0, 0}, material: *mat.Material = null, values: *mat.Instance_Values = null,
+          origin := F.Vector2.{ 0, 0 }, material: *mat.Material = null, values: *mat.Instance_Values = null,
           pass_id: mat.Pass_Id = "") -> mat.Draw_Error {
     if frame.Tex == null || frame.Tex.handle == 0 return .Missing_Sprite_Texture;
     corners := render2d_frame_corners(frame, origin, transform);
@@ -307,7 +321,7 @@ image :: (r: *Render2D, frame: F.Subtexture, transform: F.Matrix3x2, color := F.
 
 // 整张贴图当一帧。
 texture :: (r: *Render2D, texture: *F.Texture, transform: F.Matrix3x2, color := F.Color_White,
-            origin := F.Vector2.{0, 0}, material: *mat.Material = null, values: *mat.Instance_Values = null,
+            origin := F.Vector2.{ 0, 0 }, material: *mat.Material = null, values: *mat.Instance_Values = null,
             pass_id: mat.Pass_Id = "") -> mat.Draw_Error {
     if texture == null || texture.handle == 0 return .Missing_Sprite_Texture;
     return image(r, F.subtexture_make_full(texture), transform, color, origin, material, values, pass_id);
@@ -325,7 +339,7 @@ quad_texture :: (r: *Render2D, texture: *F.Texture, a: F.Vector2, b: F.Vector2, 
 
 quad :: (r: *Render2D, a: F.Vector2, b: F.Vector2, c: F.Vector2, d: F.Vector2, color: F.Color,
          material: *mat.Material = null) -> mat.Draw_Error {
-    return render2d_record(r, material, null, .[a, b, c, d], .[F.Vector2.{0, 0}, F.Vector2.{0, 0}, F.Vector2.{0, 0}, F.Vector2.{0, 0}],
+    return render2d_record(r, material, null, .[a, b, c, d], .[F.Vector2.{ 0, 0 }, F.Vector2.{ 0, 0 }, F.Vector2.{ 0, 0 }, F.Vector2.{ 0, 0 }],
                            .[color, color, color, color], null, "", RENDER2D_AXES_IDENTITY);
 }
 
@@ -333,7 +347,7 @@ quad :: (r: *Render2D, a: F.Vector2, b: F.Vector2, c: F.Vector2, d: F.Vector2, c
 quad_gradient :: (r: *Render2D, a: F.Vector2, b: F.Vector2, c: F.Vector2, d: F.Vector2,
                   c0: F.Color, c1: F.Color, c2: F.Color, c3: F.Color,
                   material: *mat.Material = null) -> mat.Draw_Error {
-    return render2d_record(r, material, null, .[a, b, c, d], .[F.Vector2.{0, 0}, F.Vector2.{0, 0}, F.Vector2.{0, 0}, F.Vector2.{0, 0}],
+    return render2d_record(r, material, null, .[a, b, c, d], .[F.Vector2.{ 0, 0 }, F.Vector2.{ 0, 0 }, F.Vector2.{ 0, 0 }, F.Vector2.{ 0, 0 }],
                            .[c0, c1, c2, c3], null, "", RENDER2D_AXES_IDENTITY);
 }
 
@@ -341,12 +355,12 @@ quad_gradient :: (r: *Render2D, a: F.Vector2, b: F.Vector2, c: F.Vector2, d: F.V
 rect_gradient :: (r: *Render2D, rect: F.Rect, c0: F.Color, c1: F.Color, c2: F.Color, c3: F.Color,
                   material: *mat.Material = null) -> mat.Draw_Error {
     x0, y0, x1, y1 := rect.x, rect.y, rect.x + rect.w, rect.y + rect.h;
-    return quad_gradient(r, .{x0, y0}, .{x1, y0}, .{x1, y1}, .{x0, y1}, c0, c1, c2, c3, material);
+    return quad_gradient(r, .{ x0, y0 }, .{ x1, y0 }, .{ x1, y1 }, .{ x0, y1 }, c0, c1, c2, c3, material);
 }
 
 rect :: (r: *Render2D, rect: F.Rect, color: F.Color, material: *mat.Material = null) -> mat.Draw_Error {
     x0, y0, x1, y1 := rect.x, rect.y, rect.x + rect.w, rect.y + rect.h;
-    return quad(r, .{x0, y0}, .{x1, y0}, .{x1, y1}, .{x0, y1}, color, material);
+    return quad(r, .{ x0, y0 }, .{ x1, y0 }, .{ x1, y1 }, .{ x0, y1 }, color, material);
 }
 
 // 粗细为 thickness 的线段（四边形）；长度为 0 时不记录。
@@ -355,7 +369,7 @@ line :: (r: *Render2D, from: F.Vector2, to: F.Vector2, thickness: float32, color
     d := to - from;
     length := JM.sqrt(d.x * d.x + d.y * d.y);
     if length <= 0 return .None;
-    n := F.Vector2.{-d.y, d.x} / length * thickness * 0.5;
+    n := F.Vector2.{ -d.y, d.x } / length * thickness * 0.5;
     return quad(r, from + n, to + n, to - n, from - n, color, material);
 }
 
@@ -372,8 +386,8 @@ circle :: (r: *Render2D, center: F.Vector2, radius: float32, steps: int, color: 
     for i: 0..steps - 1 {
         a0 := cast(float32) i / cast(float32) steps * JM.TAU;
         a1 := cast(float32) (i + 1) / cast(float32) steps * JM.TAU;
-        p0 := center + F.Vector2.{JM.cos(a0), JM.sin(a0)} * radius;
-        p1 := center + F.Vector2.{JM.cos(a1), JM.sin(a1)} * radius;
+        p0 := center + F.Vector2.{ JM.cos(a0), JM.sin(a0) } * radius;
+        p1 := center + F.Vector2.{ JM.cos(a1), JM.sin(a1) } * radius;
         error := triangle(r, center, p0, p1, color, material);
         if error != .None return error;
     }
@@ -387,8 +401,8 @@ circle_gradient :: (r: *Render2D, center: F.Vector2, radius: float32, steps: int
     for i: 0..steps - 1 {
         a0 := cast(float32) i / cast(float32) steps * JM.TAU;
         a1 := cast(float32) (i + 1) / cast(float32) steps * JM.TAU;
-        p0 := center + F.Vector2.{JM.cos(a0), JM.sin(a0)} * radius;
-        p1 := center + F.Vector2.{JM.cos(a1), JM.sin(a1)} * radius;
+        p0 := center + F.Vector2.{ JM.cos(a0), JM.sin(a0) } * radius;
+        p1 := center + F.Vector2.{ JM.cos(a1), JM.sin(a1) } * radius;
         error := quad_gradient(r, center, p0, p1, p1, center_color, edge_color, edge_color, edge_color, material);
         if error != .None return error;
     }
@@ -399,20 +413,22 @@ circle_gradient :: (r: *Render2D, center: F.Vector2, radius: float32, steps: int
 // size 为 0 时用字体原始字号，justify 为对齐比例（0 左/上，0.5 居中，1 右/下），支持换行与字距。
 // 字形用字体的采样器；字体自带的 Material 不使用（material 为 null 时用默认材质）。
 text :: (r: *Render2D, font: *F.Sprite_Font, value: string, position: F.Vector2, color := F.Color_White,
-         size: float32 = 0, justify := F.Vector2.{0, 0}, material: *mat.Material = null) -> mat.Draw_Error {
+         size: float32 = 0, justify := F.Vector2.{ 0, 0 }, material: *mat.Material = null) -> mat.Draw_Error {
     if font == null return .None;
     size_px := size;
     if size_px <= 0 size_px = font.Size; // olib: size > 0 ? size : font.Size
     scale := 1.0;
     if font.Size > 0 scale = size_px / font.Size;
-    push_matrix(r, F.Matrix3x2.{scale, 0, 0, scale, position.x, position.y});
+    push_matrix(r, F.Matrix3x2.{ scale, 0, 0, scale, position.x, position.y });
     defer pop_matrix(r);
     push_sampler(r, font.Sampler);
     defer pop_sampler(r);
     line_height := F.sprite_font_line_height(font);
     line_start := 0;
-    at := F.Vector2.{0, font.Ascent};
-    if justify.y != 0 { at.y -= justify.y * F.sprite_font_height_of(font, value); }
+    at := F.Vector2.{ 0, font.Ascent };
+    if justify.y != 0 {
+        at.y -= justify.y * F.sprite_font_height_of(font, value);
+    }
     last := 0;
     index := 0;
     while index < value.count {
@@ -421,17 +437,19 @@ text :: (r: *Render2D, font: *F.Sprite_Font, value: string, position: F.Vector2,
             at.x = -justify.x * F.sprite_font_width_of_line(font, atlas_substring(value, index, value.count));
         }
         if c == 10 { // '\n'
-            at = .{0, at.y + line_height};
+            at = .{ 0, at.y + line_height };
             line_start, last = next, 0;
             index = next;
             continue;
         }
         glyph, ok := F.sprite_font_try_get_character(font, cast(s32) c);
         if ok {
-            if last != 0 { at.x += F.sprite_font_get_kerning(font, cast(s32) last, cast(s32) c); }
+            if last != 0 {
+                at.x += F.sprite_font_get_kerning(font, cast(s32) last, cast(s32) c);
+            }
             if glyph.Subtex.Tex != null {
                 p := at + glyph.Offset;
-                error := image(r, glyph.Subtex, F.Matrix3x2.{1, 0, 0, 1, p.x, p.y}, color, material = material);
+                error := image(r, glyph.Subtex, F.Matrix3x2.{ 1, 0, 0, 1, p.x, p.y }, color, material = material);
                 if error != .None return error;
             }
             at.x += glyph.Advance;
@@ -478,8 +496,8 @@ circle_line :: (r: *Render2D, center: F.Vector2, radius: float32, thickness: flo
     for i: 0..steps - 1 {
         a0 := cast(float32) i / cast(float32) steps * JM.TAU;
         a1 := cast(float32) (i + 1) / cast(float32) steps * JM.TAU;
-        d0 := F.Vector2.{JM.cos(a0), JM.sin(a0)};
-        d1 := F.Vector2.{JM.cos(a1), JM.sin(a1)};
+        d0 := F.Vector2.{ JM.cos(a0), JM.sin(a0) };
+        d1 := F.Vector2.{ JM.cos(a1), JM.sin(a1) };
         error := quad(r, center + d0 * inner, center + d0 * radius, center + d1 * radius, center + d1 * inner,
                       color, material);
         if error != .None return error;
@@ -605,11 +623,11 @@ buffer :: (r: *Render2D, material: *mat.Material, buf: *Sprite_Buffer, count: in
 
 render2d_mode_color :: (mode: F.Batcher_Modes) -> F.Color {
     if mode == {
-        case .NORMAL; return F.Color.{255, 0, 0, 0};
-        case .WASH;   return F.Color.{0, 255, 0, 0};
-        case .FILL;   return F.Color.{0, 0, 255, 0};
+        case .NORMAL; return F.Color.{ 255, 0, 0, 0 };
+        case .WASH; return F.Color.{ 0, 255, 0, 0 };
+        case .FILL; return F.Color.{ 0, 0, 255, 0 };
     }
-    return F.Color.{255, 0, 0, 0};
+    return F.Color.{ 255, 0, 0, 0 };
 }
 
 render2d_reset_state :: (r: *Render2D) {
@@ -618,7 +636,7 @@ render2d_reset_state :: (r: *Render2D) {
     r.blend = F.Blend_Mode_Premultiply;
     r.mode = .NORMAL;
     r.mode_color = render2d_mode_color(.NORMAL);
-    r.scissor, r.has_scissor = F.Rect_Int.{0, 0, 0, 0}, false;
+    r.scissor, r.has_scissor = F.Rect_Int.{ 0, 0, 0, 0 }, false;
     if r.transform_stack.data != null r.transform_stack.count = 0;
     if r.sampler_stack.data != null r.sampler_stack.count = 0;
     if r.blend_stack.data != null r.blend_stack.count = 0;
@@ -636,7 +654,7 @@ render2d_reset :: (r: *Render2D) {
 }
 
 // 精灵局部 1 像素在变换栈之前的两条轴 (x.x, x.y, y.x, y.y)；没有局部空间的图元用单位轴。
-RENDER2D_AXES_IDENTITY : [4] float32 : .[1, 0, 0, 1];
+RENDER2D_AXES_IDENTITY: [4] float32 : .[1, 0, 0, 1];
 
 // 记录一个四边形。texture 为 null 表示纯色图元。corners 与 axes 是变换栈之前的坐标与局部轴。
 render2d_record :: (r: *Render2D, material: *mat.Material, texture: *F.Texture,
@@ -650,8 +668,10 @@ render2d_record :: (r: *Render2D, material: *mat.Material, texture: *F.Texture,
     last: *Render2D_Run = null;
     if r.runs.count > 0 last = *r.runs[r.runs.count - 1];
     frame_texture := texture;
-    mode := F.Color.{0, 0, 0, 0};
-    if m.shader.desc.uniforms == .Foster { mode = r.mode_color; }
+    mode := F.Color.{ 0, 0, 0, 0 };
+    if m.shader.desc.uniforms == .Foster {
+        mode = r.mode_color;
+    }
     if texture == null {
         if m == r.default_material {
             // Fill 只用顶点色：沿用当前段的帧贴图即可继续合批。
@@ -685,9 +705,9 @@ render2d_record :: (r: *Render2D, material: *mat.Material, texture: *F.Texture,
     }
     for i: 0..3 {
         array_add(*r.vertices, F.Batcher_Vertex.{
-            pos  = render2d_transform(r, corners[i]),
-            tex  = uvs[i],
-            col  = colors[i],
+            pos = render2d_transform(r, corners[i]),
+            tex = uvs[i],
+            col = colors[i],
             mode = mode,
         });
     }
@@ -761,17 +781,17 @@ render2d_run_matches :: (r: *Render2D, run: *Render2D_Run, m: *mat.Material, pas
 render2d_run_begin :: (r: *Render2D, m: *mat.Material, pass_id: mat.Pass_Id, texture: *F.Texture,
                        selection: mat.Pass_Selection, values: *mat.Instance_Values) {
     run := Render2D_Run.{
-        material  = m,
-        revision  = m.revision,
-        pass_id   = pass_id,
+        material = m,
+        revision = m.revision,
+        pass_id = pass_id,
         selection = selection,
-        snapshot  = r.snapshot_count,
-        texture   = texture,
-        sampler   = r.sampler,
-        blend     = r.blend,
-        scissor   = Render2D_Scissor.{ r.scissor, r.has_scissor },
+        snapshot = r.snapshot_count,
+        texture = texture,
+        sampler = r.sampler,
+        blend = r.blend,
+        scissor = Render2D_Scissor.{ r.scissor, r.has_scissor },
         quad_start = r.vertices.count / 4,
-        tables    = r.instance_tables.count,
+        tables = r.instance_tables.count,
     };
     slot := render2d_param_slot(m.shader.desc);
     offset: u32 = 0;
@@ -779,7 +799,9 @@ render2d_run_begin :: (r: *Render2D, m: *mat.Material, pass_id: mat.Pass_Id, tex
         p := m.shader.desc.passes[selection.passes[i]];
         binding := m.bindings[selection.bindings[i]];
         run.pass_offsets[i] = offset;
-        if m.shader.desc.uniforms == .Olib { offset += cast(u32) sh.instance_count(binding.schema); }
+        if m.shader.desc.uniforms == .Olib {
+            offset += cast(u32) sh.instance_count(binding.schema);
+        }
         array_add(*r.instance_tables, mat.instance_table_make(p, binding));
         if r.snapshot_count == r.snapshots.count {
             array_add(*r.snapshots, F.material_create());
@@ -800,7 +822,7 @@ render2d_run_begin :: (r: *Render2D, m: *mat.Material, pass_id: mat.Pass_Id, tex
                 if field.kind != .Texture continue;
                 if field.id == p.sprite_texture {
                     snapshot.Fragment.Samplers[index] = F.Bound_Sampler.{
-                        Tex     = texture,
+                        Tex = texture,
                         Sampler = sh.field_sprite_sampler(field, r.sampler),
                     };
                 }
@@ -849,7 +871,7 @@ render2d_corner_mesh :: (r: *Render2D) -> bool {
     ];
     format := F.vertex_format_make(array_view(elements, 0, 1), size_of([2] float32));
     r.corner_mesh = F.mesh_create(r.library.device, format, .THIRTY_TWO, "render2d corners");
-    corners: [4] [2] float32 = .[ .[0, 0], .[1, 0], .[1, 1], .[0, 1] ];
+    corners: [4][2] float32 = .[.[0, 0], .[1, 0], .[1, 1], .[0, 1]];
     F.mesh_set_vertices(r.corner_mesh, array_view(corners, 0, 4));
     indices: [6] u32 = .[0, 1, 2, 0, 2, 3];
     F.mesh_set_indices(r.corner_mesh, array_view(indices, 0, 6));
@@ -857,7 +879,6 @@ render2d_corner_mesh :: (r: *Render2D) -> bool {
     return true;
 }
 //@endregion
-
 
 //@region 常驻精灵实例缓冲
 
@@ -880,6 +901,7 @@ Sprite_Item :: struct {
     reserved: [2] float32; // olib 的 `_: [2]f32`（GPU 布局的保留字节，由 sprite_item_make 置零；Jai 没有匿名字段名）
     tint: [4] float32;
 }
+
 #assert(size_of(Sprite_Item) == 80);
 #assert(offset_of(Sprite_Item, "rect") == 24);
 #assert(offset_of(Sprite_Item, "uv") == 40);
@@ -893,9 +915,9 @@ sprite_item_make :: (frame: F.Subtexture, origin: F.Vector2, transform: F.Matrix
     uv0, uv1 := frame.TexCoords[0], frame.TexCoords[2];
     return Sprite_Item.{
         transform = transform,
-        rect      = .[top_left.x, top_left.y, bottom_right.x - top_left.x, bottom_right.y - top_left.y],
-        uv        = .[uv0.x, uv0.y, uv1.x - uv0.x, uv1.y - uv0.y],
-        tint      = tint,
+        rect = .[top_left.x, top_left.y, bottom_right.x - top_left.x, bottom_right.y - top_left.y],
+        uv = .[uv0.x, uv0.y, uv1.x - uv0.x, uv1.y - uv0.y],
+        tint = tint,
     };
 }
 
@@ -950,7 +972,9 @@ sprite_buffer_init :: (buf: *Sprite_Buffer, material: *mat.Material, capacity: i
 }
 
 sprite_buffer_dispose :: (buf: *Sprite_Buffer) {
-    if buf.capacity > 0 { render2d_buffer_release(buf.buffer); }
+    if buf.capacity > 0 {
+        render2d_buffer_release(buf.buffer);
+    }
     buf.* = Sprite_Buffer.{};
 }
 

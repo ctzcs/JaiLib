@@ -43,7 +43,7 @@ operator == :: (a: Handle, b: Handle) -> bool {
     return a.idx == b.idx && a.gen == b.gen;
 }
 
-Pool :: struct (T: Type, HT: Type, N: int) {
+Pool :: struct(T: Type, HT: Type, N: int) {
     // 每个条目都必须有类型为 HT 的 handle 字段。
     //
     // 0 号永远是 dummy 条目，这样 idx == 0 的 Handle 表示"没有句柄"，
@@ -66,8 +66,8 @@ Pool :: struct (T: Type, HT: Type, N: int) {
 }
 
 // 遍历用。用 begin 创建。
-Iterator :: struct (T: Type, HT: Type, N: int) {
-    m:     *Pool(T, HT, N);
+Iterator :: struct(T: Type, HT: Type, N: int) {
+    m: *Pool(T, HT, N);
     index: u32;
 }
 //@endregion

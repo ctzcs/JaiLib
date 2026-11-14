@@ -13,8 +13,8 @@ Vertex_Format :: struct {
 }
 
 Vertex_Format_Element :: struct {
-    Index:      s32;
-    Type:       Vertex_Type;
+    Index: s32;
+    Type: Vertex_Type;
     Normalized: bool;
 }
 
@@ -31,7 +31,7 @@ vertex_format_make :: (elements: [] Vertex_Format_Element, stride: s32 = 0) -> V
 
 operator == :: (a: Vertex_Format, b: Vertex_Format) -> bool {
     if a.Stride != b.Stride || a.ElementCount != b.ElementCount return false;
-    for i: 0..a.ElementCount-1 {
+    for i: 0..a.ElementCount - 1 {
         if a.Elements[i] != b.Elements[i] return false;
     }
     return true;

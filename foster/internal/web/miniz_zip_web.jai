@@ -26,9 +26,9 @@ mz_int64 :: s64;
 
 MZ_ZIP_FLAG_CASE_SENSITIVE :: 0x0100;
 
-MZ_ZIP_MODE_INVALID   :: 0;
-MZ_ZIP_MODE_READING   :: 1;
-MZ_ZIP_MODE_WRITING   :: 2;
+MZ_ZIP_MODE_INVALID :: 0;
+MZ_ZIP_MODE_READING :: 1;
+MZ_ZIP_MODE_WRITING :: 2;
 MZ_ZIP_MODE_WRITING_HAS_BEEN_FINALIZED :: 3;
 
 Zip_Archive :: void;
@@ -49,7 +49,7 @@ MZ_ZIP_ARCHIVE_FILE_STAT :: struct {
     m_external_attr: mz_uint32;
     m_local_header_ofs: mz_uint64;
     m_comment_size: mz_uint32;
-    m_is_directory: u32;    // mz_bool is a 4-byte int in miniz, NOT 1-byte bool
+    m_is_directory: u32; // mz_bool is a 4-byte int in miniz, NOT 1-byte bool
     m_is_encrypted: u32;
     m_is_supported: u32;
     m_filename: [512] u8;
@@ -59,10 +59,14 @@ MZ_ZIP_ARCHIVE_FILE_STAT :: struct {
 
 // storage_ext.jai 按 C 侧 sizeof 分配再 cast；这里没有 C 侧，返回 Jai 侧的
 // 字节数 —— alloc 出来的缓冲区一定够大。
-jf_mz_stat_size :: () -> s64 { return size_of(MZ_ZIP_ARCHIVE_FILE_STAT); }
+jf_mz_stat_size :: () -> s64 {
+    return size_of(MZ_ZIP_ARCHIVE_FILE_STAT);
+}
 
 // 只在 desktop 的 zip_open_archive 里用于分配归档上下文，web 侧没有意义。
-jf_mz_zip_archive_size :: () -> s64 { return 0; }
+jf_mz_zip_archive_size :: () -> s64 {
+    return 0;
+}
 
 // 直接调用 miniz 的两处（storage_ext.jai 的 zip_storage_read_all_bytes_result）。
 // 永远定位失败 / 统计失败，正好落进它已有的 READ_FAILED 分支。
@@ -75,7 +79,7 @@ mz_zip_reader_file_stat :: (pZip: *Zip_Archive, file_index: mz_uint, pStat: *MZ_
     return false;
 }
 
-mz_free :: (p: *void) { }
+mz_free :: (p: *void) {}
 
 zip_open_archive :: (path: string) -> *Zip_Archive {
     log_warning("zip_open_archive: web 目标下没有 zip 后端（miniz 是 native 库），拿不到压缩包内容 —— W2 接上 DecompressionStream 或 wasm 版 miniz");

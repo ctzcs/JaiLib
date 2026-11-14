@@ -26,13 +26,13 @@ Transition :: enum u8 {
 
 // 值语义插值器：speed = 1/duration（duration<=0 时为 1e30，即瞬时完成）。
 Interpolated :: struct(T: Type) {
-    start:           T;
-    finish:          T;
-    start_time:      float32;
-    speed:           float32;
-    transition:      Transition;
+    start: T;
+    finish: T;
+    start_time: float32;
+    speed: float32;
+    transition: Transition;
     transition_proc: (t: float32) -> float32;
-    lerp:            (a: T, b: T, ratio: float32) -> T;
+    lerp: (a: T, b: T, ratio: float32) -> T;
 }
 //@endregion
 

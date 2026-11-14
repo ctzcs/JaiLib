@@ -28,8 +28,8 @@
 
 Lod_Selector :: struct {
     thresholds: [] float32; // 严格降序，末项为 0
-    current_level: int;     // -1 = 未初始化（下次 Select 全量扫）
-    hysteresis: float32;    // 0..0.49；0 关闭
+    current_level: int; // -1 = 未初始化（下次 Select 全量扫）
+    hysteresis: float32; // 0..0.49；0 关闭
 }
 
 // olib: make([]T, n, allocator)。Jai 的 alloc 只收字节数，从 context.allocator 取内存。
@@ -157,7 +157,7 @@ lod_world_sphere :: (bounds: DA.Dasset_Bounds, world_matrix: W.Matrix4) -> (cent
 // 一个实例的多级模型引用与 LOD 状态。不拥有 GPU 资源、不生成简化网格；
 // levels 的元素类型由调用侧决定（如 ^F.Mesh 或自定义 Model 包装）。
 // bounds 是所有级别的共同局部包围盒（动画使用者应传保守盒）。
-Model_Lod :: struct (T: Type) {
+Model_Lod :: struct(T: Type) {
     models: [] T;
     selector: Lod_Selector;
     bounds: DA.Dasset_Bounds;

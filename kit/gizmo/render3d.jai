@@ -34,20 +34,20 @@
 // 手柄顶点：Float3 位置 + Float4 颜色（28B，与 Gizmo3D.hlsl 一致）。
 Vertex3D :: struct {
     position: W.Vec3;
-    color:    [4] float32;
+    color: [4] float32;
 }
 
 GIZMO_VERTEX_STRIDE :: 28;
 #assert(size_of(Vertex3D) == GIZMO_VERTEX_STRIDE, "手柄顶点必须是 28 字节（位置 12 + 颜色 16）");
 
 Renderer3D :: struct {
-    mesh:                        *F.Mesh;
-    vertex, fragment:            *F.Shader;
-    material:                    *F.Material;
-    wire_vertex, wire_fragment:  *F.Shader;
-    wire_material:               *F.Material;
-    vertices:                    [..] Vertex3D;
-    ready:                       bool;
+    mesh: *F.Mesh;
+    vertex, fragment: *F.Shader;
+    material: *F.Material;
+    wire_vertex, wire_fragment: *F.Shader;
+    wire_material: *F.Material;
+    vertices: [..] Vertex3D;
+    ready: bool;
 }
 
 // olib: foster.MeshSetVertexCount / clear(&vertices) —— 只把长度归零，容量与已分配的缓冲保留。
@@ -221,15 +221,15 @@ gizmo_triangle :: (v: *[..] Vertex3D, a: W.Vec3, b: W.Vec3, c: W.Vec3, color: F.
     n := W.v3_cross(W.v3_sub(b, a), W.v3_sub(c, a));
     magnitude := JM.sqrt(W.v3_dot(n, n));
     if magnitude <= 0 || !gizmo_finite(magnitude) return;
-    shade := 0.7 + 0.3 * JM.abs(W.v3_dot(gizmo_v3_div(n, magnitude), W.Vec3.{0.36, 0.8, 0.48}));
+    shade := 0.7 + 0.3 * JM.abs(W.v3_dot(gizmo_v3_div(n, magnitude), W.Vec3.{ 0.36, 0.8, 0.48 }));
     col: [4] float32 = .[
         cast(float32) color.r / 255 * shade,
         cast(float32) color.g / 255 * shade,
         cast(float32) color.b / 255 * shade,
         cast(float32) color.a / 255,
     ];
-    array_add(v, Vertex3D.{position = a, color = col}, Vertex3D.{position = b, color = col},
-              Vertex3D.{position = c, color = col});
+    array_add(v, Vertex3D.{ position = a, color = col }, Vertex3D.{ position = b, color = col },
+              Vertex3D.{ position = c, color = col });
 }
 
 // olib 的 @(private) tube：8 边柱体（每段 4 个三角形，含两端封口）。
@@ -239,8 +239,8 @@ gizmo_tube :: (v: *[..] Vertex3D, a: W.Vec3, b: W.Vec3, radius_a: float32, radiu
     length_v := JM.sqrt(W.v3_dot(d, d));
     if length_v <= 0.0000001 return;
     d = gizmo_v3_div(d, length_v);
-    reference := W.Vec3.{0, 1, 0};
-    if JM.abs(d.y) > 0.9 reference = W.Vec3.{1, 0, 0};
+    reference := W.Vec3.{ 0, 1, 0 };
+    if JM.abs(d.y) > 0.9 reference = W.Vec3.{ 1, 0, 0 };
     u := W.v3_cross(d, reference);
     u = gizmo_v3_div(u, JM.sqrt(W.v3_dot(u, u)));
     w := W.v3_cross(d, u);
@@ -300,9 +300,9 @@ translation_draw :: (r: *Renderer3D, target: F.Drawable_Target, camera: *W.Camer
                      position: W.Vec3, viewport: F.Rect, state: *Translation_Gizmo,
                      pointer: W.Vec2, scale: float32 = 1,
                      style := DEFAULT_TRANSLATION_STYLE) -> [3] Axis_Label {
-    transform := Transform_Gizmo.{dragging = state.dragging, axis = state.axis};
-    unit_scale := W.Vec3.{1, 1, 1};
-    return transform_draw(r, target, camera, Transform.{position = position, scale = unit_scale},
+    transform := Transform_Gizmo.{ dragging = state.dragging, axis = state.axis };
+    unit_scale := W.Vec3.{ 1, 1, 1 };
+    return transform_draw(r, target, camera, Transform.{ position = position, scale = unit_scale },
                           viewport, .Translate, *transform, pointer, scale, style);
 }
 
@@ -350,7 +350,8 @@ gizmo_draw_depth_tested :: (material: *F.Material, mesh: *F.Mesh, target: F.Draw
         tint: [16] u8;
         mat.std140_write_vec4(tint, 0, .[cast(float32) 1, cast(float32) 1, cast(float32) 1, alpha]);
         F.material_stage_set_uniform(*material.Fragment, 0, tint);
-        if occluded command.DepthCompare = .GREATER; else command.DepthCompare = .LESS_OR_EQUAL;
+        if occluded command.DepthCompare = .GREATER;
+        else command.DepthCompare = .LESS_OR_EQUAL;
         F.graphics_device_draw(mesh.device, command);
     }
 }

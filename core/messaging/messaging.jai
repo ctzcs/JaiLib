@@ -28,13 +28,13 @@
 //     enqueue 可能让 items 重新分配，因此每轮都重新读 q.items[q.head]（不是先取指针）。
 //   - channel_messages 返回 [] T 借用视图，同 olib 的 current[:]：有效到下一次
 //     channel_advance_frame / channel_clear / channel_dispose。
-#import "Basic";   // [..] T / array_add / array_free
+#import "Basic"; // [..] T / array_add / array_free
 
 //@region Command_Queue —— 单消费者
 
-Command_Queue :: struct (T: Type) {
+Command_Queue :: struct(T: Type) {
     items: [..] T;
-    head:  s64;   // 下一个待消费下标
+    head: s64; // 下一个待消费下标
 }
 
 // 入队（生产者任意方调用）。
@@ -59,7 +59,7 @@ queue_drain :: (q: *Command_Queue($T), handler: (item: T, userdata: *void), user
         done += 1;
     }
     if q.head == q.items.count {
-        q.items.count = 0;   // 保留容量，头部归零
+        q.items.count = 0; // 保留容量，头部归零
         q.head = 0;
     }
     return n;
@@ -80,9 +80,9 @@ queue_dispose :: (q: *Command_Queue($T)) {
 
 //@region Broadcast_Channel —— 多消费者，延迟一帧
 
-Broadcast_Channel :: struct (T: Type) {
-    current: [..] T;   // 本帧可见批（只读约定）
-    pending: [..] T;   // 等待下一帧
+Broadcast_Channel :: struct(T: Type) {
+    current: [..] T; // 本帧可见批（只读约定）
+    pending: [..] T; // 等待下一帧
 }
 
 // 发布：下一帧开始时可见。

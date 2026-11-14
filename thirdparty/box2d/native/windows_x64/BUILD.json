@@ -1,0 +1,19 @@
+{
+  "target": "windows_x64",
+  "compiler": "MSVC 14.51.36231",
+  "flags": [
+    "/TC",
+    "/std:c17",
+    "/O2",
+    "/MD",
+    "/DNDEBUG"
+  ],
+  "source_manifest_sha256": "479b73fd3b96c523355c4137634a9233488932b2a793852a06aac657773fbd48",
+  "helpers_source_sha256": "187397c8403fea61c90e1ed912ed920d4b346c08048b6e08681f3e6f74eda4f1",
+  "libraries": {
+    "box2d_windows_amd64_sse2.lib": "6d79f0488a1f3e9c63d41169f8b7812e91cd477de8b6ea94c89650b35e4dfd10",
+    "helpers.lib": "ef9afb2ba3ce1f90b291a20cfa3af31e5bd33b9b91ca189fe0aa5da31880c676"
+  },
+  "c_layouts_and_all_symbols": "compile/link passed",
+  "native_smoke": "not run (requires target host)"
+}

@@ -89,7 +89,10 @@ def main():
         checks += [('build tests/' + group, [jaic, *imports, '-exe', name, '-output_path', OUT,
                     ROOT / f'tests/{group}/run_{group}_tests.jai']),
                    ('test ' + group, [OUT / (name + suffix)])]
-    for group in ['onet', 'voice']:
+    for group in ['onet', 'voice', 'box2d', 'box3d']:
+        if group in ['box2d', 'box3d']:
+            checks.append(('check ' + group + ' targets', [sys.executable,
+                           ROOT / 'tools/physics-bindings/check.py', group, '--jaic', jaic]))
         name = group + '_tests'
         checks += [('build tests/' + group, [jaic, '-no_dce', *imports, '-exe', name, '-output_path', OUT,
                     ROOT / f'thirdparty/{group}/tests/main.jai']),
@@ -109,7 +112,7 @@ def main():
     failed = []
     failed_builds = set()
     for name, cmd in selected:
-        if name in {'test core', 'test kit', 'test onet', 'test voice'} and name.split()[-1] in failed_builds:
+        if name in {'test core', 'test kit', 'test onet', 'test voice', 'test box2d', 'test box3d'} and name.split()[-1] in failed_builds:
             print('FAIL', name, '(build failed; refusing stale executable)')
             failed.append(name)
             continue

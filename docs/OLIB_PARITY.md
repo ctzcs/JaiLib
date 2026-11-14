@@ -20,6 +20,12 @@
 
 ## 运行时与库
 
+- 新增 Odin vendor 物理库：`thirdparty/box2d`（3.1.1）和 `thirdparty/box3d`（0.1.0 源码快照）。
+  这是 Jai C ABI 绑定及配套原生实现，非纯 Jai 求解器；提供 Windows x64、Linux/macOS x64 与 ARM64 静态库，Box3D 单精度。
+  已验证全部导出符号及 C 结构布局，行为覆盖碰撞、传感器、查询回调、距离关节及资源生命周期；
+  Windows x64、Linux x64 已运行行为测试；macOS、Linux ARM64 仅交叉构建/布局/链接及 Jai 声明检查通过。
+  其余高级特性不声称已逐项行为验收。版本来源、排除的声明和已知限制见各库 README。
+
 - core：既有句柄、entities、encoding、curve、coroutine、localization、geometry、meshutil、
   dasset、tween、messaging、profiler、debug、devbuild、hotreload 实现保留；统一入口运行现有回归。
 - kit：既有 world、rendering、ui、gizmo、animation、asset、audio、storage、app、tools 实现保留，

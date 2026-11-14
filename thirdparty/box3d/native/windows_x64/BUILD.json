@@ -1,0 +1,19 @@
+{
+  "target": "windows_x64",
+  "compiler": "MSVC 14.51.36231",
+  "flags": [
+    "/TC",
+    "/std:c17",
+    "/O2",
+    "/MD",
+    "/DNDEBUG"
+  ],
+  "source_manifest_sha256": "1675102885e0f7039166de6d6fbe0373545feef0bbe0e7e2274836f17bca5bfb",
+  "helpers_source_sha256": "609875066a59e4a73959a6913033394a64b34ca908f23c7e8c527e4ff02b3c2e",
+  "libraries": {
+    "box3d.lib": "c943fd53009b45ba89515bbf893bc0dfc4af442db0a673400153598df6ca4cdf",
+    "helpers.lib": "4c1236fc4bd8de7cbce64c5836d0747e30274293e430317e4375ad7dcae2d9c5"
+  },
+  "c_layouts_and_all_symbols": "compile/link passed",
+  "native_smoke": "not run (requires target host)"
+}

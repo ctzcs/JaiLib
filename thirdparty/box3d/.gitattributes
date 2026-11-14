@@ -1,0 +1,5 @@
+# Preserve the exact bytes recorded in SOURCE.json and native/*/BUILD.json.
+/upstream/** -text -whitespace
+/SOURCE.json -text whitespace=cr-at-eol
+/helpers.c -text whitespace=cr-at-eol
+/native/** -text whitespace=cr-at-eol

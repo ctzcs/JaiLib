@@ -16,6 +16,8 @@ Validated with jacket `jaic` 0.35.1 on Windows.
 | thirdparty/imgui/ | Jai bindings, Foster backend, and matching ImGui.dll and imgui.lib |
 | thirdparty/onet/ | Network replication, UDP/ENet transports, scenes, prediction, and replay |
 | thirdparty/voice/ | Opus/RNNoise bindings, PCM buffering, and voice send/receive pipelines |
+| [thirdparty/box2d/](thirdparty/box2d/README.md) | Box2D 3.1.1 C ABI bindings, Windows/Linux/macOS static libraries, and physics tests |
+| [thirdparty/box3d/](thirdparty/box3d/README.md) | Box3D 0.1.0 snapshot bindings, single-precision Windows/Linux/macOS static libraries, and physics tests |
 | assets/ | Fonts, icons, provenance, and licenses |
 | tests/ | First-party and integration tests; Foster regressions live in foster/tests |
 | tools/ | Unified checks, Jai tool runner, shader/font/icon tools, project scaffolding, and wasm builds |
@@ -35,6 +37,8 @@ python tools/check/main.py --only core
 python tools/check/main.py --only kit
 python tools/check/main.py --only onet
 python tools/check/main.py --only voice
+python tools/check/main.py --only box2d
+python tools/check/main.py --only box3d
 python tools/check/main.py --web
 ```
 
@@ -67,7 +71,8 @@ bindings instead of declarations from the compiler's global ImGui module.
 
 ## Tools
 
-- [tools/check](tools/check/README.md): module checks, core/kit/onet/voice behavior tests, and optional Web validation.
+- [tools/check](tools/check/README.md): module checks, core/kit/onet/voice/Box2D/Box3D behavior tests, and optional Web validation.
+- [tools/physics-bindings](tools/physics-bindings/README.md): regenerate physics bindings, native libraries, and C ABI probes from pinned sources.
 - [tools/new-game](tools/new-game/README.md): standalone Jai game scaffolding with core/core_editor/editor/game modules, state tests, and a build entry point.
 - [tools/shaders](tools/shaders/README.md): .oshader/HLSL compilation, manifest readback, and stale-output checks using the shared Jai parser.
 - [tools/auto_gen](tools/auto_gen/README.md): enum generation CLI using the existing Jai declaration scanner.

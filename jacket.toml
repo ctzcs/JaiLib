@@ -1,0 +1,5 @@
+[format]
+indent_width = 4
+max_width = 120
+max_blank_lines = 1
+blank_lines_between_items = true

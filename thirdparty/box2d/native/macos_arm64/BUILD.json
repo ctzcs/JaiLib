@@ -1,0 +1,22 @@
+{
+  "target": "macos_arm64",
+  "compiler": "Zig 0.17.0",
+  "flags": [
+    "-target",
+    "aarch64-macos.11.0",
+    "-std=c17",
+    "-O2",
+    "-g0",
+    "-DNDEBUG",
+    "-fPIC",
+    "-ffp-contract=off"
+  ],
+  "source_manifest_sha256": "479b73fd3b96c523355c4137634a9233488932b2a793852a06aac657773fbd48",
+  "helpers_source_sha256": "187397c8403fea61c90e1ed912ed920d4b346c08048b6e08681f3e6f74eda4f1",
+  "libraries": {
+    "libbox2d.a": "70254c793f3b9c05f7aba29e24a95768283c9bc9dc7420f5f6dce3ab696c417d",
+    "libhelpers.a": "02e663cc713fb1945588dec11f4dae46e71b815b4b61e0dbc5d3904b67562e89"
+  },
+  "c_layouts_and_all_symbols": "compile/link passed",
+  "native_smoke": "not run (requires target host)"
+}

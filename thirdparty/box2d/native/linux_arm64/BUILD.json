@@ -1,0 +1,23 @@
+{
+  "target": "linux_arm64",
+  "compiler": "Zig 0.17.0",
+  "flags": [
+    "-target",
+    "aarch64-linux-gnu.2.28",
+    "-std=c17",
+    "-O2",
+    "-g0",
+    "-DNDEBUG",
+    "-fPIC",
+    "-ffp-contract=off",
+    "-D_POSIX_C_SOURCE=200809L"
+  ],
+  "source_manifest_sha256": "479b73fd3b96c523355c4137634a9233488932b2a793852a06aac657773fbd48",
+  "helpers_source_sha256": "187397c8403fea61c90e1ed912ed920d4b346c08048b6e08681f3e6f74eda4f1",
+  "libraries": {
+    "libbox2d.a": "179bd4d9ca8554795a8dca78d97e4c0fcccd39196b1eaea0982fbfbf8784d2f5",
+    "libhelpers.a": "b07c3137646e37c49af96d9bb1e99791dc1f7016d2ac8e0c0002e5686b455a40"
+  },
+  "c_layouts_and_all_symbols": "compile/link passed",
+  "native_smoke": "not run (requires target host)"
+}

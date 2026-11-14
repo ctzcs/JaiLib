@@ -1,0 +1,10 @@
+{
+  "functions": 699,
+  "inline_helpers": 121,
+  "callback_types": 23,
+  "excluded_declarations": [
+    "b3InternalAssert",
+    "b3World_DumpShapeBounds"
+  ],
+  "abi_checks": 889
+}

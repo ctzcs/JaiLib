@@ -1,0 +1,9 @@
+{
+  "functions": 494,
+  "inline_helpers": 73,
+  "callback_types": 16,
+  "excluded_declarations": [
+    "b2InternalAssertFcn"
+  ],
+  "abi_checks": 570
+}
